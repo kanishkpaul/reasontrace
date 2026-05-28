@@ -1,0 +1,110 @@
+@import '@xyflow/react/dist/style.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom Global Styling for Cyber Theme */
+body {
+  margin: 0;
+  background-color: #0A0E17;
+  color: #F3F4F6;
+  font-family: 'Inter', 'Outfit', system-ui, sans-serif;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Scrollbar for cyber theme */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0A0E17;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1F293D;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3B82F6;
+}
+
+/* React Flow custom style overrides */
+.react-flow__renderer {
+  background-color: #0A0E17;
+  background-image: radial-gradient(circle, #1F293D 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.react-flow__handle {
+  width: 8px !important;
+  height: 8px !important;
+  background: #3B82F6 !important;
+  border: 2px solid #0A0E17 !important;
+}
+
+.react-flow__handle:hover {
+  background: #06B6D4 !important;
+  transform: scale(1.2);
+}
+
+.react-flow__edge-path {
+  stroke-width: 2.5;
+  transition: stroke 0.2s, stroke-width 0.2s, stroke-dasharray 0.2s;
+}
+
+.react-flow__controls {
+  background: #121826 !important;
+  border: 1px solid #1F293D !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+}
+
+.react-flow__controls-button {
+  background: transparent !important;
+  border-bottom: 1px solid #1F293D !important;
+  color: #9CA3AF !important;
+  fill: #9CA3AF !important;
+}
+
+.react-flow__controls-button:hover {
+  background: #1F293D !important;
+  color: #3B82F6 !important;
+  fill: #3B82F6 !important;
+}
+
+/* Node glows and animations */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.25);
+  }
+}
+
+.node-pulse {
+  animation: pulse-glow 2s infinite ease-in-out;
+}
+
+.glow-hypothesis { box-shadow: 0 0 15px rgba(6, 182, 212, 0.15); border-color: rgba(6, 182, 212, 0.4); }
+.glow-action { box-shadow: 0 0 15px rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.4); }
+.glow-observation { box-shadow: 0 0 15px rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4); }
+.glow-belief_update { box-shadow: 0 0 15px rgba(139, 92, 246, 0.15); border-color: rgba(139, 92, 246, 0.4); }
+.glow-failure { box-shadow: 0 0 20px rgba(239, 68, 68, 0.25); border-color: rgba(239, 68, 68, 0.6); }
+.glow-decision { box-shadow: 0 0 15px rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.4); }
+.glow-final_answer { box-shadow: 0 0 25px rgba(236, 72, 153, 0.3); border-color: rgba(236, 72, 153, 0.6); }
+
+/* Blinking dot for playback */
+@keyframes blink {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+.blink-dot {
+  animation: blink 1.2s infinite;
+}
