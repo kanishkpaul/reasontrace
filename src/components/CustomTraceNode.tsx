@@ -110,11 +110,10 @@ export const CustomTraceNode = (props: { data: unknown }) => {
 
   return (
     <div
-      className={`relative w-[280px] rounded-xl border bg-cyber-card transition-all duration-300 backdrop-blur-md text-cyber-text text-sm p-4 cursor-pointer
-        ${config.borderClass} ${isSelected ? "ring-2 ring-cyber-primary shadow-cyber-glow" : ""}
-        ${isHighlightedFailure ? "ring-2 ring-cyber-danger shadow-rose-glow border-cyber-danger animate-pulse" : ""}
-        ${isNewest ? "ring-2 ring-cyan-400 shadow-cyan-glow border-cyan-400" : ""}
-        ${config.glowClass}
+      className={`relative w-[280px] rounded-xl border bg-cyber-card p-4 text-sm text-cyber-text shadow-sm transition-shadow duration-200 cursor-pointer
+        ${config.borderClass} ${isSelected ? "ring-2 ring-cyber-primary shadow-cyan-glow" : ""}
+        ${isHighlightedFailure ? "ring-2 ring-cyber-danger shadow-rose-glow border-cyber-danger" : ""}
+        ${isNewest ? "ring-2 ring-cyan-400 border-cyan-400" : ""}
       `}
     >
       {/* Target handle on top */}
@@ -182,7 +181,7 @@ export const CustomTraceNode = (props: { data: unknown }) => {
         )}
         {isNewest && (
           <div className="flex items-center space-x-1">
-            <span className="w-2 h-2 rounded-full bg-cyan-400 blink-dot" />
+            <span className="w-2 h-2 rounded-full bg-cyan-400" />
             <span className="text-[8px] uppercase tracking-wider text-cyan-400 font-bold">
               Active Step
             </span>

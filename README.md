@@ -12,11 +12,24 @@ I built it because most reasoning traces are easy to generate and annoying to st
 - Lets you scrub through the trace step by step
 - Filters by event type and search query
 - Shows per-node inspection details
+- Provides a focused analyst workspace with import, review, and detail panels
+- Starts with a guided empty state instead of treating a sample trace as user data
+- Adapts to smaller screens with dedicated Review, Import, and Details views
 - Separates stated reasoning, observed behavior, and analyst-inferred events so it never presents reconstructed behavior as hidden chain-of-thought
 - Computes evidence coverage, answer grounding, unexplained actions, repeated-action loops, and review findings with recommended next checks
 - Exports the current trace as JSON
 - Exports a diagnostics report as Markdown
 - Ships with sample traces for ARC-style reasoning, coding, planning, and web-agent failures
+
+## Review workflow
+
+ReasonTrace is organized as a compact agent workspace rather than a dashboard:
+
+1. Open a trace by pasting text, dropping a file, or choosing a sample.
+2. Review the graph, timeline, evidence coverage, and trace status in the central workspace.
+3. Inspect an event or open findings in the detail panel. Selecting a finding takes you to its related event.
+
+The interface keeps imports, filters, graph review, and event detail close together on desktop. On phones, those areas become focused Review, Import, and Details views.
 
 ## Why this project matters
 

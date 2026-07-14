@@ -3,7 +3,7 @@ import { useTraceStore } from "../store";
 import { sampleTraces } from "../data/sampleTraces";
 import { Library, HelpCircle } from "lucide-react";
 
-export const SampleTracePicker: React.FC = () => {
+export const SampleTracePicker: React.FC<{ onLoaded?: () => void; compact?: boolean }> = ({ onLoaded, compact = false }) => {
   const { currentTrace, loadSampleTrace } = useTraceStore();
 
   const sampleDescriptions: Record<string, string> = {
@@ -15,16 +15,18 @@ export const SampleTracePicker: React.FC = () => {
     "database-migration": "DB schema creation shell loop and migration drops script."
   };
 
+  const load = (key: string) => { loadSampleTrace(key); onLoaded?.(); };
+
   return (
     <div className="bg-cyber-card border border-cyber-border rounded-xl p-4 space-y-3 shadow-cyber-glow">
       <div className="flex items-center space-x-2 text-cyber-muted pb-1.5 border-b border-cyber-border">
         <Library className="w-4 h-4" />
         <h3 className="text-sm font-bold text-cyber-text tracking-wide uppercase">
-          Sample Trajectories
+          Explore examples
         </h3>
       </div>
 
-      <div className="space-y-1.5 max-h-[220px] overflow-y-auto pr-1">
+      <div className={`space-y-1.5 overflow-y-auto pr-1 ${compact ? "max-h-none" : "max-h-[220px]"}`}>
         {Object.entries(sampleTraces).map(([key, trace]) => {
           const isActive = currentTrace?.title === trace.title;
           const desc = sampleDescriptions[key] || "Machine reasoning evaluation trace logs.";
@@ -32,7 +34,7 @@ export const SampleTracePicker: React.FC = () => {
           return (
             <button
               key={key}
-              onClick={() => loadSampleTrace(key)}
+              onClick={() => load(key)}
               className={`w-full text-left p-2.5 rounded-lg border transition-all flex flex-col space-y-1 group
                 ${isActive 
                   ? "bg-blue-950/20 border-cyber-primary text-cyber-text shadow-cyan-glow" 

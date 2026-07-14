@@ -158,7 +158,7 @@ export const ReasoningGraph: React.FC = () => {
   }
 
   return (
-    <div className="relative w-full h-full bg-cyber-bg border border-cyber-border rounded-xl overflow-hidden shadow-inner">
+    <div className="relative w-full h-full bg-[#0d1424] border border-cyber-border rounded-xl overflow-hidden shadow-inner">
       <ReactFlow
         nodes={nodes}
         edges={edges}

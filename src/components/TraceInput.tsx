@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useTraceStore } from "../store";
 import { Terminal, Upload, AlertCircle, FileText } from "lucide-react";
 
-export const TraceInput: React.FC = () => {
+export const TraceInput: React.FC<{ onLoaded?: () => void }> = ({ onLoaded }) => {
   const { parseAndSetTrace } = useTraceStore();
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -26,6 +26,7 @@ export const TraceInput: React.FC = () => {
     } else {
       setSuccessMsg("Trace loaded successfully!");
       setTimeout(() => setSuccessMsg(null), 3000);
+      onLoaded?.();
     }
   };
 
@@ -79,8 +80,8 @@ Final: Replace db.local host with 10.0.0.5 inside connection string.`;
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2 text-blue-500">
           <Terminal className="w-5 h-5" />
-          <h3 className="text-sm font-bold text-cyber-text tracking-wide uppercase">
-            Trace Input
+          <h3 className="text-sm font-semibold text-cyber-text tracking-wide">
+            Import a trace
           </h3>
         </div>
         <div className="flex space-x-1">
@@ -108,6 +109,7 @@ Final: Replace db.local host with 10.0.0.5 inside connection string.`;
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
+          aria-label="Trace input"
           placeholder={`Paste a reasoning trace, chat/tool log JSON, or lines like:
 Thought: Maybe the key is invalid...
 Action: Check config...
@@ -120,7 +122,7 @@ Update: Confirmed empty file (confidence: 0.90)`}
         {!text && (
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-cyber-muted/50 p-4">
             <Upload className="w-6 h-6 mb-1 text-cyber-border group-hover:text-cyber-primary transition-all" />
-            <span className="text-[10px]">Drop a .json or .txt trace, chat log, or tool-call record</span>
+            <span className="text-[10px] text-center">Drop a .json or .txt trace, chat log, or tool-call record</span>
           </div>
         )}
       </div>
@@ -151,7 +153,7 @@ Update: Confirmed empty file (confidence: 0.90)`}
           className="flex-1 bg-cyber-primary hover:bg-blue-600 text-white text-xs font-bold py-2 rounded-lg transition-all shadow-cyber-glow flex items-center justify-center space-x-1.5"
         >
           <FileText className="w-3.5 h-3.5" />
-          <span>Parse & Visualize</span>
+          <span>Open trace</span>
         </button>
         <button
           onClick={() => {

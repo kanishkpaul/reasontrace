@@ -4,7 +4,7 @@ import { computeDiagnostics } from "../lib/diagnostics";
 import { AlertCircle, CheckCircle, BarChart3, Download, Sparkles, Eye, Lightbulb } from "lucide-react";
 
 export const DiagnosisPanel: React.FC = () => {
-  const { currentTrace } = useTraceStore();
+  const { currentTrace, setSelectedNodeId } = useTraceStore();
 
   // 1. Calculate diagnostics
   const diagnostics = useMemo(() => {
@@ -168,14 +168,21 @@ export const DiagnosisPanel: React.FC = () => {
           {hasWarnings ? (
             <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
               {diagnostics.findings.map((finding) => (
-                <div key={finding.id} className="p-2.5 bg-cyber-bg border border-cyber-border rounded-lg flex items-start space-x-2 text-xs">
+                <button
+                  key={finding.id}
+                  type="button"
+                  onClick={() => finding.eventIds[0] && setSelectedNodeId(finding.eventIds[0])}
+                  className="w-full p-3 bg-cyber-bg border border-cyber-border rounded-lg flex items-start space-x-2 text-left text-xs transition-colors hover:border-slate-500 hover:bg-cyber-hover focus-visible:outline-cyber-cyan"
+                  title={finding.eventIds.length ? "Focus related event" : "No related event"}
+                >
                   <AlertCircle className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${finding.severity === "critical" ? "text-rose-400" : finding.severity === "warning" ? "text-amber-400" : "text-cyan-400"}`} />
                   <div className="leading-relaxed">
                     <span className="text-cyber-text font-semibold block">{finding.title}</span>
                     <span className="text-cyber-muted block mt-0.5">{finding.detail}</span>
                     <span className="mt-1.5 text-[10px] text-cyber-primary flex items-center gap-1"><Lightbulb className="w-3 h-3" />{finding.recommendation}</span>
+                    {finding.eventIds.length > 0 && <span className="mt-2 block text-[10px] font-medium text-cyber-muted">View related event</span>}
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           ) : (
