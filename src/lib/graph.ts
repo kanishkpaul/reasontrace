@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import type { TraceEvent } from "../types";
 
 export interface GraphNode {
@@ -18,7 +19,7 @@ export interface GraphEdge {
   target: string;
   type: string;
   animated?: boolean;
-  style?: Record<string, any>;
+  style?: CSSProperties;
   dashed?: boolean;
 }
 
@@ -212,7 +213,7 @@ export function buildGraphData(
       // Only add temporal edge if there isn't already an explicit edge between them
       if (!explicitEdges.has(`${prevEvent.id}->${currEvent.id}`)) {
         let opacity = 0.25;
-        let strokeColor = "#1F293D";
+        const strokeColor = "#1F293D";
 
         if (selectedNodeId) {
           // If a node is selected, dim temporal edges even further

@@ -8,6 +8,7 @@ import {
   Panel,
 } from "@xyflow/react";
 import type { Node, Edge } from "@xyflow/react";
+import type { ReactFlowInstance } from "@xyflow/react";
 import { useTraceStore } from "../store";
 import { buildGraphData } from "../lib/graph";
 import { CustomTraceNode } from "./CustomTraceNode";
@@ -104,7 +105,7 @@ export const ReasoningGraph: React.FC = () => {
   };
 
   // React Flow Ref to fit view
-  const reactFlowRef = React.useRef<any>(null);
+  const reactFlowRef = React.useRef<ReactFlowInstance | null>(null);
 
   const fitView = () => {
     if (reactFlowRef.current) {
@@ -179,7 +180,7 @@ export const ReasoningGraph: React.FC = () => {
         <MiniMap 
           style={{ background: '#121826', border: '1px solid #1F293D', borderRadius: '8px' }}
           nodeColor={(node) => {
-            const evType = (node.data as any)?.event?.type;
+            const evType = (node.data as { event?: { type?: string } }).event?.type;
             if (evType === "failure") return "#EF4444";
             if (evType === "final_answer") return "#EC4899";
             return "#1F293D";

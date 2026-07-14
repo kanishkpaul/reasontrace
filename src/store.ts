@@ -24,7 +24,7 @@ interface TraceState {
   maxStep: number;
   isPlaying: boolean;
   playbackSpeed: number; // in ms
-  playbackIntervalId: any | null;
+  playbackIntervalId: ReturnType<typeof setInterval> | null;
 
   // Filters & Settings
   filters: StoreFilters;

@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { useTraceStore } from "../store";
 import { computeDiagnostics } from "../lib/diagnostics";
-import { AlertCircle, CheckCircle, BarChart3, Download, Sparkles } from "lucide-react";
+import { AlertCircle, CheckCircle, BarChart3, Download, Sparkles, Eye, Lightbulb } from "lucide-react";
 
 export const DiagnosisPanel: React.FC = () => {
   const { currentTrace } = useTraceStore();
@@ -148,23 +148,33 @@ export const DiagnosisPanel: React.FC = () => {
           </div>
         </div>
 
+        <div className="rounded-lg border border-cyber-border bg-cyber-bg p-3 flex items-start gap-2.5">
+          <Eye className="w-4 h-4 shrink-0 mt-0.5 text-cyan-400" />
+          <div className="text-xs">
+            <span className="font-semibold text-cyber-text block">What this trace can tell you</span>
+            <span className="text-cyber-muted block mt-0.5">
+              {diagnostics.opaqueEventCount
+                ? `${diagnostics.opaqueEventCount} records are observed behavior. ReasonTrace can assess actions, evidence, and outcomes, but cannot recover hidden chain-of-thought.`
+                : "This trace includes stated reasoning. Treat it as a reported rationale and still verify it against observations and tool results."}
+            </span>
+          </div>
+        </div>
+
         {/* Heuristic Issues Warnings */}
         <div className="space-y-2">
           <span className="text-[10px] font-bold uppercase tracking-wider text-cyber-muted block">
-            Cognitive Diagnostics ({diagnostics.warnings.length})
+            Review findings ({diagnostics.findings.length})
           </span>
           {hasWarnings ? (
             <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
-              {diagnostics.warnings.map((warn, i) => (
-                <div key={i} className="p-2.5 bg-cyber-bg border border-cyber-border rounded-lg flex items-start space-x-2 text-xs">
-                  <AlertCircle className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${
-                    warn.includes("breakdown") || warn.includes("loop") || warn.includes("weakly")
-                      ? "text-rose-400 animate-pulse" 
-                      : "text-amber-400"
-                  }`} />
-                  <span className="text-cyber-text font-sans leading-relaxed">
-                    {warn}
-                  </span>
+              {diagnostics.findings.map((finding) => (
+                <div key={finding.id} className="p-2.5 bg-cyber-bg border border-cyber-border rounded-lg flex items-start space-x-2 text-xs">
+                  <AlertCircle className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${finding.severity === "critical" ? "text-rose-400" : finding.severity === "warning" ? "text-amber-400" : "text-cyan-400"}`} />
+                  <div className="leading-relaxed">
+                    <span className="text-cyber-text font-semibold block">{finding.title}</span>
+                    <span className="text-cyber-muted block mt-0.5">{finding.detail}</span>
+                    <span className="mt-1.5 text-[10px] text-cyber-primary flex items-center gap-1"><Lightbulb className="w-3 h-3" />{finding.recommendation}</span>
+                  </div>
                 </div>
               ))}
             </div>

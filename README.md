@@ -6,13 +6,14 @@ I built it because most reasoning traces are easy to generate and annoying to st
 
 ## What it does today
 
-- Accepts either structured JSON traces or lightly formatted transcripts
+- Accepts structured event JSON, lightly formatted transcripts, common chat-message logs, and OpenAI Responses-style tool-call output
 - Normalizes events into a common reasoning-trace schema
 - Renders the trace as an interactive graph
 - Lets you scrub through the trace step by step
 - Filters by event type and search query
 - Shows per-node inspection details
-- Computes heuristic diagnostics such as unsupported hypotheses, weak grounding, and repeated-action loops
+- Separates stated reasoning, observed behavior, and analyst-inferred events so it never presents reconstructed behavior as hidden chain-of-thought
+- Computes evidence coverage, answer grounding, unexplained actions, repeated-action loops, and review findings with recommended next checks
 - Exports the current trace as JSON
 - Exports a diagnostics report as Markdown
 - Ships with sample traces for ARC-style reasoning, coding, planning, and web-agent failures
@@ -41,6 +42,14 @@ ReasonTrace centers around a small event vocabulary:
 - `final_answer`
 
 That gives the UI enough structure to show causal flow without locking the project into one agent framework.
+
+Every event can additionally carry an `evidenceMode`:
+
+- `explicit` for reasoning or rationale that the runtime actually provided
+- `observed` for messages, tool calls, tool results, and other externally visible behavior
+- `inferred` for an analyst's reconstruction from behavior
+
+This distinction is deliberate. For an opaque model, ReasonTrace can show what it did, what it saw, and whether its outcome is supported. It does not claim to recover its private chain-of-thought.
 
 ## Local setup
 
@@ -78,6 +87,19 @@ Final: Change <= to < in parser.ts.
 
 It also accepts JSON traces with explicit event IDs and links.
 
+For an opaque tool-using agent, paste a familiar chat-log shape:
+
+```json
+{
+  "messages": [
+    { "role": "user", "content": "Find order 4812" },
+    { "role": "assistant", "tool_calls": [{ "id": "call_1", "function": { "name": "lookup_order", "arguments": "{\"id\":\"4812\"}" } }] },
+    { "role": "tool", "tool_call_id": "call_1", "content": "One completed charge found." },
+    { "role": "assistant", "content": "There is one completed charge." }
+  ]
+}
+```
+
 ## Diagnostics it currently checks
 
 - unsupported hypotheses
@@ -86,6 +108,9 @@ It also accepts JSON traces with explicit event IDs and links.
 - repeated action loops
 - missing confidence values on belief updates
 - explicit failure events in the trajectory
+- evidence coverage across claims and decisions
+- whether a trace is observed behavior, stated rationale, or a mix of both
+- analyst inferences that require extra caution
 
 These checks are heuristic on purpose. The point is to make trace review faster, not to pretend the diagnosis layer is perfect.
 

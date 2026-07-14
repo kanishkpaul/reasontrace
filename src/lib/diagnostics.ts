@@ -1,4 +1,4 @@
-import type { ReasonTrace, TraceEvent, TraceDiagnostics } from "../types";
+import type { ReasonTrace, TraceEvent, TraceDiagnostics, TraceFinding } from "../types";
 
 /**
  * Computes heuristic diagnostics for a reasoning trace.
@@ -6,6 +6,11 @@ import type { ReasonTrace, TraceEvent, TraceDiagnostics } from "../types";
 export function computeDiagnostics(trace: ReasonTrace): TraceDiagnostics {
   const events = trace.events;
   const warnings: string[] = [];
+  const findings: TraceFinding[] = [];
+  const addFinding = (finding: TraceFinding) => {
+    findings.push(finding);
+    warnings.push(`${finding.title}: ${finding.detail}`);
+  };
 
   // 1. Count event types
   let hypothesisCount = 0;
@@ -94,7 +99,7 @@ export function computeDiagnostics(trace: ReasonTrace): TraceDiagnostics {
       // An unsupported hypothesis has no children at all, or none that lead to updates or answers
       if (children.length === 0 || !canReachType(e.id, ["action", "observation", "belief_update", "final_answer"])) {
         unsupportedHypotheses.push(e.id);
-        warnings.push(`Unsupported hypothesis: no observations or actions linked downstream of Step ${e.step} ("${e.content.substring(0, 40)}...")`);
+        addFinding({ id: `unsupported-${e.id}`, severity: "warning", category: "grounding", title: "Unsupported claim", detail: `Step ${e.step} does not lead to an action, observation, update, or answer.`, eventIds: [e.id], recommendation: "Collect evidence for this claim or mark it as abandoned." });
       }
     }
   });
@@ -107,7 +112,7 @@ export function computeDiagnostics(trace: ReasonTrace): TraceDiagnostics {
       const hasPlanningAncestor = hasAncestorType(e.id, ["hypothesis", "decision"]);
       if (!hasPlanningAncestor) {
         actionsWithoutPriorHypothesis.push(e.id);
-        warnings.push(`Action taken without explicit prior hypothesis or decision at Step ${e.step} ("${e.content.substring(0, 40)}...")`);
+        addFinding({ id: `unplanned-${e.id}`, severity: "info", category: "planning", title: "Unexplained action", detail: `Step ${e.step} has no linked hypothesis or decision. This may be normal for an opaque agent.`, eventIds: [e.id], recommendation: "Link the action to a goal or keep it classified as an observed behavior." });
       }
     }
   });
@@ -120,7 +125,7 @@ export function computeDiagnostics(trace: ReasonTrace): TraceDiagnostics {
     
     if (groundedAnswers.length === 0) {
       hasEvidenceChain = false;
-      warnings.push("Final answer weakly grounded: no link back to observations or belief update evidence.");
+      addFinding({ id: "ungrounded-answer", severity: "critical", category: "grounding", title: "Answer lacks an evidence path", detail: "No final answer links back to an observation or an evidence-informed update.", eventIds: finalAnswers.map(event => event.id), recommendation: "Inspect the answer's parent links and add the observations that justify it." });
     }
   }
 
@@ -135,7 +140,7 @@ export function computeDiagnostics(trace: ReasonTrace): TraceDiagnostics {
       if (lastAction && e.tool && lastAction.tool === e.tool) {
         repeatedToolCount++;
         if (repeatedToolCount >= 2 && !loopDetected) {
-          warnings.push(`Possible loop: repeated action pattern detected (tool '${e.tool}' executed consecutively in steps ${lastAction.step} and ${e.step}).`);
+          addFinding({ id: `tool-loop-${e.id}`, severity: "warning", category: "loop", title: "Possible tool loop", detail: `${e.tool} repeats without an intervening strategy change near steps ${lastAction.step} and ${e.step}.`, eventIds: [lastAction.id, e.id], recommendation: "Check whether the later call used new evidence or add a recovery condition." });
           loopDetected = true;
         }
       } else {
@@ -149,22 +154,37 @@ export function computeDiagnostics(trace: ReasonTrace): TraceDiagnostics {
   const actionContents = events.filter(e => e.type === "action").map(e => e.content.trim().toLowerCase());
   const uniqueActions = new Set(actionContents);
   if (actionContents.length - uniqueActions.size > 1) {
-    warnings.push("Possible loop: repeated action content found. Agent might be stuck executing identical tasks.");
+    addFinding({ id: "content-loop", severity: "warning", category: "loop", title: "Repeated action content", detail: "The trace repeats the same action text more than once.", eventIds: events.filter(e => e.type === "action").map(e => e.id), recommendation: "Compare the repeated attempts and require a changed input or new observation before retrying." });
   }
 
   // 6. Warnings for missing confidence on updates
   events.forEach(e => {
     if (e.type === "belief_update" && e.confidence === undefined) {
-      warnings.push(`Belief update missing confidence value at Step ${e.step}.`);
+      addFinding({ id: `missing-confidence-${e.id}`, severity: "info", category: "confidence", title: "Uncalibrated update", detail: `Step ${e.step} changes a belief without a confidence value.`, eventIds: [e.id], recommendation: "Record confidence when the runtime provides it; do not invent it after the fact." });
     }
   });
 
   // 7. General failure node warnings
   events.forEach(e => {
     if (e.type === "failure") {
-      warnings.push(`Reasoning breakdown / failure event recorded at Step ${e.step}. Inspect surrounding context.`);
+      addFinding({ id: `failure-${e.id}`, severity: "critical", category: "contradiction", title: "Failure recorded", detail: `A failure event appears at step ${e.step}.`, eventIds: [e.id], recommendation: "Trace the incoming evidence and the next recovery action." });
     }
   });
+
+  const answerEvents = events.filter(e => e.type === "final_answer");
+  const groundedAnswerCount = answerEvents.filter(answer => hasAncestorType(answer.id, ["observation", "belief_update"])).length;
+  const claims = events.filter(e => ["hypothesis", "belief_update", "decision", "final_answer"].includes(e.type));
+  const supportedClaims = claims.filter(event => hasAncestorType(event.id, ["observation"]) || canReachType(event.id, ["observation"]));
+  const evidenceCoverage = claims.length ? Math.round((supportedClaims.length / claims.length) * 100) : 0;
+  const opaqueEventCount = events.filter(e => e.evidenceMode === "observed").length;
+  const inferredEventCount = events.filter(e => e.evidenceMode === "inferred").length;
+
+  if (opaqueEventCount > 0) {
+    addFinding({ id: "opaque-trace", severity: "info", category: "visibility", title: "Observed behavior trace", detail: `${opaqueEventCount} events are observable outputs or tool records, not private model reasoning.`, eventIds: events.filter(e => e.evidenceMode === "observed").map(e => e.id), recommendation: "Use this trace to evaluate behavior and evidence paths; do not infer hidden thoughts from it." });
+  }
+  if (inferredEventCount > 0) {
+    addFinding({ id: "inferred-events", severity: "info", category: "visibility", title: "Analyst inferences present", detail: `${inferredEventCount} events were reconstructed from behavior.`, eventIds: events.filter(e => e.evidenceMode === "inferred").map(e => e.id), recommendation: "Treat inferred nodes as hypotheses about behavior, not observations." });
+  }
 
   return {
     hypothesisCount,
@@ -178,6 +198,11 @@ export function computeDiagnostics(trace: ReasonTrace): TraceDiagnostics {
     unsupportedHypotheses,
     actionsWithoutPriorHypothesis,
     hasEvidenceChain,
+    evidenceCoverage,
+    groundedAnswerCount,
+    opaqueEventCount,
+    inferredEventCount,
+    findings,
     warnings
   };
 }

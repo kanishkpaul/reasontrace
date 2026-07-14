@@ -7,6 +7,7 @@ export const SampleTracePicker: React.FC = () => {
   const { currentTrace, loadSampleTrace } = useTraceStore();
 
   const sampleDescriptions: Record<string, string> = {
+    "opaque-tool-agent": "Tool-call-only agent trace: detect unsupported outcomes without pretending to see hidden reasoning.",
     "arc-agi-solver": "ARC-AGI symmetry hypothesis failure and object count recovery.",
     "code-debugger": "Standard software parser debugging. Explains loop index bounds errors.",
     "rope-scaling": "AI Model position embeddings. Scaling context limits through YaRN.",

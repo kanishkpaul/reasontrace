@@ -7,6 +7,7 @@ import { ReasoningGraph } from "./ReasoningGraph";
 import { NodeInspector } from "./NodeInspector";
 import { DiagnosisPanel } from "./DiagnosisPanel";
 import { TimelineControls } from "./TimelineControls";
+import { TraceAnalysisSummary } from "./TraceAnalysisSummary";
 import { computeDiagnostics } from "../lib/diagnostics";
 import { 
   BrainCircuit, 
@@ -30,7 +31,7 @@ export const Layout: React.FC = () => {
         if (parsed && Array.isArray(parsed.events)) {
           setTrace(parsed);
         }
-      } catch (e) {
+      } catch {
         // Silently ignore
       }
     } else {
@@ -134,6 +135,7 @@ export const Layout: React.FC = () => {
 
         {/* CENTER PANEL: Flow Graph Canvas & Controls */}
         <section className="flex-1 flex flex-col space-y-4 overflow-hidden">
+          <TraceAnalysisSummary />
           <div className="flex-1 min-h-0 relative">
             <ReasoningGraph />
           </div>

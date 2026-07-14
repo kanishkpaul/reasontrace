@@ -1,4 +1,4 @@
-import type { ReasonTrace, TraceEvent, EventType } from "../types";
+import type { ReasonTrace, TraceEvent, EventType, EvidenceMode } from "../types";
 
 // Helper to generate a simple unique ID
 const generateId = () => `ev-${Math.random().toString(36).substring(2, 9)}`;
@@ -12,11 +12,15 @@ export function parseJsonTrace(input: string): ReasonTrace | null {
     const parsed = JSON.parse(input);
     if (!parsed || typeof parsed !== "object") return null;
 
-    let events: TraceEvent[] = [];
+    let events: unknown[] = [];
     if (Array.isArray(parsed.events)) {
       events = parsed.events;
     } else if (Array.isArray(parsed)) {
       events = parsed;
+    } else if (Array.isArray(parsed.messages)) {
+      return parseChatMessages(parsed.messages, parsed.title || parsed.model || "Imported chat and tool trace");
+    } else if (Array.isArray(parsed.output)) {
+      return parseResponsesOutput(parsed.output, parsed.title || parsed.model || "Imported model response trace");
     } else {
       return null;
     }
@@ -24,14 +28,17 @@ export function parseJsonTrace(input: string): ReasonTrace | null {
     const title = parsed.title || "Imported JSON Trace";
 
     // Standardize and sanitize events
-    const sanitizedEvents = events.map((ev: any, idx: number) => {
+    const sanitizedEvents = events.map((rawEvent, idx: number) => {
+      const ev = rawEvent as Record<string, unknown>;
       const id = String(ev.id || ev.Id || generateId());
-      const type = (ev.type || ev.Type || "hypothesis").toLowerCase() as EventType;
+      const type = normaliseType(ev.type || ev.Type || ev.event_type || "hypothesis");
       const step = typeof ev.step === "number" ? ev.step : (typeof ev.Step === "number" ? ev.Step : idx + 1);
       const content = String(ev.content || ev.Content || ev.text || ev.Text || "");
       const confidence = typeof ev.confidence === "number" ? ev.confidence : (typeof ev.Confidence === "number" ? ev.Confidence : undefined);
-      const tool = ev.tool || ev.Tool || undefined;
+      const rawTool = ev.tool || ev.Tool;
+      const tool = rawTool === undefined ? undefined : String(rawTool);
       const links = Array.isArray(ev.links) ? ev.links.map(String) : (Array.isArray(ev.Links) ? ev.Links.map(String) : []);
+      const evidenceMode = normaliseEvidenceMode(ev.evidenceMode || ev.evidence_mode || ev.provenance || ev.origin, type);
 
       return {
         id,
@@ -41,7 +48,9 @@ export function parseJsonTrace(input: string): ReasonTrace | null {
         confidence,
         tool,
         links,
-        metadata: ev.metadata || ev.Metadata || undefined
+        evidenceMode,
+        source: ev.source || ev.provider ? String(ev.source || ev.provider) : undefined,
+        metadata: (ev.metadata || ev.Metadata) as Record<string, unknown> | undefined
       };
     });
 
@@ -52,9 +61,96 @@ export function parseJsonTrace(input: string): ReasonTrace | null {
       title,
       events: sanitizedEvents
     };
-  } catch (e) {
+  } catch {
     return null;
   }
+}
+
+function normaliseType(value: unknown): EventType {
+  const raw = String(value || "").toLowerCase().replace(/[\s-]/g, "_");
+  if (["tool_call", "function_call", "command", "run", "execute"].includes(raw)) return "action";
+  if (["tool_result", "function_result", "function_call_output", "output", "result", "message", "user"].includes(raw)) return "observation";
+  if (["thought", "reasoning", "analysis", "claim", "assistant"].includes(raw)) return "hypothesis";
+  if (["answer", "final", "assistant_final"].includes(raw)) return "final_answer";
+  if (["update", "belief", "conclusion"].includes(raw)) return "belief_update";
+  if (["error", "exception", "hallucination"].includes(raw)) return "failure";
+  return ["hypothesis", "action", "observation", "belief_update", "failure", "decision", "final_answer"].includes(raw)
+    ? raw as EventType
+    : "hypothesis";
+}
+
+function normaliseEvidenceMode(value: unknown, type?: EventType): EvidenceMode {
+  const raw = String(value || "").toLowerCase();
+  if (["explicit", "reasoning", "thought"].includes(raw)) return "explicit";
+  if (["inferred", "derived", "reconstructed"].includes(raw)) return "inferred";
+  return type === "hypothesis" || type === "belief_update" || type === "decision" ? "explicit" : "observed";
+}
+
+function contentOf(value: unknown): string {
+  if (typeof value === "string") return value;
+  if (Array.isArray(value)) return value.map(item => typeof item === "string" ? item : item?.text || item?.content || "").filter(Boolean).join("\n");
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    return contentOf(record.text) || contentOf(record.content) || JSON.stringify(value);
+  }
+  return "";
+}
+
+/** Imports common chat-completion style logs without claiming assistant text is private reasoning. */
+function parseChatMessages(messages: Record<string, unknown>[], title: string): ReasonTrace {
+  const events: TraceEvent[] = [];
+  let step = 1;
+  let previousId: string | undefined;
+  const add = (event: Omit<TraceEvent, "id" | "step" | "links">) => {
+    const id = `m${step}`;
+    events.push({ ...event, id, step, links: previousId ? [previousId] : [] });
+    previousId = id;
+    step++;
+  };
+  messages.forEach((message) => {
+    const role = String(message.role || "").toLowerCase();
+    const text = contentOf(message.content);
+    if (role === "tool" || role === "function") {
+      add({ type: "observation", content: text || "Tool returned no text output.", tool: message.name || message.tool_call_id ? String(message.name || message.tool_call_id) : undefined, evidenceMode: "observed", source: "tool result", metadata: { role } });
+      return;
+    }
+    if (role === "assistant") {
+      const rawCalls = message.tool_calls || (message.function_call ? [message.function_call] : []);
+      const calls = Array.isArray(rawCalls) ? rawCalls.filter((call): call is Record<string, unknown> => Boolean(call && typeof call === "object")) : [];
+      if (text) add({ type: calls.length ? "belief_update" : "final_answer", content: text, evidenceMode: "observed", source: "assistant message", metadata: { role, note: "Observable output, not hidden reasoning." } });
+      calls.forEach((call: Record<string, unknown>) => {
+        const fn = call.function as Record<string, unknown> | undefined;
+        const tool = String(fn?.name || call.name || "tool");
+        add({ type: "action", content: contentOf(fn?.arguments || call.arguments) || `Called ${tool}`, tool, evidenceMode: "observed", source: "tool call", metadata: { callId: call.id } });
+      });
+      return;
+    }
+    if (text) add({ type: "observation", content: text, evidenceMode: "observed", source: role || "input", metadata: { role } });
+  });
+  return { title, events };
+}
+
+/** Imports OpenAI Responses-style output records and preserves tool-call chronology. */
+function parseResponsesOutput(output: Record<string, unknown>[], title: string): ReasonTrace {
+  const events: TraceEvent[] = [];
+  let previousId: string | undefined;
+  const add = (event: Omit<TraceEvent, "id" | "step" | "links">) => {
+    const id = `r${events.length + 1}`;
+    events.push({ ...event, id, step: events.length + 1, links: previousId ? [previousId] : [] });
+    previousId = id;
+  };
+  output.forEach((item) => {
+    if (item.type === "function_call") {
+      add({ type: "action", content: contentOf(item.arguments) || `Called ${item.name || "tool"}`, tool: item.name ? String(item.name) : undefined, evidenceMode: "observed", source: "tool call", metadata: { callId: item.call_id } });
+    } else if (item.type === "function_call_output") {
+      add({ type: "observation", content: contentOf(item.output) || "Tool returned no text output.", tool: item.call_id ? String(item.call_id) : undefined, evidenceMode: "observed", source: "tool result" });
+    } else if (item.type === "message") {
+      add({ type: "final_answer", content: contentOf(item.content), evidenceMode: "observed", source: "assistant message", metadata: { note: "Observable output, not hidden reasoning." } });
+    } else if (item.type === "reasoning" && contentOf(item.summary)) {
+      add({ type: "belief_update", content: contentOf(item.summary), evidenceMode: "explicit", source: "reasoning summary" });
+    }
+  });
+  return { title, events };
 }
 
 /**
@@ -105,7 +201,8 @@ export function parseTranscriptTrace(input: string): ReasonTrace {
       currentEvent = {
         id: `e${currentStep}`,
         type: matchedType,
-        content: remainder
+        content: remainder,
+        evidenceMode: matchedType === "hypothesis" || matchedType === "belief_update" ? "explicit" : "observed"
       };
     } else {
       // If no prefix matches, this line either belongs to the current event or starts a default 'hypothesis'
@@ -116,7 +213,8 @@ export function parseTranscriptTrace(input: string): ReasonTrace {
         currentEvent = {
           id: `e${currentStep}`,
           type: "hypothesis",
-          content: trimmed
+          content: trimmed,
+          evidenceMode: "explicit"
         };
       }
     }
@@ -124,7 +222,7 @@ export function parseTranscriptTrace(input: string): ReasonTrace {
 
   // Push the final event
   if (currentEvent) {
-    events.push(finalizeEvent(currentEvent, currentStep++));
+    events.push(finalizeEvent(currentEvent, currentStep));
   }
 
   // Auto-link sequential events temporally if no links exist
@@ -191,7 +289,7 @@ function finalizeEvent(event: Partial<TraceEvent>, step: number): TraceEvent {
   }
 
   // Clean up content by stripping out the metadata tags if they clutter the main text
-  let cleanedContent = content.trim();
+  const cleanedContent = content.trim();
 
   return {
     id: event.id || `e${step}`,
@@ -247,7 +345,7 @@ export function parseTrace(input: string): { trace: ReasonTrace; error?: string 
     if (transcriptTrace.events.length > 0) {
       return { trace: transcriptTrace };
     }
-  } catch (e) {
+  } catch {
     // Fallback
   }
 

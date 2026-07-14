@@ -13,10 +13,11 @@ import {
 import type { TraceEvent, EventType } from "../types";
 
 // Map types to icons, colors and labels
+// eslint-disable-next-line react-refresh/only-export-components
 export const typeConfigs: Record<
   EventType, 
   { 
-    icon: React.ComponentType<any>; 
+    icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
     colorClass: string; 
     borderClass: string;
     bgClass: string;
@@ -90,7 +91,7 @@ export const typeConfigs: Record<
   },
 };
 
-export const CustomTraceNode = (props: any) => {
+export const CustomTraceNode = (props: { data: unknown }) => {
   const data = props.data as {
     event: TraceEvent;
     isSelected: boolean;
@@ -173,6 +174,12 @@ export const CustomTraceNode = (props: any) => {
         )}
 
         {/* Newest Pulse Dot Indicator */}
+        <div className="flex items-center gap-2">
+        {event.evidenceMode && (
+          <span className={`text-[8px] uppercase tracking-wider font-bold ${event.evidenceMode === "explicit" ? "text-purple-400" : event.evidenceMode === "inferred" ? "text-amber-400" : "text-cyan-400"}`}>
+            {event.evidenceMode === "explicit" ? "stated" : event.evidenceMode}
+          </span>
+        )}
         {isNewest && (
           <div className="flex items-center space-x-1">
             <span className="w-2 h-2 rounded-full bg-cyan-400 blink-dot" />
@@ -181,6 +188,7 @@ export const CustomTraceNode = (props: any) => {
             </span>
           </div>
         )}
+        </div>
       </div>
 
       {/* Source handle at bottom */}

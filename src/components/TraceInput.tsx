@@ -108,7 +108,7 @@ Final: Replace db.local host with 10.0.0.5 inside connection string.`;
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder={`Paste JSON trace or paste lines like:
+          placeholder={`Paste a reasoning trace, chat/tool log JSON, or lines like:
 Thought: Maybe the key is invalid...
 Action: Check config...
 Observation: File is empty...
@@ -120,7 +120,7 @@ Update: Confirmed empty file (confidence: 0.90)`}
         {!text && (
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-cyber-muted/50 p-4">
             <Upload className="w-6 h-6 mb-1 text-cyber-border group-hover:text-cyber-primary transition-all" />
-            <span className="text-[10px]">Drag & drop .json / .txt trace files here</span>
+            <span className="text-[10px]">Drop a .json or .txt trace, chat log, or tool-call record</span>
           </div>
         )}
       </div>

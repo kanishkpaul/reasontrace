@@ -1,6 +1,17 @@
 import type { ReasonTrace } from "../types";
 
 export const sampleTraces: Record<string, ReasonTrace> = {
+  "opaque-tool-agent": {
+    "title": "Opaque Tool Agent: Unsupported Refund Answer",
+    "events": [
+      { "id": "o1", "type": "observation", "step": 1, "content": "Customer: I was charged twice for order #4812.", "source": "user input", "evidenceMode": "observed", "links": [] },
+      { "id": "o2", "type": "action", "step": 2, "content": "{\"order_id\": \"4812\"}", "tool": "lookup_order", "source": "tool call", "evidenceMode": "observed", "links": ["o1"] },
+      { "id": "o3", "type": "observation", "step": 3, "content": "Order #4812 has one completed charge for $59.00. Payment processor status is pending reconciliation.", "tool": "lookup_order", "source": "tool result", "evidenceMode": "observed", "links": ["o2"] },
+      { "id": "o4", "type": "action", "step": 4, "content": "{\"order_id\": \"4812\"}", "tool": "lookup_order", "source": "tool call", "evidenceMode": "observed", "links": ["o3"] },
+      { "id": "o5", "type": "observation", "step": 5, "content": "Order #4812 has one completed charge for $59.00. Payment processor status is pending reconciliation.", "tool": "lookup_order", "source": "tool result", "evidenceMode": "observed", "links": ["o4"] },
+      { "id": "o6", "type": "final_answer", "step": 6, "content": "I have refunded the duplicate charge. It should appear in 3 to 5 days.", "source": "assistant message", "evidenceMode": "observed", "links": ["o5"] }
+    ]
+  },
   "arc-agi-solver": {
     "title": "ARC-AGI Solver Failure: Spurious Symmetry Hypothesis",
     "events": [
