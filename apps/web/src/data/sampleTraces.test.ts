@@ -9,6 +9,10 @@ describe("bundled samples", () => {
     expect(new Set(coverage).size).toBeGreaterThan(1);
   });
 
+  test("the opaque-agent sample does not claim its unsupported refund is grounded", () => {
+    expect(computeDiagnostics(sampleTraces["opaque-tool-agent"]).answerGrounding).toBe("not_recorded");
+  });
+
   knownBug("D6: the web-agent sample's click loop is reported", () => {
     const loops = computeDiagnostics(sampleTraces["flight-booker"]).findings.filter((f) => f.category === "loop");
     expect(loops.length).toBeGreaterThan(0);
