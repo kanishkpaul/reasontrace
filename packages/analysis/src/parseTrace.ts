@@ -63,7 +63,7 @@ function traceFromJson(value: unknown): ReasonTrace {
     const rawTool = ev.tool || ev.Tool;
     const tool = rawTool === undefined ? undefined : String(rawTool);
     const rawSupports = ev.supports ?? ev.links ?? ev.Links;
-    const supports = Array.isArray(rawSupports) ? rawSupports.map(String) : [];
+    const supports = Array.isArray(rawSupports) ? [...new Set(rawSupports.map(String))] : [];
     const label = normaliseLabel(ev.label || ev.evidenceMode || ev.evidence_mode || ev.provenance || ev.origin, rawType);
 
     return {

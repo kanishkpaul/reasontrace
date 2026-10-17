@@ -1,4 +1,4 @@
-import { describe, expect } from "vitest";
+import { describe, expect, test } from "vitest";
 import { knownBug } from "../../../../test/knownBug";
 import { parsed, traceFixture } from "../../../../test/traces";
 import { buildGraphData } from "./graph";
@@ -17,7 +17,7 @@ describe("graph layout", () => {
     expect(x.c).toBe(x.d);
   });
 
-  knownBug("G6: duplicate links produce one edge", () => {
+  test("G6: duplicate links produce one edge", () => {
     const ids = layout("duplicate-links.json").edges.map((e) => e.id);
     expect(new Set(ids).size).toBe(ids.length);
   });
