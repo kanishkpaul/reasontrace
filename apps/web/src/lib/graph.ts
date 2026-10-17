@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { supportOrder } from "@reasontrace/analysis";
 import type { TraceEvent } from "@reasontrace/format";
 
 export interface GraphNode {
@@ -60,82 +61,41 @@ export function buildGraphData(
     });
   });
 
-  // Calculate X and Y coordinates
   const xPositions: Record<string, number> = {};
   const yPositions: Record<string, number> = {};
 
-  // Track coordinates assigned per step to prevent overlaps
-  const stepNodes: Record<number, string[]> = {};
-
-  // Sort events by step to ensure correct order of evaluation
   const sortedEvents = [...events].sort((a, b) => a.step - b.step);
 
   // Rows follow the order of step values, not the values themselves: steps can
   // be sparse or timestamps, which would put rows millions of pixels apart (G3).
   const rowOfStep = new Map([...new Set(sortedEvents.map(e => e.step))].map((step, row) => [step, row + 1]));
-
   sortedEvents.forEach(event => {
     yPositions[event.id] = (rowOfStep.get(event.step) ?? 0) * Y_SPACING;
-
-    if (!stepNodes[event.step]) {
-      stepNodes[event.step] = [];
-    }
-    stepNodes[event.step].push(event.id);
   });
 
-  // Assign X positions based on parent links and offsets
-  sortedEvents.forEach(event => {
+  // Each node is placed once, after the nodes that support it (G4), next to
+  // its parents, then nudged right past any node already in its row. Rows are
+  // not re-centred afterwards, which would undo the alignment (G5).
+  const placedInRow = new Map<number, number[]>();
+  for (const event of supportOrder(events)) {
     const parentLinks = event.supports.filter(pId => eventMap.has(pId));
-
-    if (parentLinks.length === 0) {
-      // Root node or unlinked node
-      xPositions[event.id] = 0;
-    } else if (parentLinks.length === 1) {
-      const parentId = parentLinks[0];
-      const parentX = xPositions[parentId] || 0;
-      const siblings = childrenMap.get(parentId) || [];
-
-      if (siblings.length <= 1) {
-        // Only child, align directly under parent
-        xPositions[event.id] = parentX;
-      } else {
-        // Multiple children, spread them out relative to parent
-        const idx = siblings.indexOf(event.id);
-        const offset = (idx - (siblings.length - 1) / 2) * X_SPACING;
-        xPositions[event.id] = parentX + offset;
-      }
-    } else {
-      // Multiple parents, center between parents
-      const parentXSum = parentLinks.reduce((sum, pId) => sum + (xPositions[pId] || 0), 0);
-      xPositions[event.id] = parentXSum / parentLinks.length;
+    let x = 0;
+    if (parentLinks.length === 1) {
+      const siblings = childrenMap.get(parentLinks[0]) ?? [];
+      x = xPositions[parentLinks[0]] + (siblings.indexOf(event.id) - (siblings.length - 1) / 2) * X_SPACING;
+    } else if (parentLinks.length > 1) {
+      x = parentLinks.reduce((sum, pId) => sum + xPositions[pId], 0) / parentLinks.length;
     }
-  });
-
-  // Post-processing to resolve horizontal overlapping at the same step
-  sortedEvents.forEach(event => {
-    const step = event.step;
-    const nodesAtStep = stepNodes[step] || [];
-    if (nodesAtStep.length > 1) {
-      // Sort nodes at the same step by their calculated X positions
-      nodesAtStep.sort((a, b) => xPositions[a] - xPositions[b]);
-      
-      // Enforce minimum horizontal distance
-      for (let i = 1; i < nodesAtStep.length; i++) {
-        const prevId = nodesAtStep[i - 1];
-        const currId = nodesAtStep[i];
-        if (xPositions[currId] - xPositions[prevId] < X_SPACING - 40) {
-          xPositions[currId] = xPositions[prevId] + X_SPACING;
-        }
-      }
-
-      // Center the group of nodes around 0 again
-      const totalWidth = xPositions[nodesAtStep[nodesAtStep.length - 1]] - xPositions[nodesAtStep[0]];
-      const offsetToCenter = - (xPositions[nodesAtStep[0]] + totalWidth / 2);
-      nodesAtStep.forEach(id => {
-        xPositions[id] += offsetToCenter;
-      });
+    const row = placedInRow.get(event.step) ?? [];
+    let blocker = row.find(other => Math.abs(other - x) < X_SPACING - 40);
+    while (blocker !== undefined) {
+      x = blocker + X_SPACING;
+      blocker = row.find(other => Math.abs(other - x) < X_SPACING - 40);
     }
-  });
+    row.push(x);
+    placedInRow.set(event.step, row);
+    xPositions[event.id] = x;
+  }
 
   // Build the React Flow nodes
   sortedEvents.forEach(event => {
