@@ -7,7 +7,7 @@ const layout = (fixture: string) =>
   buildGraphData(parsed(traceFixture(fixture)).events, null, null, false, false);
 
 describe("graph layout", () => {
-  knownBug("G3: timestamp steps are laid out by order, not by value", () => {
+  test("G3: timestamp steps are laid out by order, not by value", () => {
     const ys = layout("timestamp-steps.json").nodes.map((n) => n.position.y);
     expect(Math.max(...ys)).toBeLessThan(10_000);
   });

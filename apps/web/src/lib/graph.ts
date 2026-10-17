@@ -70,9 +70,12 @@ export function buildGraphData(
   // Sort events by step to ensure correct order of evaluation
   const sortedEvents = [...events].sort((a, b) => a.step - b.step);
 
+  // Rows follow the order of step values, not the values themselves: steps can
+  // be sparse or timestamps, which would put rows millions of pixels apart (G3).
+  const rowOfStep = new Map([...new Set(sortedEvents.map(e => e.step))].map((step, row) => [step, row + 1]));
+
   sortedEvents.forEach(event => {
-    // Y position is directly related to step
-    yPositions[event.id] = event.step * Y_SPACING;
+    yPositions[event.id] = (rowOfStep.get(event.step) ?? 0) * Y_SPACING;
 
     if (!stepNodes[event.step]) {
       stepNodes[event.step] = [];
