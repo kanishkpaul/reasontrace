@@ -102,4 +102,14 @@ describe("diagnostics", () => {
   test("D11: the hypothesis/observation ratio is undefined with no observations", () => {
     expect(diagnose("Thought: a\nThought: b").hypothesisToObservationRatio).toBeNull();
   });
+
+  test("every finding carries its rule and limitations", () => {
+    const traces = ["Thought: a\nAction: b()\nAction: b()\nFailure: x\nUpdate: y", traceFixture("answer-via-unsupported-update.json"), traceFixture("chat-tools.json")];
+    const findings = traces.flatMap((text) => diagnose(text).findings);
+    expect(findings.length).toBeGreaterThan(3);
+    for (const f of findings) {
+      expect(f.rule.length).toBeGreaterThan(0);
+      expect(f.limitations.length).toBeGreaterThan(0);
+    }
+  });
 });

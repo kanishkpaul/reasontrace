@@ -41,8 +41,9 @@ export const DiagnosisPanel: React.FC = () => {
     if (diagnostics.warnings.length === 0) {
       md += `No check raised a finding. The checks cover declared support links, repeated calls, recorded failures and stated confidence; they do not judge whether the reasoning is correct.\n`;
     } else {
-      diagnostics.warnings.forEach(w => {
-        md += `- ${w}\n`;
+      diagnostics.findings.forEach(f => {
+        md += `- **${f.title}:** ${f.detail}\n  - Rule: ${f.rule}\n  - Limits: ${f.limitations}\n`;
+        if (f.eventIds.length) md += `  - Events: ${f.eventIds.join(", ")}\n`;
       });
     }
 
@@ -166,6 +167,8 @@ export const DiagnosisPanel: React.FC = () => {
                   <div className="leading-relaxed">
                     <span className="text-cyber-text font-semibold block">{finding.title}</span>
                     <span className="text-cyber-muted block mt-0.5">{finding.detail}</span>
+                    <span className="mt-1.5 text-[10px] text-cyber-muted block"><span className="font-semibold text-cyber-text">Rule:</span> {finding.rule}</span>
+                    <span className="mt-0.5 text-[10px] text-cyber-muted block"><span className="font-semibold text-cyber-text">Limits:</span> {finding.limitations}</span>
                     <span className="mt-1.5 text-[10px] text-cyber-primary flex items-center gap-1"><Lightbulb className="w-3 h-3" />{finding.recommendation}</span>
                     {finding.eventIds.length > 0 && <span className="mt-2 block text-[10px] font-medium text-cyber-muted">View related event</span>}
                   </div>

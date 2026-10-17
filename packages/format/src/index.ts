@@ -98,6 +98,11 @@ export interface TraceFinding {
   category: "grounding" | "planning" | "loop" | "failure" | "visibility" | "confidence";
   title: string;
   detail: string;
+  /** The events the finding rests on. */
   eventIds: string[];
   recommendation: string;
+  /** What was checked, in one sentence. */
+  rule: string;
+  /** What the check cannot tell, so the finding is not read as more than it is. */
+  limitations: string;
 }
