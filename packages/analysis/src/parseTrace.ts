@@ -168,11 +168,8 @@ function parseChatMessages(messages: Record<string, unknown>[], title: string): 
   const events: TraceEvent[] = [];
   const toolByCallId = new Map<string, string>();
   let step = 1;
-  let previousId: string | undefined;
   const add = (event: Omit<TraceEvent, "id" | "step" | "supports" | "depth">) => {
-    const id = `m${step}`;
-    events.push({ ...event, id, step, depth: depthOf(event.label), supports: previousId ? [previousId] : [] });
-    previousId = id;
+    events.push({ ...event, id: `m${step}`, step, depth: depthOf(event.label), supports: [] });
     step++;
   };
   messages.forEach((message) => {
@@ -205,11 +202,9 @@ function parseChatMessages(messages: Record<string, unknown>[], title: string): 
 /** Imports OpenAI Responses-style output records and preserves tool-call chronology. */
 function parseResponsesOutput(output: Record<string, unknown>[], title: string): ReasonTrace {
   const events: TraceEvent[] = [];
-  let previousId: string | undefined;
   const add = (event: Omit<TraceEvent, "id" | "step" | "supports" | "depth">) => {
-    const id = `r${events.length + 1}`;
-    events.push({ ...event, id, step: events.length + 1, depth: depthOf(event.label), supports: previousId ? [previousId] : [] });
-    previousId = id;
+    const step = events.length + 1;
+    events.push({ ...event, id: `r${step}`, step, depth: depthOf(event.label), supports: [] });
   };
   const toolByCallId = new Map<string, string>();
   output.forEach((item) => {
@@ -316,13 +311,6 @@ export function parseTranscriptTrace(input: string): ReasonTrace {
   // Push the final event
   if (currentEvent) {
     events.push(finalizeEvent(currentEvent, currentStep));
-  }
-
-  // Auto-link sequential events temporally if no links exist
-  for (let i = 0; i < events.length; i++) {
-    if (i > 0 && events[i].supports.length === 0) {
-      events[i].supports = [events[i - 1].id];
-    }
   }
 
   return importedTrace("Parsed Transcript Trace", events);

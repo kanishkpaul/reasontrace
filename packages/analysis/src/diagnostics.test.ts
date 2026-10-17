@@ -4,18 +4,27 @@ import { parsed, traceFixture } from "../../../test/traces";
 import { computeDiagnostics } from "./diagnostics";
 
 const diagnose = (text: string) => computeDiagnostics(parsed(text));
-const chain = (prefix: string, length: number) =>
-  Array.from({ length }, (_, i) => `${prefix}: step ${i}`).join("\n");
+/** A trace of `length` events of one type, each supported by the one before. */
+const chain = (type: string, length: number) =>
+  JSON.stringify({
+    events: Array.from({ length }, (_, i) => ({
+      id: `c${i}`,
+      type,
+      step: i + 1,
+      content: `step ${i}`,
+      supports: i ? [`c${i - 1}`] : [],
+    })),
+  });
 
 describe("diagnostics", () => {
   // Chains with no event of the type a walk looks for make the recursive walk
   // visit every event, so their depth equals the trace length.
   knownBug("D1: an 8,000-event chain of thoughts does not overflow the stack", () => {
-    expect(() => diagnose(chain("Thought", 8000))).not.toThrow();
+    expect(() => diagnose(chain("hypothesis", 8000))).not.toThrow();
   });
 
   knownBug("D1: an 8,000-event chain of actions does not overflow the stack", () => {
-    expect(() => diagnose(chain("Action", 8000))).not.toThrow();
+    expect(() => diagnose(chain("action", 8000))).not.toThrow();
   });
 
   // Each walk restarts from scratch, so the cost grows with the square of the
@@ -23,7 +32,7 @@ describe("diagnostics", () => {
   // an M5 MacBook. One linear pass takes a few milliseconds at 2,000. Longer
   // chains would overflow the stack (D1) before the timing could be read.
   knownBug("D2: diagnostics over 2,000 events take under 100 ms", () => {
-    const text = chain("Thought", 2000);
+    const text = chain("hypothesis", 2000);
     const start = performance.now();
     diagnose(text);
     expect(performance.now() - start).toBeLessThan(100);

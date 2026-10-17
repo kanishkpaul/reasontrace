@@ -154,3 +154,15 @@ describe("format versions", () => {
     expect(depths).toEqual(["probabilities", "internals"]);
   });
 });
+
+describe("evidence links", () => {
+  test("P5: transcripts, chat and Responses imports record no support from time order alone", () => {
+    for (const trace of [
+      parsed(traceFixture("react-transcript.txt")),
+      parsed(traceFixture("chat-tools.json")),
+      parsed(traceFixture("responses-output.json")),
+    ]) {
+      expect(trace.events.flatMap((e) => e.supports)).toEqual([]);
+    }
+  });
+});
