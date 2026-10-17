@@ -1,4 +1,4 @@
-import { describe, expect } from "vitest";
+import { describe, expect, test } from "vitest";
 import { knownBug } from "../../../test/knownBug";
 import { parsed, traceFixture } from "../../../test/traces";
 import { computeDiagnostics } from "./diagnostics";
@@ -19,11 +19,11 @@ const chain = (type: string, length: number) =>
 describe("diagnostics", () => {
   // Chains with no event of the type a walk looks for make the recursive walk
   // visit every event, so their depth equals the trace length.
-  knownBug("D1: an 8,000-event chain of thoughts does not overflow the stack", () => {
+  test("D1: an 8,000-event chain of thoughts does not overflow the stack", () => {
     expect(() => diagnose(chain("hypothesis", 8000))).not.toThrow();
   });
 
-  knownBug("D1: an 8,000-event chain of actions does not overflow the stack", () => {
+  test("D1: an 8,000-event chain of actions does not overflow the stack", () => {
     expect(() => diagnose(chain("action", 8000))).not.toThrow();
   });
 
@@ -31,11 +31,19 @@ describe("diagnostics", () => {
   // trace length: 76 ms at 1,000 events, 297 ms at 2,000 and 729 ms at 3,000 on
   // an M5 MacBook. One linear pass takes a few milliseconds at 2,000. Longer
   // chains would overflow the stack (D1) before the timing could be read.
-  knownBug("D2: diagnostics over 2,000 events take under 100 ms", () => {
+  test("D2: diagnostics over 2,000 events take under 100 ms", () => {
     const text = chain("hypothesis", 2000);
     const start = performance.now();
     diagnose(text);
     expect(performance.now() - start).toBeLessThan(100);
+  });
+
+  test("diagnostics over a 50,000-event chain finish in under 500 ms", () => {
+    const text = chain("hypothesis", 50_000);
+    const trace = parsed(text);
+    const start = performance.now();
+    computeDiagnostics(trace);
+    expect(performance.now() - start).toBeLessThan(500);
   });
 
   knownBug("D4: a trace with no final answer does not report an evidence chain", () => {

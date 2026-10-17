@@ -1,4 +1,5 @@
-import type { ReasonTrace, TraceEvent, TraceDiagnostics, TraceFinding } from "@reasontrace/format";
+import type { EventType, ReasonTrace, TraceEvent, TraceDiagnostics, TraceFinding } from "@reasontrace/format";
+import { supportGraph, typeMask } from "./supportGraph";
 
 /**
  * Computes heuristic diagnostics for a reasoning trace.
@@ -37,67 +38,18 @@ export function computeDiagnostics(trace: ReasonTrace): TraceDiagnostics {
     ? hypothesisCount
     : parseFloat((hypothesisCount / observationCount).toFixed(2));
 
-  // Build graph representations for reachability
-  // dependency graph: child -> parent (represented by event.supports)
-  // We want to traverse forward (parent -> children) and backward (child -> parents)
-  const childrenMap = new Map<string, string[]>(); // parentId -> childIds[]
-  const parentMap = new Map<string, string[]>();   // childId -> parentIds[]
-  const eventMap = new Map<string, TraceEvent>();
-
-  events.forEach(e => {
-    eventMap.set(e.id, e);
-    parentMap.set(e.id, e.supports);
-    e.supports.forEach(parentId => {
-      if (!childrenMap.has(parentId)) {
-        childrenMap.set(parentId, []);
-      }
-      childrenMap.get(parentId)!.push(e.id);
-    });
-  });
-
-  // Helper: check if a node has any path to a node of certain types
-  function canReachType(startId: string, targetTypes: string[], visited = new Set<string>()): boolean {
-    if (visited.has(startId)) return false;
-    visited.add(startId);
-
-    const children = childrenMap.get(startId) || [];
-    for (const childId of children) {
-      const child = eventMap.get(childId);
-      if (child && targetTypes.includes(child.type)) {
-        return true;
-      }
-      if (canReachType(childId, targetTypes, visited)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  // Helper: check if a node is reachable from any node of certain types (backward traversal)
-  function hasAncestorType(startId: string, targetTypes: string[], visited = new Set<string>()): boolean {
-    if (visited.has(startId)) return false;
-    visited.add(startId);
-
-    const parents = parentMap.get(startId) || [];
-    for (const parentId of parents) {
-      const parent = eventMap.get(parentId);
-      if (parent && targetTypes.includes(parent.type)) {
-        return true;
-      }
-      if (hasAncestorType(parentId, targetTypes, visited)) {
-        return true;
-      }
-    }
-    return false;
-  }
+  const { upstream, downstream } = supportGraph(events);
+  const childrenCount = new Map<string, number>();
+  events.forEach(e => e.supports.forEach(id => childrenCount.set(id, (childrenCount.get(id) ?? 0) + 1)));
+  const canReachType = (id: string, types: EventType[]) => ((downstream.get(id) ?? 0) & typeMask(types)) !== 0;
+  const hasAncestorType = (id: string, types: EventType[]) => ((upstream.get(id) ?? 0) & typeMask(types)) !== 0;
 
   // 2. Detect unsupported hypotheses (hypotheses with no downstream effect / no links going to observations/belief_updates/final_answers)
   const unsupportedHypotheses: string[] = [];
   events.forEach(e => {
     if (e.type === "hypothesis") {
-      const children = childrenMap.get(e.id) || [];
       // An unsupported hypothesis has no children at all, or none that lead to updates or answers
-      if (children.length === 0 || !canReachType(e.id, ["action", "observation", "belief_update", "final_answer"])) {
+      if (!childrenCount.get(e.id) || !canReachType(e.id, ["action", "observation", "belief_update", "final_answer"])) {
         unsupportedHypotheses.push(e.id);
         addFinding({ id: `unsupported-${e.id}`, severity: "warning", category: "grounding", title: "Unsupported claim", detail: `Step ${e.step} does not lead to an action, observation, update, or answer.`, eventIds: [e.id], recommendation: "Collect evidence for this claim or mark it as abandoned." });
       }
