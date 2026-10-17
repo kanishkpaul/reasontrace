@@ -90,33 +90,36 @@ export function computeDiagnostics(trace: ReasonTrace): TraceDiagnostics {
     addFinding({ id: "ungrounded-answer", severity: "critical", category: "grounding", title: "Answer lacks an evidence path", detail: `${ungroundedAnswers.length} of ${finalAnswers.length} final answers have no support path back to an observation.`, eventIds: ungroundedAnswers.map(event => event.id), recommendation: "Inspect the answer's support links and add the observations that justify it." });
   }
 
-  // 5. Detect loops or repeated action patterns
-  // Pattern 1: Same tool called consecutively
-  let lastAction: TraceEvent | null = null;
-  let repeatedToolCount = 0;
-  let loopDetected = false;
+  // 5. Repeated calls. Either can be legitimate (polling, retrying after a
+  // fix), so they are warnings to check, not failures.
+  const actions = events.filter(e => e.type === "action");
+  const callKey = (e: TraceEvent) => `${e.tool ?? ""}\u0000${e.content.trim().toLowerCase()}`;
 
-  for (const e of events) {
-    if (e.type === "action") {
-      if (lastAction && e.tool && lastAction.tool === e.tool) {
-        repeatedToolCount++;
-        if (repeatedToolCount >= 2 && !loopDetected) {
-          addFinding({ id: `tool-loop-${e.id}`, severity: "warning", category: "loop", title: "Possible tool loop", detail: `${e.tool} repeats without an intervening strategy change near steps ${lastAction.step} and ${e.step}.`, eventIds: [lastAction.id, e.id], recommendation: "Check whether the later call used new evidence or add a recovery condition." });
-          loopDetected = true;
-        }
-      } else {
-        repeatedToolCount = 0;
-      }
-      lastAction = e;
+  const identical = new Map<string, TraceEvent[]>();
+  for (const action of actions) {
+    const group = identical.get(callKey(action));
+    if (group) group.push(action);
+    else identical.set(callKey(action), [action]);
+  }
+  for (const group of identical.values()) {
+    if (group.length < 2) continue;
+    addFinding({ id: `same-call-${group[0].id}`, severity: "warning", category: "loop", title: "Same call repeated", detail: `The same ${group[0].tool ? `${group[0].tool} call` : "action"} appears ${group.length} times, at steps ${group.map(e => e.step).join(", ")}.`, eventIds: group.map(e => e.id), recommendation: "Check whether anything changed between the calls that could give a different result." });
+  }
+
+  // Runs of the same tool with no other action between them (D6). A run whose
+  // calls are all identical is already reported above.
+  let run: TraceEvent[] = [];
+  const closeRun = () => {
+    if (run.length >= 2 && new Set(run.map(callKey)).size > 1) {
+      addFinding({ id: `tool-run-${run[0].id}`, severity: "warning", category: "loop", title: "Repeated tool call", detail: `${run[0].tool} is called ${run.length} times in a row, at steps ${run.map(e => e.step).join(", ")}, with no other action between.`, eventIds: run.map(e => e.id), recommendation: "Check whether each call used what the previous one returned, or repeated a step that was not working." });
     }
+    run = [];
+  };
+  for (const action of actions) {
+    if (!action.tool || (run.length && run[0].tool !== action.tool)) closeRun();
+    if (action.tool) run.push(action);
   }
-
-  // Pattern 2: Identical action content
-  const actionContents = events.filter(e => e.type === "action").map(e => e.content.trim().toLowerCase());
-  const uniqueActions = new Set(actionContents);
-  if (actionContents.length - uniqueActions.size > 1) {
-    addFinding({ id: "content-loop", severity: "warning", category: "loop", title: "Repeated action content", detail: "The trace repeats the same action text more than once.", eventIds: events.filter(e => e.type === "action").map(e => e.id), recommendation: "Compare the repeated attempts and require a changed input or new observation before retrying." });
-  }
+  closeRun();
 
   // 6. Warnings for missing confidence on updates
   events.forEach(e => {

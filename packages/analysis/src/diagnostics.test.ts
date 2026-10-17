@@ -63,7 +63,7 @@ describe("diagnostics", () => {
     expect(diagnose(traceFixture("chat-tools.json")).answerGrounding).toBe("not_recorded");
   });
 
-  knownBug("D7: two identical actions are reported as a repeat, naming only those two", () => {
+  test("D7: two identical actions are reported as a repeat, naming only those two", () => {
     const repeat = diagnose("Action: a()\nAction: a()\nAction: b()").findings.find((f) => f.category === "loop");
     expect(repeat?.eventIds).toEqual(["e1", "e2"]);
   });
@@ -71,6 +71,15 @@ describe("diagnostics", () => {
   test("D3: an observation a claim leads to does not count as support for it", () => {
     const text = '{"events":[{"id":"h","type":"hypothesis","step":1},{"id":"o","type":"observation","step":2,"supports":["h"]}]}';
     expect(diagnose(text).evidenceCoverage).toBe(0);
+  });
+
+  test("D6: each run of consecutive calls to one tool is reported with its own calls", () => {
+    const loops = diagnose("Action: click(a)\nAction: click(b)\nAction: read()\nAction: click(c)\nAction: click(d)").findings.filter((f) => f.category === "loop");
+    expect(loops.map((f) => f.eventIds)).toEqual([["e1", "e2"], ["e4", "e5"]]);
+  });
+
+  test("D6: calls to the same tool separated by another action are not a run", () => {
+    expect(diagnose("Action: click(a)\nAction: read()\nAction: click(b)").findings.filter((f) => f.category === "loop")).toEqual([]);
   });
 
   test("D8: chat actions are not called unexplained when the source never states plans", () => {
