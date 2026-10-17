@@ -12,10 +12,12 @@ describe("transcript import", () => {
     expect(labels).toEqual(["stated", "observed", "observed"]);
   });
 
-  knownBug("P2: ReAct transcripts split Action Input and Final Answer into their own fields and events", () => {
+  test("P2: ReAct transcripts split Action Input and Final Answer into their own fields and events", () => {
     const parsed = events(traceFixture("react-transcript.txt"));
     expect(parsed.map((e) => e.type)).toEqual(["hypothesis", "action", "observation", "hypothesis", "final_answer"]);
     expect(parsed[1].tool).toBe("search");
+    expect(parsed[1].content).toBe("population of Lyon");
+    expect(parsed[4].content).toBe("About 520,000 people live in Lyon.");
   });
 
   test("P11: a 'Tool:' line keeps its tool name", () => {

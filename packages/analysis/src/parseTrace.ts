@@ -211,6 +211,8 @@ function parseResponsesOutput(output: Record<string, unknown>[], title: string):
   return importedTrace(title, events);
 }
 
+const BARE_TOOL_NAME = /^[A-Za-z_][\w.-]*$/;
+
 /**
  * Parses a simple text transcript.
  * Matches lines starting with known keywords like "Thought:", "Action:", etc.
@@ -229,12 +231,22 @@ export function parseTranscriptTrace(input: string): ReasonTrace {
     { regex: /^(update|belief_update|belief|confidence|conclusion):\s*/i, type: "belief_update" },
     { regex: /^(failure|error|loop|mistake|hallucination):\s*/i, type: "failure" },
     { regex: /^(decision|choose|choice|branch):\s*/i, type: "decision" },
-    { regex: /^(final|final_answer|answer|summary|output_final):\s*/i, type: "final_answer" }
+    { regex: /^(final|final[ _]answer|answer|summary|output_final):\s*/i, type: "final_answer" }
   ];
 
   for (const line of lines) {
     const trimmed = line.trim();
     if (!trimmed) continue;
+
+    // ReAct puts the tool's name on the "Action:" line and its argument on
+    // the next one.
+    const actionInput = trimmed.match(/^action[ _]input:\s*/i);
+    if (actionInput && currentEvent?.type === "action") {
+      const name = (currentEvent.content ?? "").trim();
+      if (BARE_TOOL_NAME.test(name)) currentEvent.tool = name;
+      currentEvent.content = trimmed.slice(actionInput[0].length);
+      continue;
+    }
 
     let matchedType: EventType | null = null;
     let matchedPrefixLength = 0;
@@ -299,7 +311,7 @@ export function parseTranscriptTrace(input: string): ReasonTrace {
 function finalizeEvent(event: Partial<TraceEvent>, step: number): TraceEvent {
   const content = event.content || "";
   let confidence: number | undefined = undefined;
-  let tool: string | undefined = undefined;
+  let tool = event.tool;
 
   // Extract confidence (e.g. "[confidence: 0.85]" or "(90%)" or "confidence: 0.9")
   const confidenceRegexes = [
@@ -327,7 +339,7 @@ function finalizeEvent(event: Partial<TraceEvent>, step: number): TraceEvent {
   }
 
   // Extract tool name if event is an action (e.g. "tool: file_read" or "[tool: file_read]" or "Action: file_read()")
-  if (event.type === "action") {
+  if (event.type === "action" && !tool) {
     const toolRegexes = [
       /(?:tool|command|cmd):\s*([a-zA-Z0-9_-]+)/i,
       /\[(?:tool|command|cmd):\s*([a-zA-Z0-9_-]+)\]/i,
@@ -344,7 +356,7 @@ function finalizeEvent(event: Partial<TraceEvent>, step: number): TraceEvent {
     // "Tool: web_search" and ReAct's "Action: search" name the tool alone on
     // the first line.
     const firstLine = content.split("\n")[0].trim();
-    if (!tool && /^[A-Za-z_][\w.-]*$/.test(firstLine)) tool = firstLine;
+    if (!tool && BARE_TOOL_NAME.test(firstLine)) tool = firstLine;
   }
 
   const label = event.label ?? "stated";
