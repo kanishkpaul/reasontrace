@@ -341,6 +341,10 @@ function finalizeEvent(event: Partial<TraceEvent>, step: number): TraceEvent {
         break;
       }
     }
+    // "Tool: web_search" and ReAct's "Action: search" name the tool alone on
+    // the first line.
+    const firstLine = content.split("\n")[0].trim();
+    if (!tool && /^[A-Za-z_][\w.-]*$/.test(firstLine)) tool = firstLine;
   }
 
   const label = event.label ?? "stated";

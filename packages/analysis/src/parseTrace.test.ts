@@ -18,7 +18,7 @@ describe("transcript import", () => {
     expect(parsed[1].tool).toBe("search");
   });
 
-  knownBug("P11: a 'Tool:' line keeps its tool name", () => {
+  test("P11: a 'Tool:' line keeps its tool name", () => {
     expect(events("Tool: web_search")[0].tool).toBe("web_search");
   });
 
