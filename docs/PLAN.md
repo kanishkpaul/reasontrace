@@ -116,8 +116,8 @@ Decided on 2026-10-17:
 | D-1 | A TypeScript local server (Hono on Node) for sources, keys and engines, plus a Python sidecar for neural internals | One language with the web app. Internals tooling (nnsight, TransformerLens, SAELens, Gemma Scope) is in Python, so borrowing it beats rebuilding activation hooks. |
 | D-2 | Keep React and React Flow | The working code is React. The design kit is plain CSS with a Tailwind bridge. |
 | D-3 | Keys live server-side only, in the OS keychain | Charter rule 6. The browser never sees a key and never calls a provider. |
-| D-4 | A hosted static build opens trace files only | A shareable demo that can't leak keys. |
-| D-5 | Skin: `lens` | The direction in `design/README.md` is written for it. |
+| D-4 | Skin: `lens` | The direction in `design/README.md` is written for it. |
+| D-5 | Leave out extra and optional features | The tool needs to do a few things well, not everything. BUILD_PLAN.md lists what is in. |
 
 ## 3. Phases
 

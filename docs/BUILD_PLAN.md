@@ -15,14 +15,16 @@ Bug IDs (P1, D3, …) refer to the audit in [PLAN.md](PLAN.md).
 | 3 | Local server, keys, BYOK and local-server sources | 0 |
 | 4 | Full tier: Python sidecar and activation capture | 3 |
 | 5 | Ground truth and controls | 4 |
-| 6 | Decoders: lens, SAE features, probes | 4, 5 |
+| 6 | Decoders: logit lens and SAE features | 4, 5 |
 | 7 | First finding view: when the answer is committed | 2, 6 |
-| 8 | Symbolic engines | 2, 3 |
+| 8 | Symbolic engine: z3 | 2, 3 |
 | 9 | Neurosymbolic pipelines | 3 or 4, 8 |
-| 10 | Review features | 1, 2 |
-| 11 | Interventions and breadth | varies |
 
-Phases 8–11 depend on the phases above them but not on each other.
+Phase 8 can start any time after phases 2 and 3.
+
+The tool does a few things well rather than everything: anything not listed
+here (more sources, more decoders, interventions, review annotations, a
+hosted build) stays out until a phase above needs it.
 
 ---
 
@@ -86,10 +88,10 @@ Phases 8–11 depend on the phases above them but not on each other.
 - `packages/core`: the `Source` and `Engine` interfaces, the run-directory
   writer and reader, the determinism comparison.
 - `packages/keys`: keychain storage and a `Secret` that never serialises.
-- Sources: OpenAI-compatible (OpenAI, OpenRouter, Groq, Together; Ollama, LM
-  Studio, llama.cpp server, vLLM) with log-probabilities and raw `<think>`
-  text; OpenAI Responses (reasoning summaries); Anthropic (thinking blocks,
-  labelled as provider summaries); Gemini (thought parts).
+- Sources: OpenAI-compatible (OpenAI, OpenRouter, Groq, Gemini's compatible
+  endpoint; Ollama, LM Studio, llama.cpp server, vLLM) with log-probabilities
+  and raw `<think>` text; Anthropic (thinking blocks, labelled as provider
+  summaries).
 - Per-model capability declarations: unavailable depths carry reasons.
 - Viewer: key entry, model picker, prompt runner with streaming, run list,
   token view with probabilities when present.
@@ -108,8 +110,8 @@ Phases 8–11 depend on the phases above them but not on each other.
 ## Phase 4: Full tier
 
 **Builds**
-- `bridge/python` (uv): Gemma 3 1B-it and Qwen3 0.6B on MPS through nnsight
-  or TransformerLens; activation capture to a plan naming layers, positions
+- `bridge/python` (uv): Gemma 3 1B-it and Qwen3 0.6B on MPS through nnsight;
+  activation capture to a plan naming layers, positions
   and pooling; tensors as safetensors.
 - `packages/sidecar`: starts the sidecar and speaks JSON-RPC on stdio.
 - The manifest records quantization, dtype, device, cache state and peak
@@ -131,17 +133,15 @@ Phases 8–11 depend on the phases above them but not on each other.
   viewer.
 
 **Gate**
-- On the planted-circuit model, the logit lens and a linear probe recover the
-  planted variable, and each control fails to. A control that also succeeds
+- On the planted-circuit model, the logit lens recovers the planted variable,
+  and each control fails to. A control that also succeeds
   marks the decoder unvalidated.
 
 ## Phase 6: Decoders
 
 **Builds**
-- Logit lens, and tuned lens where trained weights exist.
-- Gemma Scope SAEs and transcoders through SAELens, top features per step,
-  optional Neuronpedia labels cached locally.
-- Linear probes trained and applied over captured runs.
+- Logit lens.
+- Gemma Scope SAEs through SAELens, with the top features per step.
 
 **Gate**
 - SAE reconstruction error on captured Gemma 3 activations is in the range
@@ -159,12 +159,11 @@ Phases 8–11 depend on the phases above them but not on each other.
 - A run over a fixed problem set, with controls, is stored under `fixtures/`
   and renders, including cases where the answer is never decodable early.
 
-## Phase 8: Symbolic engines
+## Phase 8: Symbolic engine
 
 **Builds**
 - z3 through `z3-solver`: models, unsat cores and proofs as `exact`
   derivations.
-- Datalog with rule firings and provenance.
 - A proof-tree view that collapses large derivations and expands on demand.
 
 **Gate**
@@ -183,29 +182,3 @@ Phases 8–11 depend on the phases above them but not on each other.
 **Gate**
 - A fixture with a deliberate translation error shows where the formula
   departs from the text.
-
-## Phase 10: Review features
-
-**Builds**
-- A tool-call inspector pairing requests with arguments, results, errors and
-  durations.
-- Selecting a finding focuses its events and highlights the supporting path.
-- Annotations, failure-point markers, accepted and dismissed findings.
-- A portable review file holding the source trace, annotations, finding
-  decisions and `format_version`.
-- OpenTelemetry GenAI trace import.
-
-**Gate**
-- A review exported and re-imported is equal on every stable field.
-
-## Phase 11: Interventions and breadth
-
-Each item is independent and removable:
-
-- `Runner.rerun`: steering, ablation and resampling, with a diff view.
-  Gate: steering a known feature moves the output in the expected direction,
-  and an empty intervention reproduces the original run.
-- GGUF models through llama.cpp, recording how far quantization shifts
-  activations.
-- circuit-tracer attribution graphs and nnsight on NDIF in the sidecar.
-- More model families in the sidecar.

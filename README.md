@@ -33,10 +33,10 @@ Needs Node 22.22.2+ or 24.15+ (the test tools, jsdom and ESLint, set the floor).
 
 | How the model is reached | What you can see |
 |---|---|
-| Weights run in the Python sidecar (Gemma 3, Qwen3 first) | behaviour, raw reasoning, token probabilities, activations, lenses, SAE features, probes, interventions |
+| Weights run in the Python sidecar (Gemma 3, Qwen3) | behaviour, raw reasoning, token probabilities, activations, logit lens, SAE features |
 | A local server (Ollama, LM Studio, llama.cpp, vLLM) | behaviour, raw reasoning from open models, token probabilities where supported |
-| Your own API key (OpenAI, Anthropic, Gemini, OpenRouter, …) | behaviour, provider reasoning summaries, token probabilities where supported |
-| A symbolic engine (z3, Datalog) | queries, results, and the exact derivation |
+| Your own API key (OpenAI, Anthropic, Gemini, OpenRouter, Groq) | behaviour, provider reasoning summaries, token probabilities where supported |
+| A symbolic engine (z3) | queries, results, and the exact derivation |
 
 What a source cannot provide is shown as unavailable, with the reason. Signals
 decoded from a model's internals carry the result of their control.

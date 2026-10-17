@@ -4,7 +4,7 @@ ReasonTrace is a local web app. A TypeScript server runs on your machine,
 holds your API keys, talks to providers, local model servers and symbolic
 engines, and serves a React viewer to your browser. Neural internals come from
 an optional Python sidecar, because the tools that read a model's activations
-(nnsight, TransformerLens, SAELens) exist in Python. Every capability is its own
+(nnsight, SAELens) exist in Python. Every capability is its own
 package. The trace format is the only contract between those packages, so
 adding a capability means adding one package and one registration line, and
 removing one means deleting the same.
@@ -13,8 +13,8 @@ removing one means deleting the same.
  producers                          run directory                 consumers
  ─────────                          ─────────────                 ─────────
  Source  (APIs, local servers)  ─┐                           ┌─► Viewer   (React, over /api)
- Engine  (z3, Datalog)          ─┼─► events + tensors      ──┤
- Sidecar (Python: weights,      ─┘   + manifest              └─► Decoder  (Python: lens, SAE, probe)
+ Engine  (z3)                   ─┼─► events + tensors      ──┤
+ Sidecar (Python: weights,      ─┘   + manifest              └─► Decoder  (Python: logit lens, SAE)
           activations, decoders)
  Import  (trace files, OTel)    ───► events only, labelled by what the file can show
 ```
@@ -35,13 +35,10 @@ packages/
   core/              @reasontrace/core       extension interfaces, run directory, determinism check
   keys/              @reasontrace/keys       OS keychain access and redaction
   sources/
-    openai/          OpenAI-compatible: OpenAI, OpenRouter, Groq, Together, Ollama, LM Studio, llama.cpp, vLLM
-    responses/       OpenAI Responses API: reasoning summaries
+    openai/          OpenAI-compatible: OpenAI, OpenRouter, Groq, Gemini, Ollama, LM Studio, llama.cpp, vLLM
     anthropic/       Messages API: thinking blocks
-    gemini/          thought parts
   engines/
     z3/              z3-solver (WebAssembly)
-    datalog/         Datalog with provenance
   sidecar/           @reasontrace/sidecar    starts and talks to bridge/python
 bridge/python/       capture and decoders (uv project); reads and writes run directories only
 fixtures/            recorded provider responses, trace files, small tensors
@@ -136,9 +133,6 @@ interface Engine {
 interface Runner {
   capabilities(model: ModelRef): Promise<Capabilities>;
   generate(request: RunRequest, plan: CapturePlan): AsyncIterable<RunEvent>;
-  /** Re-runs from a step with an intervention (steering, ablation,
-   *  resampling) and writes a new run linked to the original. */
-  rerun(from: StepRef, intervention: Intervention): AsyncIterable<RunEvent>;
 }
 ```
 
@@ -184,17 +178,13 @@ key's bytes appear anywhere in the run directory or the server log.
 `apps/server` listens on `127.0.0.1` only. It generates a token at launch,
 passes it to the page it serves, and rejects any `/api` request without it, so
 other pages open in the same browser cannot drive it. It serves the built
-viewer, so `npx reasontrace` (or `npm start`) is the whole install.
-
-A static build of the viewer can also be hosted without the server. It
-opens trace files only, with no keys and no model calls.
+viewer, so `npm start` is the whole install.
 
 ## 8. The Python sidecar
 
 `bridge/python/` is a uv project. The server starts it on demand and talks to
 it over JSON-RPC on stdio. It runs open-weights models (Gemma 3, Qwen3 on
-Apple MPS first) through nnsight or TransformerLens, captures activations to
-the plan it is given, and runs decoders (logit and tuned lens, Gemma Scope
-SAEs through SAELens, linear probes). It reads and writes run directories and
+Apple MPS) through nnsight, captures activations to the plan it is given, and
+runs decoders (logit lens, Gemma Scope SAEs through SAELens). It reads and writes run directories and
 nothing else. Without Python installed, the app loses the full tier and
 nothing more.

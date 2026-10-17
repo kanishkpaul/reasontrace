@@ -22,13 +22,9 @@ row says **adopted**, its licence column is unverified.
 | React Testing Library | rendering components in tests | github.com/testing-library/react-testing-library | MIT | — | adopted |
 | Hono | local HTTP server | github.com/honojs/hono | to verify | — | planned (phase 3) |
 | @napi-rs/keyring | OS keychain access | github.com/Brooooooklyn/keyring-node | to verify | a platform keychain binding with fewer dependencies | planned (phase 3) |
-| dagre or elkjs | graph layout instead of the hand-rolled pass | github.com/dagrejs/dagre, github.com/kieler/elkjs | to verify | — | planned (phase 1) |
 | nnsight | activation capture and interventions in the sidecar | github.com/ndif-team/nnsight | to verify | TransformerLens covers every model family we need | planned (phase 4) |
-| TransformerLens | hooked models, logit lens | github.com/TransformerLensOrg/TransformerLens | to verify | nnsight alone | planned (phase 4) |
 | safetensors | tensor storage in run directories | github.com/huggingface/safetensors | to verify | a format with better streaming writes | planned (phase 4) |
 | SAELens | loading and encoding SAEs | github.com/jbloomAus/SAELens | to verify | — | planned (phase 6) |
 | Gemma Scope 2 | SAE and transcoder weights for Gemma 3 | huggingface.co/google/gemma-scope-2-* | to verify; weights may carry terms separate from code | decoder support dropped for Gemma | planned (phase 6) |
-| Neuronpedia | human-readable labels for SAE features | neuronpedia.org | to verify terms of use for cached labels | labels generated locally | planned (phase 6) |
 | z3-solver | SMT solver, official WebAssembly build | github.com/Z3Prover/z3 | to verify | — | planned (phase 8) |
-| circuit-tracer | attribution graphs in the sidecar | github.com/decoderesearch/circuit-tracer | to verify | — | planned (phase 11) |
 | Daedalus practices | run directories, failure modes, honest zeros, borrowing ledger | the author's Daedalus repository | own work | — | adopted |
