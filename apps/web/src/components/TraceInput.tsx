@@ -1,9 +1,10 @@
 import React, { useState } from "react";
+import { useShallow } from "zustand/react/shallow";
 import { useTraceStore } from "../store";
 import { Terminal, Upload, AlertCircle, FileText } from "lucide-react";
 
 export const TraceInput: React.FC<{ onLoaded?: () => void }> = ({ onLoaded }) => {
-  const { parseAndSetTrace } = useTraceStore();
+  const { parseAndSetTrace } = useTraceStore(useShallow((s) => ({ parseAndSetTrace: s.parseAndSetTrace })));
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<{ text: string; warning: boolean } | null>(null);

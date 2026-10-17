@@ -1,10 +1,11 @@
 import React, { useMemo, useState } from "react";
+import { useShallow } from "zustand/react/shallow";
 import { useTraceStore } from "../store";
 import { typeConfigs } from "./CustomTraceNode";
 import { Copy, Check, ArrowLeft, ArrowRight, Info } from "lucide-react";
 
 export const NodeInspector: React.FC = () => {
-  const { currentTrace, selectedNodeId, setSelectedNodeId } = useTraceStore();
+  const { currentTrace, selectedNodeId, setSelectedNodeId } = useTraceStore(useShallow((s) => ({ currentTrace: s.currentTrace, selectedNodeId: s.selectedNodeId, setSelectedNodeId: s.setSelectedNodeId })));
   const [copied, setCopied] = useState(false);
 
   // 1. Find the selected event

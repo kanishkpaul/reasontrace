@@ -1,11 +1,26 @@
 import React from "react";
+import { useShallow } from "zustand/react/shallow";
 import { useTraceStore } from "../store";
 import type { EventType } from "@reasontrace/format";
 import { typeConfigs } from "./CustomTraceNode";
 import { Filter, Search, Sliders, CheckSquare, Square } from "lucide-react";
 
 export const EventFilters: React.FC = () => {
-  const { filters, settings, setEventTypeFilter, setSearchQuery, toggleSetting, resetFilters } = useTraceStore();
+  const {
+    filters,
+    settings,
+    setEventTypeFilter,
+    setSearchQuery,
+    toggleSetting,
+    resetFilters
+  } = useTraceStore(useShallow((s) => ({
+    filters: s.filters,
+    settings: s.settings,
+    setEventTypeFilter: s.setEventTypeFilter,
+    setSearchQuery: s.setSearchQuery,
+    toggleSetting: s.toggleSetting,
+    resetFilters: s.resetFilters,
+  })));
 
   const handleTypeToggle = (type: EventType) => {
     setEventTypeFilter(type, !filters.eventTypes[type]);

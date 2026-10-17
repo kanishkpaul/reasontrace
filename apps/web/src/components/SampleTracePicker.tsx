@@ -1,10 +1,11 @@
 import React from "react";
+import { useShallow } from "zustand/react/shallow";
 import { useTraceStore } from "../store";
 import { sampleTraces } from "../data/sampleTraces";
 import { Library, HelpCircle } from "lucide-react";
 
 export const SampleTracePicker: React.FC<{ onLoaded?: () => void; compact?: boolean }> = ({ onLoaded, compact = false }) => {
-  const { currentTrace, loadSampleTrace } = useTraceStore();
+  const { currentTrace, loadSampleTrace } = useTraceStore(useShallow((s) => ({ currentTrace: s.currentTrace, loadSampleTrace: s.loadSampleTrace })));
 
   const sampleDescriptions: Record<string, string> = {
     "opaque-tool-agent": "Tool-call-only agent trace: detect unsupported outcomes without pretending to see hidden reasoning.",

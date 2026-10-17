@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useShallow } from "zustand/react/shallow";
 import { useTraceStore } from "../store";
 import { TraceInput } from "./TraceInput";
 import { SampleTracePicker } from "./SampleTracePicker";
@@ -16,7 +17,7 @@ type MobileTab = "review" | "import" | "details";
 const utilityButton = "inline-flex items-center gap-1.5 rounded-md border border-cyber-border bg-cyber-card px-2.5 py-1.5 text-xs font-medium text-cyber-muted transition-colors hover:bg-cyber-hover hover:text-cyber-text";
 
 export const Layout: React.FC = () => {
-  const { currentTrace, setTrace, selectedNodeId } = useTraceStore();
+  const { currentTrace, setTrace, selectedNodeId } = useTraceStore(useShallow((s) => ({ currentTrace: s.currentTrace, setTrace: s.setTrace, selectedNodeId: s.selectedNodeId })));
   const [activeRightTab, setActiveRightTab] = useState<"inspector" | "diagnosis">("inspector");
   const [leftOpen, setLeftOpen] = useState(true);
   const [rightOpen, setRightOpen] = useState(true);

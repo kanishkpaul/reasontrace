@@ -1,4 +1,5 @@
 import React from "react";
+import { useShallow } from "zustand/react/shallow";
 import { useTraceStore } from "../store";
 import { 
   Play, 
@@ -24,7 +25,20 @@ export const TimelineControls: React.FC = () => {
     resetReplay,
     revealAll,
     setPlaybackSpeed
-  } = useTraceStore();
+  } = useTraceStore(useShallow((s) => ({
+    currentTrace: s.currentTrace,
+    currentStep: s.currentStep,
+    steps: s.steps,
+    isPlaying: s.isPlaying,
+    playbackSpeed: s.playbackSpeed,
+    setCurrentStep: s.setCurrentStep,
+    stepForward: s.stepForward,
+    stepBackward: s.stepBackward,
+    togglePlay: s.togglePlay,
+    resetReplay: s.resetReplay,
+    revealAll: s.revealAll,
+    setPlaybackSpeed: s.setPlaybackSpeed,
+  })));
 
   if (!currentTrace || currentTrace.events.length === 0) return null;
 

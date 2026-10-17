@@ -9,6 +9,7 @@ import {
 } from "@xyflow/react";
 import type { Edge, Node, NodeChange, XYPosition } from "@xyflow/react";
 import type { ReactFlowInstance } from "@xyflow/react";
+import { useShallow } from "zustand/react/shallow";
 import { useTraceStore } from "../store";
 import { buildGraphData } from "../lib/graph";
 import { CustomTraceNode } from "./CustomTraceNode";
@@ -27,8 +28,16 @@ export const ReasoningGraph: React.FC = () => {
     newestNodeId,
     filters,
     settings,
-    setSelectedNodeId,
-  } = useTraceStore();
+    setSelectedNodeId
+  } = useTraceStore(useShallow((s) => ({
+    currentTrace: s.currentTrace,
+    currentStep: s.currentStep,
+    selectedNodeId: s.selectedNodeId,
+    newestNodeId: s.newestNodeId,
+    filters: s.filters,
+    settings: s.settings,
+    setSelectedNodeId: s.setSelectedNodeId,
+  })));
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
