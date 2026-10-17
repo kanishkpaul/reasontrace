@@ -37,9 +37,9 @@ export const DiagnosisPanel: React.FC = () => {
     md += `**${grounding.title}.** ${grounding.detail}\n`;
     md += `\n`;
 
-    md += `## 3. Cognitive Warnings & Inconsistencies\n\n`;
+    md += `## 3. Findings\n\n`;
     if (diagnostics.warnings.length === 0) {
-      md += `✅ No reasoning issues or looping behaviors were detected. The cognitive trajectory appears sound.\n`;
+      md += `No check raised a finding. The checks cover declared support links, repeated calls, recorded failures and stated confidence; they do not judge whether the reasoning is correct.\n`;
     } else {
       diagnostics.warnings.forEach(w => {
         md += `- ${w}\n`;
@@ -84,7 +84,7 @@ export const DiagnosisPanel: React.FC = () => {
         {/* Metrics Grid */}
         <div className="space-y-2">
           <span className="text-[10px] font-bold uppercase tracking-wider text-cyber-muted flex items-center">
-            <BarChart3 className="w-3.5 h-3.5 mr-1" /> Cognitive Metrics
+            <BarChart3 className="w-3.5 h-3.5 mr-1" /> Event counts
           </span>
           <div className="grid grid-cols-3 gap-2">
             <div className="bg-cyber-bg border border-cyber-border p-2 rounded-lg text-center">
@@ -175,7 +175,7 @@ export const DiagnosisPanel: React.FC = () => {
           ) : (
             <div className="p-4 bg-cyber-bg border border-cyber-border rounded-lg text-center text-xs text-cyber-muted flex flex-col items-center justify-center">
               <CheckCircle className="w-6 h-6 text-emerald-400 mb-2" />
-              <span>Perfect cognitive coherence. No warnings or loop patterns detected in reasoning logs.</span>
+              <span>No check raised a finding. The checks cover declared support links, repeated calls, recorded failures and stated confidence; they do not judge whether the reasoning is correct.</span>
             </div>
           )}
         </div>

@@ -38,13 +38,15 @@ export const NodeInspector: React.FC = () => {
       case "observation":
         return "This represents external evidence or tool output returned from the environment. Inspect whether the model correctly processed this information in its next belief update.";
       case "belief_update":
-        return "This marks a shift in the model's internal confidence or belief state. Check if the update is proportional to the evidence gathered, or if it overreacted/underreacted.";
+        return selectedEvent.label === "stated"
+          ? "The model says it changed its belief. This is its own account, not a reading of its internal state. Check whether the evidence before it supports the change."
+          : "Output the model produced between steps. It shows what the model said, not what it believed.";
       case "failure":
         return "This represents a critical reasoning breakdown, loop, or error. Inspect neighboring hypothesis, action, and observation nodes to isolate where the logic derailed.";
       case "decision":
         return "This is a branching decision point where the model weighs alternatives. Compare the chosen path with other candidates to verify selection criteria.";
       case "final_answer":
-        return "This is the final terminal output of the trace. Trace backwards along its parent links to confirm if it has a sound causal justification rooted in evidence.";
+        return "The trace's final answer. Follow its support links back to see which observations it rests on; the links show what the trace declares, not whether the answer is right.";
       default:
         return "Trace event metadata. Review content details for reasoning context.";
     }
