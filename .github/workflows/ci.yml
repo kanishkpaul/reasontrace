@@ -13,3 +13,19 @@ jobs:
         with:
           fetch-depth: 0
       - run: scripts/check-history.sh
+
+  check:
+    name: lint, typecheck, dependency rules, tests, build (node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # The oldest version package.json "engines" allows, and the newest 24.x.
+        node: ["22.22.2", "24"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run check

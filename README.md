@@ -26,7 +26,7 @@ npm run dev        # http://localhost:5173
 npm run check      # lint, typecheck, tests, dependency rules, build
 ```
 
-Needs Node 20.19+ or 22.12+.
+Needs Node 22.22.2+ or 24.15+ (the test tools, jsdom and ESLint, set the floor).
 
 ## What it will show
 
