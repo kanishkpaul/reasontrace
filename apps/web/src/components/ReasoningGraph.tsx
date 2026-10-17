@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import {
   ReactFlow,
   Background,
@@ -7,7 +7,7 @@ import {
   useEdgesState,
   Panel,
 } from "@xyflow/react";
-import type { Node, Edge } from "@xyflow/react";
+import type { Edge, Node, NodeChange, XYPosition } from "@xyflow/react";
 import type { ReactFlowInstance } from "@xyflow/react";
 import { useTraceStore } from "../store";
 import { buildGraphData } from "../lib/graph";
@@ -32,6 +32,26 @@ export const ReasoningGraph: React.FC = () => {
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+  const reactFlowRef = useRef<ReactFlowInstance | null>(null);
+
+  // Where the user dragged nodes. Selecting a node rebuilds the graph, which
+  // used to put every node back at its computed position (G1); these survive
+  // until another trace opens.
+  const draggedPositions = useRef(new Map<string, XYPosition>());
+  const handleNodesChange = useCallback((changes: NodeChange<Node>[]) => {
+    for (const change of changes) {
+      if (change.type === "position" && change.position) draggedPositions.current.set(change.id, change.position);
+    }
+    onNodesChange(changes);
+  }, [onNodesChange]);
+
+  // A new trace starts from its own layout and is fitted to the view; the
+  // `fitView` prop only fits on first mount (G2).
+  useEffect(() => {
+    draggedPositions.current.clear();
+    const frame = requestAnimationFrame(() => reactFlowRef.current?.fitView({ padding: 0.2 }));
+    return () => cancelAnimationFrame(frame);
+  }, [currentTrace]);
 
   // 1. Filter events based on active filters and current scrubber step
   const visibleEvents = useMemo(() => {
@@ -74,7 +94,7 @@ export const ReasoningGraph: React.FC = () => {
     const rfNodes: Node[] = graphData.nodes.map(n => ({
       id: n.id,
       type: n.type,
-      position: n.position,
+      position: draggedPositions.current.get(n.id) ?? n.position,
       data: n.data,
       selectable: true,
       draggable: true, // Allow users to clean up layout manually if needed
@@ -103,9 +123,6 @@ export const ReasoningGraph: React.FC = () => {
   const onPaneClick = () => {
     setSelectedNodeId(null);
   };
-
-  // React Flow Ref to fit view
-  const reactFlowRef = React.useRef<ReactFlowInstance | null>(null);
 
   const fitView = () => {
     if (reactFlowRef.current) {
@@ -163,7 +180,7 @@ export const ReasoningGraph: React.FC = () => {
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
-        onNodesChange={onNodesChange}
+        onNodesChange={handleNodesChange}
         onEdgesChange={onEdgesChange}
         onNodeClick={onNodeClick}
         onPaneClick={onPaneClick}
