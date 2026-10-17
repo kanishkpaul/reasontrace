@@ -16,75 +16,75 @@ function importedTrace(title: string, events: TraceEvent[]): ReasonTrace {
 /** Stated reasoning is its own depth; everything a trace file can otherwise show is behaviour. */
 const depthOf = (label: EvidenceLabel): Depth => (label === "stated" ? "stated" : "behaviour");
 
-/**
- * Attempts to parse a JSON string into a ReasonTrace object.
- * Returns null if parsing fails.
- */
-export function parseJsonTrace(input: string): ReasonTrace | null {
-  try {
-    return traceFromJson(JSON.parse(input));
-  } catch {
-    return null;
-  }
+/** JSON that parses but is not a trace this reader understands. */
+class TraceShapeError extends Error {}
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+function records(items: unknown[], what: string): Record<string, unknown>[] {
+  items.forEach((item, index) => {
+    if (!isRecord(item)) throw new TraceShapeError(`${what} ${index + 1} is not an object.`);
+  });
+  return items as Record<string, unknown>[];
 }
 
-/** Reads an already-parsed JSON value in any supported shape, including format v0. */
-export function traceFromJson(value: unknown): ReasonTrace | null {
-  try {
-    if (!value || typeof value !== "object") return null;
-    const parsed = value as Record<string, unknown>;
+/**
+ * Reads an already-parsed JSON value in any supported shape, including format v0.
+ *
+ * @throws {TraceShapeError} if the value is in no supported shape.
+ */
+function traceFromJson(value: unknown): ReasonTrace {
+  if (!value || typeof value !== "object") throw new TraceShapeError("The JSON is not an object or an array.");
+  const parsed = value as Record<string, unknown>;
 
-    let events: unknown[] = [];
-    if (Array.isArray(parsed.events)) {
-      events = parsed.events;
-    } else if (Array.isArray(value)) {
-      events = value;
-    } else if (Array.isArray(parsed.messages)) {
-      return parseChatMessages(parsed.messages as Record<string, unknown>[], String(parsed.title || parsed.model || "Imported chat and tool trace"));
-    } else if (Array.isArray(parsed.output)) {
-      return parseResponsesOutput(parsed.output as Record<string, unknown>[], String(parsed.title || parsed.model || "Imported model response trace"));
-    } else {
-      return null;
-    }
-
-    const title = (parsed.title || "Imported JSON Trace") as string;
-
-    // Standardize and sanitize events
-    const sanitizedEvents = events.map((rawEvent, idx: number) => {
-      const ev = rawEvent as Record<string, unknown>;
-      const id = String(ev.id || ev.Id || generateId());
-      const type = normaliseType(ev.type || ev.Type || ev.event_type || "hypothesis");
-      const step = typeof ev.step === "number" ? ev.step : (typeof ev.Step === "number" ? ev.Step : idx + 1);
-      const content = String(ev.content || ev.Content || ev.text || ev.Text || "");
-      const confidence = typeof ev.confidence === "number" ? ev.confidence : (typeof ev.Confidence === "number" ? ev.Confidence : undefined);
-      const rawTool = ev.tool || ev.Tool;
-      const tool = rawTool === undefined ? undefined : String(rawTool);
-      const rawSupports = ev.supports ?? ev.links ?? ev.Links;
-      const supports = Array.isArray(rawSupports) ? rawSupports.map(String) : [];
-      const label = normaliseLabel(ev.label || ev.evidenceMode || ev.evidence_mode || ev.provenance || ev.origin, type);
-
-      return {
-        id,
-        type,
-        step,
-        content: content.trim(),
-        confidence,
-        tool,
-        depth: depthOf(label),
-        label,
-        supports,
-        source: ev.source || ev.provider ? String(ev.source || ev.provider) : undefined,
-        metadata: (ev.metadata || ev.Metadata) as Record<string, unknown> | undefined
-      };
-    });
-
-    // Sort by step
-    sanitizedEvents.sort((a, b) => a.step - b.step);
-
-    return importedTrace(title, sanitizedEvents);
-  } catch {
-    return null;
+  let events: unknown[];
+  if (Array.isArray(parsed.events)) {
+    events = parsed.events;
+  } else if (Array.isArray(value)) {
+    events = value;
+  } else if (Array.isArray(parsed.messages)) {
+    return parseChatMessages(records(parsed.messages, "Message"), String(parsed.title || parsed.model || "Imported chat and tool trace"));
+  } else if (Array.isArray(parsed.output)) {
+    return parseResponsesOutput(records(parsed.output, "Output item"), String(parsed.title || parsed.model || "Imported model response trace"));
+  } else {
+    throw new TraceShapeError("The JSON has no `events`, `messages` or `output` array.");
   }
+
+  const title = (parsed.title || "Imported JSON Trace") as string;
+
+  // Standardize and sanitize events
+  const sanitizedEvents = records(events, "Event").map((ev, idx: number) => {
+    const id = String(ev.id || ev.Id || generateId());
+    const type = normaliseType(ev.type || ev.Type || ev.event_type || "hypothesis");
+    const step = typeof ev.step === "number" ? ev.step : (typeof ev.Step === "number" ? ev.Step : idx + 1);
+    const content = String(ev.content || ev.Content || ev.text || ev.Text || "");
+    const confidence = typeof ev.confidence === "number" ? ev.confidence : (typeof ev.Confidence === "number" ? ev.Confidence : undefined);
+    const rawTool = ev.tool || ev.Tool;
+    const tool = rawTool === undefined ? undefined : String(rawTool);
+    const rawSupports = ev.supports ?? ev.links ?? ev.Links;
+    const supports = Array.isArray(rawSupports) ? rawSupports.map(String) : [];
+    const label = normaliseLabel(ev.label || ev.evidenceMode || ev.evidence_mode || ev.provenance || ev.origin, type);
+
+    return {
+      id,
+      type,
+      step,
+      content: content.trim(),
+      confidence,
+      tool,
+      depth: depthOf(label),
+      label,
+      supports,
+      source: ev.source || ev.provider ? String(ev.source || ev.provider) : undefined,
+      metadata: (ev.metadata || ev.Metadata) as Record<string, unknown> | undefined
+    };
+  });
+
+  // Sort by step
+  sanitizedEvents.sort((a, b) => a.step - b.step);
+
+  return importedTrace(title, sanitizedEvents);
 }
 
 function normaliseType(value: unknown): EventType {
@@ -337,8 +337,13 @@ export interface ParseResult {
  * no event.
  */
 export function readTrace(value: unknown): ParseResult {
-  const trace = traceFromJson(value);
-  if (!trace) return { trace: null, errors: ["The JSON is not in a trace shape this reader knows."], warnings: [] };
+  let trace: ReasonTrace;
+  try {
+    trace = traceFromJson(value);
+  } catch (error) {
+    if (error instanceof TraceShapeError) return { trace: null, errors: [error.message], warnings: [] };
+    throw error;
+  }
   const allIds = new Set(trace.events.map(e => e.id));
   let danglingSupport = false;
   trace.events.forEach(e => {
@@ -360,15 +365,16 @@ export function parseTrace(input: string): ParseResult {
   const trimmed = input.trim();
   if (!trimmed) return { trace: null, errors: ["The input is empty."], warnings: [] };
 
+  // Text that starts like JSON is read only as JSON. Falling back to the
+  // transcript reader would turn a typo into one "stated" hypothesis.
   if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
     let value: unknown;
     try {
       value = JSON.parse(trimmed);
-    } catch {
-      value = undefined;
+    } catch (error) {
+      return { trace: null, errors: [`The input is not valid JSON: ${(error as SyntaxError).message}`], warnings: [] };
     }
-    const result = readTrace(value);
-    if (result.trace) return result;
+    return readTrace(value);
   }
 
   const transcriptTrace = parseTranscriptTrace(trimmed);

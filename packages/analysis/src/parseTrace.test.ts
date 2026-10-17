@@ -32,13 +32,13 @@ describe("transcript import", () => {
 });
 
 describe("JSON import", () => {
-  knownBug("P3: malformed JSON is reported as an error, not read as a transcript", () => {
+  test("P3: malformed JSON is reported as an error, not read as a transcript", () => {
     const result = parse(traceFixture("malformed.json"));
     expect(result.errors).not.toEqual([]);
     expect(result.trace).toBeNull();
   });
 
-  knownBug("P16: a null event is reported, not re-read as a transcript", () => {
+  test("P16: a null event is reported, not re-read as a transcript", () => {
     const result = parse(traceFixture("null-event.json"));
     expect(result.errors).not.toEqual([]);
     expect(result.trace).toBeNull();
