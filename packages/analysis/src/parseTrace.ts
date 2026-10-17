@@ -323,12 +323,22 @@ function finalizeEvent(event: Partial<TraceEvent>, step: number): TraceEvent {
 }
 
 /**
- * Reads a parsed JSON value as a trace and drops `supports` entries that name
- * no event. Returns null when the value is in no supported shape.
+ * The outcome of reading a trace. `trace` is null exactly when `errors` is
+ * non-empty; `warnings` describe what was dropped or assumed while reading.
  */
-export function readTrace(value: unknown): { trace: ReasonTrace; error?: string } | null {
+export interface ParseResult {
+  trace: ReasonTrace | null;
+  errors: string[];
+  warnings: string[];
+}
+
+/**
+ * Reads a parsed JSON value as a trace and drops `supports` entries that name
+ * no event.
+ */
+export function readTrace(value: unknown): ParseResult {
   const trace = traceFromJson(value);
-  if (!trace) return null;
+  if (!trace) return { trace: null, errors: ["The JSON is not in a trace shape this reader knows."], warnings: [] };
   const allIds = new Set(trace.events.map(e => e.id));
   let danglingSupport = false;
   trace.events.forEach(e => {
@@ -340,24 +350,16 @@ export function readTrace(value: unknown): { trace: ReasonTrace; error?: string 
   });
   return {
     trace,
-    error: danglingSupport ? "Warning: Some events contained links to missing event IDs. These links were ignored." : undefined
+    errors: [],
+    warnings: danglingSupport ? ["Some events linked to event IDs that don't exist. Those links were dropped."] : []
   };
 }
 
-/**
- * Universal parse entry point. Resolves either JSON or simple transcript text.
- * Never throws an error; returns a fallback trace if both fail.
- */
-export function parseTrace(input: string): { trace: ReasonTrace; error?: string } {
+/** Reads trace text: JSON in any supported shape, or a plain transcript. */
+export function parseTrace(input: string): ParseResult {
   const trimmed = input.trim();
-  if (!trimmed) {
-    return {
-      trace: importedTrace("Empty Trace", []),
-      error: "Empty input provided."
-    };
-  }
+  if (!trimmed) return { trace: null, errors: ["The input is empty."], warnings: [] };
 
-  // 1. Try JSON
   if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
     let value: unknown;
     try {
@@ -366,21 +368,10 @@ export function parseTrace(input: string): { trace: ReasonTrace; error?: string 
       value = undefined;
     }
     const result = readTrace(value);
-    if (result) return result;
+    if (result.trace) return result;
   }
 
-  // 2. Try Transcript
-  try {
-    const transcriptTrace = parseTranscriptTrace(trimmed);
-    if (transcriptTrace.events.length > 0) {
-      return { trace: transcriptTrace };
-    }
-  } catch {
-    // Fallback
-  }
-
-  return {
-    trace: importedTrace("Fallback Trace", []),
-    error: "Failed to parse input as JSON or plain transcript. Please verify the format."
-  };
+  const transcriptTrace = parseTranscriptTrace(trimmed);
+  if (transcriptTrace.events.length > 0) return { trace: transcriptTrace, errors: [], warnings: [] };
+  return { trace: null, errors: ["The input is neither trace JSON nor a transcript."], warnings: [] };
 }

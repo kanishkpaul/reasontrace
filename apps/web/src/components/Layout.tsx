@@ -27,8 +27,8 @@ export const Layout: React.FC = () => {
     const saved = localStorage.getItem("reasontrace_saved_trace");
     if (!saved) return;
     try {
-      const restored = readTrace(JSON.parse(saved));
-      if (restored) setTrace(restored.trace);
+      const { trace } = readTrace(JSON.parse(saved));
+      if (trace) setTrace(trace);
     } catch {
       localStorage.removeItem("reasontrace_saved_trace");
     }

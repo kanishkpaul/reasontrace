@@ -6,7 +6,7 @@ export const TraceInput: React.FC<{ onLoaded?: () => void }> = ({ onLoaded }) =>
   const { parseAndSetTrace } = useTraceStore();
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<{ text: string; warning: boolean } | null>(null);
 
   const handleParse = () => {
     setError(null);
@@ -16,18 +16,19 @@ export const TraceInput: React.FC<{ onLoaded?: () => void }> = ({ onLoaded }) =>
       return;
     }
 
-    const warning = parseAndSetTrace(text);
-    if (warning && (warning.includes("Failed") || warning.includes("Could not"))) {
-      setError(warning);
-    } else if (warning) {
-      // It parsed successfully but has a warning (e.g. missing links)
-      setSuccessMsg(`Trace loaded with warning: ${warning}`);
+    const { trace, errors, warnings } = parseAndSetTrace(text);
+    if (!trace) {
+      setError(errors.join(" "));
+      return;
+    }
+    if (warnings.length) {
+      setSuccessMsg({ text: `Trace loaded with warnings: ${warnings.join(" ")}`, warning: true });
       setTimeout(() => setSuccessMsg(null), 6000);
     } else {
-      setSuccessMsg("Trace loaded successfully!");
+      setSuccessMsg({ text: "Trace loaded.", warning: false });
       setTimeout(() => setSuccessMsg(null), 3000);
-      onLoaded?.();
     }
+    onLoaded?.();
   };
 
   const handleFileDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -138,12 +139,12 @@ Update: Confirmed empty file (confidence: 0.90)`}
 
       {successMsg && (
         <div className={`p-2.5 rounded text-[11px] flex items-start space-x-2 border ${
-          successMsg.includes("warning") 
+          successMsg.warning 
             ? "bg-amber-950/20 border-amber-500/30 text-amber-400" 
             : "bg-emerald-950/20 border-emerald-500/30 text-emerald-400"
         }`}>
           <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-          <span>{successMsg}</span>
+          <span>{successMsg.text}</span>
         </div>
       )}
 

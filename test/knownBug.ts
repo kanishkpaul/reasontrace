@@ -1,5 +1,3 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import { test } from "vitest";
 
 /**
@@ -12,10 +10,3 @@ import { test } from "vitest";
  * phase 0 gate shows each one really fails today.
  */
 export const knownBug = process.env.RT_EXPECT_FIXED === "1" ? test : test.fails;
-
-/** Reads a file from fixtures/traces as text. */
-export function traceFixture(name: string): string {
-  // Not `new URL(…, import.meta.url)`: under jsdom, Vite serves this file from
-  // outside the web app's root as a `/@fs/` URL, which is not a file URL.
-  return readFileSync(join(import.meta.dirname, "../fixtures/traces", name), "utf8");
-}

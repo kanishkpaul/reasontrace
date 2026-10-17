@@ -1,10 +1,10 @@
-import { parseTrace } from "@reasontrace/analysis";
 import { describe, expect } from "vitest";
-import { knownBug, traceFixture } from "../../../../test/knownBug";
+import { knownBug } from "../../../../test/knownBug";
+import { parsed, traceFixture } from "../../../../test/traces";
 import { buildGraphData } from "./graph";
 
 const layout = (fixture: string) =>
-  buildGraphData(parseTrace(traceFixture(fixture)).trace.events, null, null, false, false);
+  buildGraphData(parsed(traceFixture(fixture)).events, null, null, false, false);
 
 describe("graph layout", () => {
   knownBug("G3: timestamp steps are laid out by order, not by value", () => {

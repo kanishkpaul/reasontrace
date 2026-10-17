@@ -1,9 +1,9 @@
 import { describe, expect } from "vitest";
-import { knownBug, traceFixture } from "../../../test/knownBug";
+import { knownBug } from "../../../test/knownBug";
+import { parsed, traceFixture } from "../../../test/traces";
 import { computeDiagnostics } from "./diagnostics";
-import { parseTrace } from "./parseTrace";
 
-const diagnose = (text: string) => computeDiagnostics(parseTrace(text).trace);
+const diagnose = (text: string) => computeDiagnostics(parsed(text));
 const chain = (prefix: string, length: number) =>
   Array.from({ length }, (_, i) => `${prefix}: step ${i}`).join("\n");
 

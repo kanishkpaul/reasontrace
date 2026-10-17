@@ -1,9 +1,10 @@
 import { describe, expect, test } from "vitest";
-import { knownBug, traceFixture } from "../../../test/knownBug";
+import { knownBug } from "../../../test/knownBug";
+import { parsed, traceFixture } from "../../../test/traces";
 import { parseTrace } from "./parseTrace";
 
 const parse = (text: string) => parseTrace(text);
-const events = (text: string) => parse(text).trace.events;
+const events = (text: string) => parsed(text).events;
 
 describe("transcript import", () => {
   test("P1: transcript events keep their evidence label", () => {
@@ -33,14 +34,14 @@ describe("transcript import", () => {
 describe("JSON import", () => {
   knownBug("P3: malformed JSON is reported as an error, not read as a transcript", () => {
     const result = parse(traceFixture("malformed.json"));
-    expect(result.error).toBeDefined();
-    expect(result.trace.events).toHaveLength(0);
+    expect(result.errors).not.toEqual([]);
+    expect(result.trace).toBeNull();
   });
 
   knownBug("P16: a null event is reported, not re-read as a transcript", () => {
     const result = parse(traceFixture("null-event.json"));
-    expect(result.error).toBeDefined();
-    expect(result.trace.events.every((e) => e.type !== "hypothesis")).toBe(true);
+    expect(result.errors).not.toEqual([]);
+    expect(result.trace).toBeNull();
   });
 
   knownBug("P6: an 'assistant' event is observed output, not stated reasoning", () => {
@@ -56,7 +57,7 @@ describe("JSON import", () => {
 
   knownBug("P7: duplicate event ids are reported", () => {
     const result = parse('{"events":[{"id":"a","step":1},{"id":"a","step":2}]}');
-    expect(result.error ?? "").toMatch(/duplicate/i);
+    expect(result.errors.join(" ")).toMatch(/duplicate/i);
   });
 
   knownBug("P8: object content is read as its text", () => {
@@ -68,11 +69,11 @@ describe("JSON import", () => {
   });
 
   knownBug("P10: the trace title is always a string", () => {
-    expect(typeof parse(traceFixture("json-edge-cases.json")).trace.title).toBe("string");
+    expect(typeof parsed(traceFixture("json-edge-cases.json")).title).toBe("string");
   });
 
   knownBug("P15: cyclic links are reported", () => {
-    expect(parse(traceFixture("cyclic-links.json")).error ?? "").toMatch(/cycl/i);
+    expect(parse(traceFixture("cyclic-links.json")).errors.join(" ")).toMatch(/cycl/i);
   });
 });
 
@@ -101,7 +102,7 @@ describe("chat and Responses import", () => {
 
 describe("format versions", () => {
   test("a v0 trace reads as v1: links become supports, explicit becomes stated", () => {
-    const { trace } = parse(JSON.stringify({
+    const trace = parsed(JSON.stringify({
       title: "v0",
       events: [
         { id: "a", type: "observation", step: 1, evidenceMode: "observed", links: [] },
@@ -116,12 +117,12 @@ describe("format versions", () => {
   });
 
   test("a v1 trace reads back equal to what was written", () => {
-    const { trace } = parse(traceFixture("answer-via-unsupported-update.json"));
-    expect(parse(JSON.stringify(trace)).trace).toEqual(trace);
+    const trace = parsed(traceFixture("answer-via-unsupported-update.json"));
+    expect(parsed(JSON.stringify(trace))).toEqual(trace);
   });
 
   test("an imported trace says which depths it cannot show, with reasons", () => {
-    const depths = parse("Thought: a").trace.unavailable.map((u) => u.depth);
+    const depths = parsed("Thought: a").unavailable.map((u) => u.depth);
     expect(depths).toEqual(["probabilities", "internals"]);
   });
 });

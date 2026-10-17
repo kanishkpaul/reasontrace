@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { ReasonTrace, EventType } from "@reasontrace/format";
 import { sampleTraces } from "./data/sampleTraces";
 import { parseTrace } from "@reasontrace/analysis";
+import type { ParseResult } from "@reasontrace/analysis";
 
 interface StoreFilters {
   eventTypes: Record<EventType, boolean>;
@@ -33,7 +34,7 @@ interface TraceState {
   // Actions
   setTrace: (trace: ReasonTrace) => void;
   loadSampleTrace: (key: string) => void;
-  parseAndSetTrace: (text: string) => string | undefined; // returns error message if any
+  parseAndSetTrace: (text: string) => ParseResult;
   setSelectedNodeId: (id: string | null) => void;
   
   // Playback Actions
@@ -113,12 +114,9 @@ export const useTraceStore = create<TraceState>((set, get) => ({
   },
 
   parseAndSetTrace: (text) => {
-    const { trace, error } = parseTrace(text);
-    if (trace.events.length > 0) {
-      get().setTrace(trace);
-      return error; // Return parsing warning if any
-    }
-    return error || "Could not parse any reasoning events.";
+    const result = parseTrace(text);
+    if (result.trace) get().setTrace(result.trace);
+    return result;
   },
 
   setSelectedNodeId: (id) => {

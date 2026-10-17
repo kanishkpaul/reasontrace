@@ -450,9 +450,9 @@ const samplesV0: Record<string, unknown> = {
 };
 
 function readSample(key: string, raw: unknown): ReasonTrace {
-  const result = readTrace(raw);
-  if (!result || result.error) throw new Error(`sample "${key}" is not a valid trace: ${result?.error ?? "unreadable"}`);
-  return result.trace;
+  const { trace, errors, warnings } = readTrace(raw);
+  if (!trace || warnings.length) throw new Error(`sample "${key}" is not a valid trace: ${[...errors, ...warnings].join(" ")}`);
+  return trace;
 }
 
 export const sampleTraces: Record<string, ReasonTrace> = Object.fromEntries(

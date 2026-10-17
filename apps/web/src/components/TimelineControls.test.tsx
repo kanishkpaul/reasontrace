@@ -1,12 +1,12 @@
 // @vitest-environment jsdom
-import { parseTrace } from "@reasontrace/analysis";
 import { cleanup, render } from "@testing-library/react";
 import { afterEach, describe, expect } from "vitest";
-import { knownBug, traceFixture } from "../../../../test/knownBug";
+import { knownBug } from "../../../../test/knownBug";
+import { parsed, traceFixture } from "../../../../test/traces";
 import { useTraceStore } from "../store";
 import { TimelineControls } from "./TimelineControls";
 
-const open = (fixture: string) => useTraceStore.getState().setTrace(parseTrace(traceFixture(fixture)).trace);
+const open = (fixture: string) => useTraceStore.getState().setTrace(parsed(traceFixture(fixture)));
 
 afterEach(cleanup);
 
