@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useTraceStore } from "../store";
 import { Terminal, Upload, AlertCircle, FileText } from "lucide-react";
@@ -8,6 +8,16 @@ export const TraceInput: React.FC<{ onLoaded?: () => void }> = ({ onLoaded }) =>
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<{ text: string; warning: boolean } | null>(null);
+
+  // One timer for the success message. Separate timers let an older one hide
+  // a newer message early (I3).
+  const messageTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const showSuccess = (message: { text: string; warning: boolean }, ms: number) => {
+    clearTimeout(messageTimer.current);
+    setSuccessMsg(message);
+    messageTimer.current = setTimeout(() => setSuccessMsg(null), ms);
+  };
+  useEffect(() => () => clearTimeout(messageTimer.current), []);
 
   const handleParse = () => {
     setError(null);
@@ -23,11 +33,9 @@ export const TraceInput: React.FC<{ onLoaded?: () => void }> = ({ onLoaded }) =>
       return;
     }
     if (warnings.length) {
-      setSuccessMsg({ text: `Trace loaded with warnings: ${warnings.join(" ")}`, warning: true });
-      setTimeout(() => setSuccessMsg(null), 6000);
+      showSuccess({ text: `Trace loaded with warnings: ${warnings.join(" ")}`, warning: true }, 6000);
     } else {
-      setSuccessMsg({ text: "Trace loaded.", warning: false });
-      setTimeout(() => setSuccessMsg(null), 3000);
+      showSuccess({ text: "Trace loaded.", warning: false }, 3000);
     }
     onLoaded?.();
   };
