@@ -21,15 +21,13 @@ export interface SupportGraph {
 }
 
 /**
- * Computes, in one pass each way, which event types lie upstream and
- * downstream of every event along `supports` edges. This replaces a walk per
- * event, which was quadratic and recursed once per event (D1, D2).
+ * Orders events so that every event comes after the events that support it,
+ * keeping time order among events with no support relation. Supports naming
+ * no event are ignored.
  *
- * Requires the support graph to be acyclic, which `readTrace` guarantees.
- *
- * @throws {Error} if the support graph has a cycle.
+ * @throws {Error} if the support graph has a cycle, which `readTrace` rules out.
  */
-export function supportGraph(events: TraceEvent[]): SupportGraph {
+export function supportOrder(events: TraceEvent[]): TraceEvent[] {
   const byId = new Map(events.map((e) => [e.id, e]));
   const supported = new Map<string, string[]>();
   const waiting = new Map<string, number>();
@@ -42,31 +40,46 @@ export function supportGraph(events: TraceEvent[]): SupportGraph {
       else supported.set(id, [e.id]);
     }
   }
-
-  const order: string[] = events.filter((e) => waiting.get(e.id) === 0).map((e) => e.id);
+  const order = events.filter((e) => waiting.get(e.id) === 0);
   for (let i = 0; i < order.length; i++) {
-    for (const child of supported.get(order[i]) ?? []) {
+    for (const child of supported.get(order[i].id) ?? []) {
       const left = (waiting.get(child) ?? 0) - 1;
       waiting.set(child, left);
-      if (left === 0) order.push(child);
+      if (left === 0) order.push(byId.get(child) as TraceEvent);
     }
   }
-  if (order.length !== byId.size) throw new Error("supportGraph: the support graph has a cycle");
+  if (order.length !== byId.size) throw new Error("supportOrder: the support graph has a cycle");
+  return order;
+}
 
+/**
+ * Computes, in one pass each way, which event types lie upstream and
+ * downstream of every event along `supports` edges. This replaces a walk per
+ * event, which was quadratic and recursed once per event (D1, D2).
+ *
+ * @throws {Error} if the support graph has a cycle, which `readTrace` rules out.
+ */
+export function supportGraph(events: TraceEvent[]): SupportGraph {
+  const order = supportOrder(events);
+  const byId = new Map(events.map((e) => [e.id, e]));
   const bit = (id: string) => TYPE_BIT[(byId.get(id) as TraceEvent).type];
   const upstream = new Map<string, number>();
-  for (const id of order) {
+  for (const e of order) {
     let mask = 0;
-    for (const parent of (byId.get(id) as TraceEvent).supports) {
+    for (const parent of e.supports) {
       if (byId.has(parent)) mask |= (upstream.get(parent) ?? 0) | bit(parent);
     }
-    upstream.set(id, mask);
+    upstream.set(e.id, mask);
   }
-  const downstream = new Map<string, number>();
+  // In reverse order every event's children are final before the event
+  // passes its own mask up to its parents.
+  const downstream = new Map(order.map((e) => [e.id, 0]));
   for (let i = order.length - 1; i >= 0; i--) {
-    let mask = 0;
-    for (const child of supported.get(order[i]) ?? []) mask |= (downstream.get(child) ?? 0) | bit(child);
-    downstream.set(order[i], mask);
+    const e = order[i];
+    const below = (downstream.get(e.id) ?? 0) | bit(e.id);
+    for (const parent of e.supports) {
+      if (byId.has(parent)) downstream.set(parent, (downstream.get(parent) ?? 0) | below);
+    }
   }
   return { upstream, downstream };
 }
