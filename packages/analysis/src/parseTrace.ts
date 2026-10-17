@@ -54,7 +54,8 @@ function traceFromJson(value: unknown): ReasonTrace {
   const sanitizedEvents = records(events, "Event").map((ev, idx: number) => {
     const rawId = ev.id ?? ev.Id;
     const id = rawId === undefined || rawId === null || rawId === "" ? `e${idx + 1}` : String(rawId);
-    const type = normaliseType(ev.type || ev.Type || ev.event_type || "hypothesis");
+    const rawType = ev.type ?? ev.Type ?? ev.event_type;
+    const type = normaliseType(rawType || "hypothesis");
     const step = typeof ev.step === "number" ? ev.step : (typeof ev.Step === "number" ? ev.Step : idx + 1);
     const content = contentOf(ev.content ?? ev.Content ?? ev.text ?? ev.Text);
     const rawConfidence = ev.confidence ?? ev.Confidence;
@@ -63,7 +64,7 @@ function traceFromJson(value: unknown): ReasonTrace {
     const tool = rawTool === undefined ? undefined : String(rawTool);
     const rawSupports = ev.supports ?? ev.links ?? ev.Links;
     const supports = Array.isArray(rawSupports) ? rawSupports.map(String) : [];
-    const label = normaliseLabel(ev.label || ev.evidenceMode || ev.evidence_mode || ev.provenance || ev.origin, type);
+    const label = normaliseLabel(ev.label || ev.evidenceMode || ev.evidence_mode || ev.provenance || ev.origin, rawType);
 
     return {
       id,
@@ -126,13 +127,21 @@ function normaliseConfidence(value: number, eventId: string): number {
   throw new TraceShapeError(`Event ${eventId} has confidence ${value}, which is neither in 0–1 nor a percentage.`);
 }
 
-/** Accepts format v1 labels and the prototype's v0 evidence modes (`explicit` is v0 for `stated`). */
-function normaliseLabel(value: unknown, type?: EventType): EvidenceLabel {
+const REASONING_TYPES = ["thought", "reasoning", "analysis", "hypothesis", "belief_update", "update", "belief", "decision"];
+
+/**
+ * Accepts format v1 labels and the prototype's v0 evidence modes (`explicit`
+ * is v0 for `stated`). Without a label, an event is `stated` only when its own
+ * type names reasoning; a model's visible output, such as an `assistant`
+ * message, or an untyped event, is `observed`.
+ */
+function normaliseLabel(value: unknown, rawType: unknown): EvidenceLabel {
   const raw = String(value || "").toLowerCase();
   if (["stated", "explicit", "reasoning", "thought"].includes(raw)) return "stated";
   if (["inferred", "derived", "reconstructed"].includes(raw)) return "inferred";
   if (["observed", "exact", "measured", "decoded"].includes(raw)) return raw as EvidenceLabel;
-  return type === "hypothesis" || type === "belief_update" || type === "decision" ? "stated" : "observed";
+  const type = String(rawType || "").toLowerCase().replace(/[\s-]/g, "_");
+  return REASONING_TYPES.includes(type) ? "stated" : "observed";
 }
 
 function contentOf(value: unknown): string {

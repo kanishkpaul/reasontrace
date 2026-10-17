@@ -44,9 +44,13 @@ describe("JSON import", () => {
     expect(result.trace).toBeNull();
   });
 
-  knownBug("P6: an 'assistant' event is observed output, not stated reasoning", () => {
+  test("P6: an 'assistant' event is observed output, not stated reasoning", () => {
     const [event] = events(traceFixture("assistant-type.json"));
     expect(event.label).toBe("observed");
+  });
+
+  test("P6: an event with no type is not presented as stated reasoning", () => {
+    expect(events('{"events":[{"id":"a","step":1,"content":"x"}]}')[0].label).toBe("observed");
   });
 
   test("P7: numeric id 0 is kept, so links to it resolve", () => {
