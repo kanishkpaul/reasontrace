@@ -166,6 +166,7 @@ function markFinalAnswer(events: TraceEvent[]): void {
 /** Imports common chat-completion style logs without claiming assistant text is private reasoning. */
 function parseChatMessages(messages: Record<string, unknown>[], title: string): ReasonTrace {
   const events: TraceEvent[] = [];
+  const toolByCallId = new Map<string, string>();
   let step = 1;
   let previousId: string | undefined;
   const add = (event: Omit<TraceEvent, "id" | "step" | "supports" | "depth">) => {
@@ -178,7 +179,9 @@ function parseChatMessages(messages: Record<string, unknown>[], title: string): 
     const role = String(message.role || "").toLowerCase();
     const text = contentOf(message.content);
     if (role === "tool" || role === "function") {
-      add({ type: "observation", content: text || "Tool returned no text output.", tool: message.name || message.tool_call_id ? String(message.name || message.tool_call_id) : undefined, label: "observed", source: "tool result", metadata: { role } });
+      const callId = message.tool_call_id === undefined ? undefined : String(message.tool_call_id);
+      const tool = message.name ? String(message.name) : callId === undefined ? undefined : toolByCallId.get(callId);
+      add({ type: "observation", content: text || "Tool returned no text output.", tool, label: "observed", source: "tool result", metadata: { role, callId } });
       return;
     }
     if (role === "assistant") {
@@ -188,6 +191,7 @@ function parseChatMessages(messages: Record<string, unknown>[], title: string): 
       calls.forEach((call: Record<string, unknown>) => {
         const fn = call.function as Record<string, unknown> | undefined;
         const tool = String(fn?.name || call.name || "tool");
+        if (call.id !== undefined) toolByCallId.set(String(call.id), tool);
         add({ type: "action", content: contentOf(fn?.arguments || call.arguments) || `Called ${tool}`, tool, label: "observed", source: "tool call", metadata: { callId: call.id } });
       });
       return;
@@ -207,11 +211,14 @@ function parseResponsesOutput(output: Record<string, unknown>[], title: string):
     events.push({ ...event, id, step: events.length + 1, depth: depthOf(event.label), supports: previousId ? [previousId] : [] });
     previousId = id;
   };
+  const toolByCallId = new Map<string, string>();
   output.forEach((item) => {
     if (item.type === "function_call") {
+      if (item.call_id !== undefined && item.name) toolByCallId.set(String(item.call_id), String(item.name));
       add({ type: "action", content: contentOf(item.arguments) || `Called ${item.name || "tool"}`, tool: item.name ? String(item.name) : undefined, label: "observed", source: "tool call", metadata: { callId: item.call_id } });
     } else if (item.type === "function_call_output") {
-      add({ type: "observation", content: contentOf(item.output) || "Tool returned no text output.", tool: item.call_id ? String(item.call_id) : undefined, label: "observed", source: "tool result" });
+      const callId = item.call_id === undefined ? undefined : String(item.call_id);
+      add({ type: "observation", content: contentOf(item.output) || "Tool returned no text output.", tool: callId === undefined ? undefined : toolByCallId.get(callId), label: "observed", source: "tool result", metadata: { callId } });
     } else if (item.type === "message") {
       add({ type: "belief_update", content: contentOf(item.content), label: "observed", source: "assistant message", metadata: { note: "Observable output, not hidden reasoning." } });
     } else if (item.type === "reasoning" && contentOf(item.summary)) {

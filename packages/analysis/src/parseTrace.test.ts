@@ -1,5 +1,4 @@
 import { describe, expect, test } from "vitest";
-import { knownBug } from "../../../test/knownBug";
 import { parsed, traceFixture } from "../../../test/traces";
 import { parseTrace } from "./parseTrace";
 
@@ -107,12 +106,12 @@ describe("chat and Responses import", () => {
     expect(types.at(-1)).toBe("final_answer");
   });
 
-  knownBug("P14: a chat tool result is labelled with the tool that produced it", () => {
+  test("P14: a chat tool result is labelled with the tool that produced it", () => {
     const result = events(traceFixture("chat-tools.json")).find((e) => e.source === "tool result");
     expect(result?.tool).toBe("get_order");
   });
 
-  knownBug("P14: a Responses tool result is labelled with the tool that produced it", () => {
+  test("P14: a Responses tool result is labelled with the tool that produced it", () => {
     const result = events(traceFixture("responses-output.json")).find((e) => e.source === "tool result");
     expect(result?.tool).toBe("get_order");
   });
