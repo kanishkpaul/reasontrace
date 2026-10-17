@@ -77,7 +77,7 @@ describe("JSON import", () => {
     expect(parse('{"events":[{"id":"a","step":1,"confidence":250}]}').errors.join(" ")).toMatch(/confidence 250/);
   });
 
-  knownBug("P10: the trace title is always a string", () => {
+  test("P10: the trace title is always a string", () => {
     expect(typeof parsed(traceFixture("json-edge-cases.json")).title).toBe("string");
   });
 

@@ -41,14 +41,14 @@ function traceFromJson(value: unknown): ReasonTrace {
   } else if (Array.isArray(value)) {
     events = value;
   } else if (Array.isArray(parsed.messages)) {
-    return parseChatMessages(records(parsed.messages, "Message"), String(parsed.title || parsed.model || "Imported chat and tool trace"));
+    return parseChatMessages(records(parsed.messages, "Message"), titleOf(parsed, "Imported chat and tool trace"));
   } else if (Array.isArray(parsed.output)) {
-    return parseResponsesOutput(records(parsed.output, "Output item"), String(parsed.title || parsed.model || "Imported model response trace"));
+    return parseResponsesOutput(records(parsed.output, "Output item"), titleOf(parsed, "Imported model response trace"));
   } else {
     throw new TraceShapeError("The JSON has no `events`, `messages` or `output` array.");
   }
 
-  const title = (parsed.title || "Imported JSON Trace") as string;
+  const title = titleOf(parsed, "Imported JSON Trace");
 
   // Standardize and sanitize events
   const sanitizedEvents = records(events, "Event").map((ev, idx: number) => {
@@ -105,6 +105,14 @@ function normaliseType(value: unknown): EventType {
   return ["hypothesis", "action", "observation", "belief_update", "failure", "decision", "final_answer"].includes(raw)
     ? raw as EventType
     : "hypothesis";
+}
+
+/** The trace's title, or its model name, when either is a non-empty string. */
+function titleOf(parsed: Record<string, unknown>, fallback: string): string {
+  for (const candidate of [parsed.title, parsed.model]) {
+    if (typeof candidate === "string" && candidate.trim()) return candidate.trim();
+  }
+  return fallback;
 }
 
 /**
