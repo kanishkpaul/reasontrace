@@ -33,16 +33,15 @@ hosted build) stays out until a phase above needs it.
 **Builds**
 - npm workspaces: `apps/web` (the prototype), `packages/format` (types),
   `packages/analysis` (parser and diagnostics, no DOM).
-- Vitest. Every audit bug reproduced by a probe becomes a test, marked as an
-  expected failure (`test.fails`) until its fix lands; trace fixtures under
-  `fixtures/traces/`.
+- Vitest. Every audit bug reproduced by a probe becomes a test that fails
+  until its fix lands; trace fixtures under `fixtures/traces/`.
 - `npm run check:deps`, which enforces ARCHITECTURE.md §2.
 - CI: `npm ci`, lint, typecheck, test, build, `check:deps`, and the
   attribution check over every commit.
 
 **Gate**
 - `npm run check` passes locally and in CI.
-- Each bug test fails when its `.fails` marker is removed.
+- Each bug test fails against the code it was written for.
 - `check:deps` fails on a test workspace in which one capability package
   depends on another.
 

@@ -19,9 +19,9 @@ can be trusted.
 
 ## 1. Bugs found
 
-Every row marked **ran** has a test that reproduces it (`npm test`; set
-`RT_EXPECT_FIXED=1` to see each one fail). Rows marked **read** come from
-reading the code; their tests are written in phase 1, alongside the fix.
+Rows marked **ran** were reproduced by a test before they were fixed; rows
+marked **read** were found by reading the code. Every row has a test whose
+name starts with its ID, except where noted in the row.
 
 ### 1.1 Parser (`src/lib/parseTrace.ts`)
 
@@ -65,8 +65,8 @@ reading the code; their tests are written in phase 1, alongside the fix.
 
 | ID | Bug | Where | Evidence |
 |---|---|---|---|
-| G1 | Selecting a node rebuilds every position, so dragged nodes snap back | `ReasoningGraph.tsx:61–95` | read (`graphData` depends on `selectedNodeId`) |
-| G2 | `fitView` runs only on first mount. A newly loaded trace can open off-screen | `ReasoningGraph.tsx:172` | read |
+| G1 | Selecting a node rebuilds every position, so dragged nodes snap back | `ReasoningGraph.tsx:61–95` | read; no automated test, checked in the browser |
+| G2 | `fitView` runs only on first mount. A newly loaded trace can open off-screen | `ReasoningGraph.tsx:172` | read; no automated test, checked in the browser |
 | G3 | Y = step × 160. Timestamps as steps place nodes at y = 2.7e14 | `graph.ts:75` | ran |
 | G4 | A child placed before its parent gets x = 0 | `graph.ts:92` | ran: the child lands at x = 0, its parent at x = 120 |
 | G5 | Rows with several nodes are re-centred on 0, losing parent alignment; the pass repeats once per node | `graph.ts:112–135` | read |
@@ -75,13 +75,13 @@ reading the code; their tests are written in phase 1, alongside the fix.
 | T2 | Timestamp steps make `Array.from({length: maxStep})` throw `RangeError: Invalid array length`, which blanks the app | `TimelineControls.tsx:126` | ran |
 | T3 | Replay steps by `+1`, so traces with sparse steps (10, 20, 30) need many empty clicks | `store.ts:151–163` | read |
 | S1 | Loading a trace keeps the previous search filter, so the new trace can show "0 of N" | `store.ts:89–105` | read |
-| S2 | Components subscribe to the whole store, so every playback tick re-renders everything | all `useTraceStore()` calls | read |
+| S2 | Components subscribe to the whole store, so every playback tick re-renders everything | all `useTraceStore()` calls | read; no test |
 
 ### 1.4 Import, export and storage
 
 | ID | Bug | Where | Evidence |
 |---|---|---|---|
-| I1 | Errors are told apart from warnings by searching for "Failed" or "Could not" in the message | `TraceInput.tsx:20` | read |
+| I1 | Errors are told apart from warnings by searching for "Failed" or "Could not" in the message | `TraceInput.tsx:20` | read; no test, the result type now separates errors and warnings |
 | I2 | A load with a warning doesn't call `onLoaded`, so the mobile view stays on Import | `TraceInput.tsx:22–25` | read |
 | I3 | Message timers are never cleared, so an older timer hides a newer message | `TraceInput.tsx:25, 28` | read |
 | I4 | File drop has no size limit and no `onerror`; binary files load as garbage; there's no keyboard file picker | `TraceInput.tsx:33–45` | read |
@@ -95,11 +95,11 @@ reading the code; their tests are written in phase 1, alongside the fix.
 
 | ID | Text | Where |
 |---|---|---|
-| C1 | "Perfect cognitive coherence. No warnings…" whenever no rule fires | `DiagnosisPanel.tsx:191` |
-| C2 | "Evidence-grounded output … successfully linked back to empirical observations" (see D3–D5) | `DiagnosisPanel.tsx:141–146` |
-| C3 | Export: "✅ Grounded … valid causal link" and "the cognitive trajectory appears sound" | `DiagnosisPanel.tsx:37–44` |
-| C4 | "Evidence coverage" is a heuristic link count but is shown as a percentage of grounding | `TraceAnalysisSummary.tsx:22–23` |
-| C5 | Belief-update inspector text says it shows "the model's internal confidence or belief state" | `NodeInspector.tsx` (interpretation for `belief_update`) |
+| C1 | "Perfect cognitive coherence. No warnings…" whenever no rule fires | `DiagnosisPanel.tsx:191` (wording; no test) |
+| C2 | "Evidence-grounded output … successfully linked back to empirical observations" (see D3–D5) | `DiagnosisPanel.tsx:141–146` (wording; no test) |
+| C3 | Export: "✅ Grounded … valid causal link" and "the cognitive trajectory appears sound" | `DiagnosisPanel.tsx:37–44` (wording; no test) |
+| C4 | "Evidence coverage" is a heuristic link count but is shown as a percentage of grounding | `TraceAnalysisSummary.tsx:22–23` (wording; no test) |
+| C5 | Belief-update inspector text says it shows "the model's internal confidence or belief state" | `NodeInspector.tsx` (interpretation for `belief_update`) (wording; no test) |
 
 ### 1.6 Design and system debt
 
