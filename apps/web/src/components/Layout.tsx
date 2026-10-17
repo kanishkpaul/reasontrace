@@ -9,7 +9,8 @@ import { NodeInspector } from "./NodeInspector";
 import { DiagnosisPanel } from "./DiagnosisPanel";
 import { TimelineControls } from "./TimelineControls";
 import { TraceAnalysisSummary } from "./TraceAnalysisSummary";
-import { computeDiagnostics, readTrace } from "@reasontrace/analysis";
+import { readTrace } from "@reasontrace/analysis";
+import { diagnosticsFor } from "../lib/diagnostics";
 import { BrainCircuit, Download, Save, Info, Sparkles, PanelLeft, PanelRight, Upload, X } from "lucide-react";
 
 type MobileTab = "review" | "import" | "details";
@@ -39,7 +40,7 @@ export const Layout: React.FC = () => {
     if (currentTrace?.events.length) localStorage.setItem("reasontrace_saved_trace", JSON.stringify(currentTrace));
   }, [currentTrace]);
 
-  const diagnostics = useMemo(() => currentTrace ? computeDiagnostics(currentTrace) : null, [currentTrace]);
+  const diagnostics = currentTrace ? diagnosticsFor(currentTrace) : null;
   const selectedEvent = useMemo(() => currentTrace?.events.find((event) => event.id === selectedNodeId), [currentTrace, selectedNodeId]);
   const warningCount = diagnostics?.findings.filter((finding) => finding.severity !== "info").length ?? 0;
 

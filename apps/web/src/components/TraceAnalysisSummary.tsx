@@ -1,12 +1,12 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useTraceStore } from "../store";
-import { computeDiagnostics } from "@reasontrace/analysis";
+import { diagnosticsFor } from "../lib/diagnostics";
 import { Activity, Eye, ShieldCheck, TriangleAlert } from "lucide-react";
 
 export const TraceAnalysisSummary: React.FC = () => {
   const { currentTrace } = useTraceStore(useShallow((s) => ({ currentTrace: s.currentTrace })));
-  const diagnostics = useMemo(() => currentTrace ? computeDiagnostics(currentTrace) : null, [currentTrace]);
+  const diagnostics = currentTrace ? diagnosticsFor(currentTrace) : null;
 
   if (!currentTrace || !diagnostics) return null;
 

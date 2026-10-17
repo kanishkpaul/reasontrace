@@ -1,18 +1,14 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useTraceStore } from "../store";
-import { computeDiagnostics } from "@reasontrace/analysis";
+import { diagnosticsFor } from "../lib/diagnostics";
 import { GROUNDING_TEXT } from "../lib/grounding";
 import { AlertCircle, CheckCircle, BarChart3, Download, Sparkles, Eye, Lightbulb } from "lucide-react";
 
 export const DiagnosisPanel: React.FC = () => {
   const { currentTrace, setSelectedNodeId } = useTraceStore(useShallow((s) => ({ currentTrace: s.currentTrace, setSelectedNodeId: s.setSelectedNodeId })));
 
-  // 1. Calculate diagnostics
-  const diagnostics = useMemo(() => {
-    if (!currentTrace) return null;
-    return computeDiagnostics(currentTrace);
-  }, [currentTrace]);
+  const diagnostics = currentTrace ? diagnosticsFor(currentTrace) : null;
 
   // 2. Export diagnosis as Markdown file
   const exportDiagnosisAsMarkdown = () => {
