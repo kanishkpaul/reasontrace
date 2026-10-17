@@ -1,0 +1,19 @@
+{
+  "name": "@reasontrace/server",
+  "private": true,
+  "version": "0.0.0",
+  "description": "The local HTTP API: holds keys, runs sources, writes run directories, serves the viewer. The registry.",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p . && tsc -p tsconfig.test.json"
+  },
+  "dependencies": {
+    "@hono/node-server": "2.1.3",
+    "@reasontrace/core": "*",
+    "@reasontrace/format": "*",
+    "@reasontrace/keys": "*",
+    "@reasontrace/source-anthropic": "*",
+    "@reasontrace/source-openai": "*",
+    "hono": "4.13.12"
+  }
+}

@@ -12,15 +12,17 @@
     "node": "^22.22.2 || >=24.15.0"
   },
   "scripts": {
-    "dev": "npm run dev -w @reasontrace/web",
+    "dev": "node scripts/dev.mjs",
+    "start": "npm run build && node apps/server/src/main.ts",
     "build": "npm run build -w @reasontrace/web",
     "lint": "eslint .",
     "typecheck": "tsc -p tsconfig.scripts.json && npm run typecheck --workspaces --if-present",
-    "check": "npm run lint && npm run typecheck && npm run check:deps && npm run check:colours && npm test && npm run build",
+    "check": "npm run lint && npm run typecheck && npm run check:deps && npm run check:colours && npm test && npm run build && npm run check:server",
     "test": "vitest run",
     "test:live": "RT_LIVE_TESTS=1 vitest run live",
     "check:deps": "node scripts/check-deps.mjs",
-    "check:colours": "node scripts/check-colours.mjs"
+    "check:colours": "node scripts/check-colours.mjs",
+    "check:server": "node apps/server/src/main.ts --version"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

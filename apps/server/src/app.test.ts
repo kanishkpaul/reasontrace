@@ -1,0 +1,183 @@
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { readSse } from "@reasontrace/core";
+import type { Run, RunManifest } from "@reasontrace/format";
+import { memoryStore } from "@reasontrace/keys";
+import { describe, expect, test } from "vitest";
+import { readFixture, replay, type HttpFixture, type ReplayStep } from "../../../test/fixtureFetch";
+import { createApp, TOKEN_HEADER } from "./app.ts";
+import { registry } from "./registry.ts";
+
+const TOKEN = "launch-token-for-tests";
+const OPENAI_FIXTURES = join(import.meta.dirname, "../../../packages/sources/openai/fixtures");
+const ANTHROPIC_FIXTURES = join(import.meta.dirname, "../../../packages/sources/anthropic/fixtures");
+
+function setup(steps: ReplayStep[] = [], initialKeys: Record<string, string> = {}, webDir?: string) {
+  const runsDir = mkdtempSync(join(tmpdir(), "rt-server-"));
+  const keys = memoryStore(initialKeys);
+  const fake = replay(...steps);
+  const log: string[] = [];
+  const app = createApp({ token: TOKEN, sources: registry({ keys, fetch: fake.fetch }), keys, runsDir, webDir, log: (line) => log.push(line), versions: { reasontrace: "test" } });
+  const call = (path: string, init: RequestInit & { token?: string | null; host?: string } = {}) => {
+    const headers = new Headers(init.headers);
+    headers.set("host", init.host ?? "127.0.0.1:4317");
+    if (init.token !== null) headers.set(TOKEN_HEADER, init.token ?? TOKEN);
+    if (init.body) headers.set("content-type", "application/json");
+    return app.request(path, { ...init, headers });
+  };
+  return { app, call, runsDir, keys, log, requests: fake.requests };
+}
+
+/** Starts a run over the API and reads its stream to the end. */
+async function runOver(call: ReturnType<typeof setup>["call"], body: Record<string, unknown>) {
+  const response = await call("/api/runs", { method: "POST", body: JSON.stringify(body) });
+  expect(response.status).toBe(200);
+  const messages: { event: string; data: unknown }[] = [];
+  for await (const message of readSse(response.body!)) messages.push({ event: message.event, data: JSON.parse(message.data) });
+  const done = messages.find((m) => m.event === "done")?.data as { manifest: RunManifest };
+  return { messages, manifest: done.manifest };
+}
+
+/** Every file under `dir`, read as text. */
+function allFiles(dir: string): string {
+  return readdirSync(dir).map((name) => {
+    const path = join(dir, name);
+    return statSync(path).isDirectory() ? allFiles(path) : readFileSync(path, "utf8");
+  }).join("\n");
+}
+
+describe("the launch token and host check", () => {
+  test("an API request without the token, or with the wrong one, is rejected", async () => {
+    const { call } = setup();
+    expect((await call("/api/sources", { token: null })).status).toBe(401);
+    expect((await call("/api/sources", { token: "launch-token-for-tesTS" })).status).toBe(401);
+    expect((await call("/api/sources", { token: "x" })).status).toBe(401);
+    expect((await call("/api/runs", { token: null, method: "POST", body: "{}" })).status).toBe(401);
+    expect((await call("/api/sources")).status).toBe(200);
+  });
+
+  test("a request naming any host but this machine is refused, token or not", async () => {
+    const { call } = setup();
+    expect((await call("/api/sources", { host: "attacker.example:4317" })).status).toBe(403);
+    expect((await call("/api/sources", { host: "localhost:4317" })).status).toBe(200);
+    expect((await call("/api/sources", { host: "[::1]:4317" })).status).toBe(200);
+  });
+});
+
+describe("keys over the API", () => {
+  test("a key can be stored and removed but never read back", async () => {
+    const { call, keys } = setup();
+    expect((await call("/api/keys/openai", { method: "PUT", body: JSON.stringify({ key: " sk-stored-0123 " }) })).status).toBe(204);
+    expect((await keys.get("openai"))?.reveal()).toBe("sk-stored-0123");
+
+    const listing = await (await call("/api/sources")).text();
+    expect(listing).not.toContain("sk-stored-0123");
+    expect(JSON.parse(listing).sources.find((s: { id: string }) => s.id === "openai")).toMatchObject({ needsKey: true, hasKey: true });
+    expect((await call("/api/keys/openai")).status).toBe(404);
+
+    expect((await call("/api/keys/openai", { method: "DELETE" })).status).toBe(204);
+    expect(await keys.has("openai")).toBe(false);
+  });
+
+  test("a local server takes no key", async () => {
+    const { call } = setup();
+    expect((await call("/api/keys/llamacpp", { method: "PUT", body: JSON.stringify({ key: "x" }) })).status).toBe(404);
+  });
+});
+
+describe("runs over the API", () => {
+  test("a run streams its text, writes its directory and reads back with its declared and found gaps", async () => {
+    const { call, runsDir, log } = setup([readFixture(OPENAI_FIXTURES, "llamacpp-reasoning-field")]);
+    const { messages, manifest } = await runOver(call, { source: "llamacpp", model: "Qwen/Qwen3-0.6B-GGUF:Q8_0", prompt: "Reply with just the word: hi", topLogprobs: 2 });
+
+    expect(messages[0].event).toBe("start");
+    expect(messages.filter((m) => m.event === "delta").length).toBeGreaterThan(10);
+    expect(manifest.completion).toEqual({ state: "complete" });
+    expect(manifest.source).toMatchObject({ id: "llamacpp", tier: "local" });
+    expect(manifest.unavailable.map((u) => u.depth)).toEqual(["internals"]);
+    expect(log.at(-1)).toMatch(/capture\s+llama\.cpp server · Qwen\/Qwen3-0\.6B-GGUF:Q8_0 · complete/);
+
+    const runs = (await (await call("/api/runs")).json()) as { runs: RunManifest[] };
+    expect(runs.runs.map((r) => r.id)).toEqual([manifest.id]);
+    const run = (await (await call(`/api/runs/${manifest.id}`)).json()) as Run;
+    expect(run.trace.events.map((e) => e.type)).toEqual(["reasoning", "final_answer"]);
+    expect(run.attachments.map((a) => a.eventId)).toEqual(["reasoning", "output"]);
+    expect(readdirSync(join(runsDir, manifest.id)).sort()).toEqual(["attachments", "events.jsonl", "manifest.json"]);
+  });
+
+  test("a model without a depth gets an unavailable record with its reason, before and after the run", async () => {
+    const { call } = setup([readFixture(ANTHROPIC_FIXTURES, "anthropic-no-thinking")], { anthropic: "sk-ant-x" });
+    const capabilities = (await (await call("/api/sources/anthropic/capabilities?model=claude-opus-5-5")).json()) as { unavailable: { depth: string }[] };
+    expect(capabilities.unavailable.map((u) => u.depth)).toEqual(["probabilities", "internals"]);
+
+    const { manifest } = await runOver(call, { source: "anthropic", model: "claude-opus-5-5", prompt: "hi" });
+    expect(manifest.unavailable.map((u) => u.depth)).toEqual(["probabilities", "internals", "stated"]);
+    for (const u of manifest.unavailable) expect(u.reason).toBeTruthy();
+  });
+
+  test("bad requests are refused before anything runs", async () => {
+    const { call, runsDir } = setup();
+    const status = async (body: unknown) => (await call("/api/runs", { method: "POST", body: JSON.stringify(body) })).status;
+    expect(await status({ source: "llamacpp", model: "m" })).toBe(400);
+    expect(await status({ source: "llamacpp", model: "m", prompt: "hi", maxTokens: 0 })).toBe(400);
+    expect(await status({ source: "llamacpp", model: "m", prompt: "hi", temperature: 9 })).toBe(400);
+    expect(await status({ source: "nope", model: "m", prompt: "hi" })).toBe(404);
+    expect(await status([1])).toBe(400);
+    expect(readdirSync(runsDir)).toEqual([]);
+  });
+
+  test("a run ID that isn't one can't reach outside the runs directory", async () => {
+    const { call } = setup();
+    expect((await call("/api/runs/..%2F..%2Fetc")).status).toBe(404);
+    expect((await call("/api/runs/20261018-000000-abcdef")).status).toBe(404);
+  });
+});
+
+describe("keys never reach the run directory or the log", () => {
+  const keyed = registry({ keys: memoryStore() }).filter((s) => s.needsKey);
+
+  /** An error reply that repeats the key, as some providers do. */
+  const echo = (key: string): HttpFixture => ({
+    recorded: "test",
+    status: 401,
+    contentType: "application/json",
+    body: JSON.stringify({ error: { message: `Incorrect API key provided: ${key}` } }),
+  });
+
+  test.each(keyed.map((s) => [s.id]))("%s", async (id) => {
+    const key = `sk-${id}-secret-bytes-0123456789`;
+    const success = id === "anthropic" ? readFixture(ANTHROPIC_FIXTURES, "anthropic-thinking") : readFixture(OPENAI_FIXTURES, "llamacpp-reasoning-field");
+    const { call, runsDir, log, requests } = setup([success, echo(key)]);
+
+    expect((await call(`/api/keys/${id}`, { method: "PUT", body: JSON.stringify({ key }) })).status).toBe(204);
+    const ok = await runOver(call, { source: id, model: "some-model", prompt: "hi" });
+    const failed = await runOver(call, { source: id, model: "some-model", prompt: "hi" });
+
+    expect(ok.manifest.completion.state).toBe("complete");
+    expect(failed.manifest.completion.state).toBe("error");
+    // The key did go to the provider, so its absence below means something.
+    expect(JSON.stringify(requests.map((r) => r.headers))).toContain(key);
+    expect(allFiles(runsDir)).not.toContain(key);
+    expect(log.join("\n")).not.toContain(key);
+    expect(JSON.stringify([ok.messages, failed.messages])).not.toContain(key);
+  });
+});
+
+describe("serving the viewer", () => {
+  test("the page carries the launch token; files outside the build are not served", async () => {
+    const webDir = mkdtempSync(join(tmpdir(), "rt-web-"));
+    mkdirSync(join(webDir, "assets"));
+    writeFileSync(join(webDir, "index.html"), "<html><head><title>t</title></head><body></body></html>");
+    writeFileSync(join(webDir, "assets", "app.js"), "console.log(1)");
+    const { call } = setup([], {}, webDir);
+
+    const page = await (await call("/", { token: null })).text();
+    expect(page).toContain(`<meta name="reasontrace-token" content="${TOKEN}">`);
+    const asset = await call("/assets/app.js", { token: null });
+    expect(asset.headers.get("content-type")).toContain("text/javascript");
+    expect(await asset.text()).toBe("console.log(1)");
+    expect(await (await call("/..%2F..%2Fpackage.json", { token: null })).text()).toContain("<html>");
+    expect((await call("/", { token: null, host: "attacker.example" })).status).toBe(403);
+  });
+});

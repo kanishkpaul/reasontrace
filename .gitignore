@@ -8,6 +8,9 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+
+# Run directories, written by the local server
+/runs
 dist
 dist-ssr
 *.local

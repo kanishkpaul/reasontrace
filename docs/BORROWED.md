@@ -23,7 +23,8 @@ row says **adopted**, its licence column is unverified.
 | Vitest | test runner | github.com/vitest-dev/vitest | MIT | — | adopted |
 | jsdom | DOM for component tests | github.com/jsdom/jsdom | MIT | browser-mode tests | adopted |
 | React Testing Library | rendering components in tests | github.com/testing-library/react-testing-library | MIT | — | adopted |
-| Hono | local HTTP server | github.com/honojs/hono | to verify | — | planned (phase 3) |
+| Hono | local HTTP server and its event streams | github.com/honojs/hono | MIT | — | adopted |
+| @hono/node-server | runs Hono on Node's HTTP server | github.com/honojs/node-server | MIT | — | adopted |
 | @napi-rs/keyring | OS keychain access | github.com/Brooooooklyn/keyring-node | MIT | a platform keychain binding with fewer dependencies | adopted |
 | Qwen3 0.6B (GGUF, Q8_0) | the model behind the recorded llama.cpp fixtures | huggingface.co/Qwen/Qwen3-0.6B-GGUF | Apache-2.0 | — | adopted (fixtures only) |
 | nnsight | activation capture and interventions in the sidecar | github.com/ndif-team/nnsight | to verify | TransformerLens covers every model family we need | planned (phase 4) |

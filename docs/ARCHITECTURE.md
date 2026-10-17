@@ -180,8 +180,12 @@ key's bytes appear anywhere in the run directory or the server log.
 
 `apps/server` listens on `127.0.0.1` only. It generates a token at launch,
 passes it to the page it serves, and rejects any `/api` request without it, so
-other pages open in the same browser cannot drive it. It serves the built
-viewer, so `npm start` is the whole install.
+other pages open in the same browser cannot drive it. It also refuses any
+request whose `Host` is not `127.0.0.1` or `localhost`: a page on another
+domain that rebinds its name to this machine could otherwise read the token
+from the served page. It serves the built viewer, so `npm start` is the whole
+install. In development, `npm run dev` starts the server with `--dev` (API
+only) and Vite, which puts the same token in the page and forwards `/api`.
 
 ## 8. The Python sidecar
 
