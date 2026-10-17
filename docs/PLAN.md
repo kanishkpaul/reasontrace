@@ -19,10 +19,9 @@ can be trusted.
 
 ## 1. Bugs found
 
-Every row marked **ran** was reproduced by a probe script against the real
-modules (`parseTrace.ts`, `diagnostics.ts`, `graph.ts`); its output is quoted.
-Rows marked **read** come from reading the code and have not yet been run in a
-browser.
+Every row marked **ran** has a test that reproduces it (`npm test`; set
+`RT_EXPECT_FIXED=1` to see each one fail). Rows marked **read** come from
+reading the code; their tests are written in phase 1, alongside the fix.
 
 ### 1.1 Parser (`src/lib/parseTrace.ts`)
 
@@ -43,7 +42,7 @@ browser.
 | P13 | `Error:` or `Result:` at the start of a line inside tool output starts a new event | :170, :172 | read |
 | P14 | Responses: a tool result's `tool` is its `call_id`, not the tool name; every `message` item becomes `final_answer` | :146, :148 | ran (chat equivalent: `"1"`) |
 | P15 | Cyclic and self links are accepted | :325–333 | ran: `[["b"],["a"]]` |
-| P16 | A `null` element in `events` throws inside `parseJsonTrace`, which returns `null`, so the JSON is re-parsed as a transcript (see P3) | :32 | read |
+| P16 | A `null` element in `events` throws inside `parseJsonTrace`, which returns `null`, so the JSON is re-parsed as a transcript (see P3) | :32 | ran: no error, and the JSON is re-read |
 
 ### 1.2 Diagnostics (`src/lib/diagnostics.ts`)
 
@@ -57,9 +56,9 @@ browser.
 | D6 | The tool-loop rule needs 3 consecutive same-tool calls and reports only the first loop. It misses the bundled web-agent loop | :140–151 | ran: flight-booker `[]` (tools `click,click,dom,click,click`) |
 | D7 | The repeated-content rule needs 2 duplicates and lists *every* action as involved, not the repeated ones | :154–158 | ran: two identical actions → 0 findings |
 | D8 | Chat traces have no `hypothesis`/`decision` events, so every action is "unexplained" | :112 | ran: `["m2"]` |
-| D9 | Every `belief_update` without confidence raises a finding. Chat import creates these, so it adds noise | :161–165 | read |
-| D10 | Failures are categorised `contradiction` | :170 | read |
-| D11 | H/O ratio with zero observations returns the hypothesis count, not "n/a"; coverage with zero claims returns 0% | :36–38, :178 | read |
+| D9 | Every `belief_update` without confidence raises a finding. Chat import creates these, so it adds noise | :161–165 | ran: one calibration finding on a chat trace |
+| D10 | Failures are categorised `contradiction` | :170 | ran |
+| D11 | H/O ratio with zero observations returns the hypothesis count, not "n/a"; coverage with zero claims returns 0% | :36–38, :178 | ran: ratio 2 with zero observations (the coverage half is read) |
 | D12 | Finding IDs collide when event IDs collide (P7) | :102 etc. | read |
 
 ### 1.3 Graph and replay
@@ -69,7 +68,7 @@ browser.
 | G1 | Selecting a node rebuilds every position, so dragged nodes snap back | `ReasoningGraph.tsx:61–95` | read (`graphData` depends on `selectedNodeId`) |
 | G2 | `fitView` runs only on first mount. A newly loaded trace can open off-screen | `ReasoningGraph.tsx:172` | read |
 | G3 | Y = step × 160. Timestamps as steps place nodes at y = 2.7e14 | `graph.ts:75` | ran |
-| G4 | A child placed before its parent gets x = 0 | `graph.ts:92` | ran |
+| G4 | A child placed before its parent gets x = 0 | `graph.ts:92` | ran: the child lands at x = 0, its parent at x = 120 |
 | G5 | Rows with several nodes are re-centred on 0, losing parent alignment; the pass repeats once per node | `graph.ts:112–135` | read |
 | G6 | Duplicate links produce duplicate edge IDs | `graph.ts:163` | ran: `["edge-a-b","edge-a-b"]` |
 | T1 | A single-step trace computes `0/0`; the slider gradient is `NaN%` | `TimelineControls.tsx:120` | ran |
