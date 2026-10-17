@@ -18,7 +18,8 @@ The viewer opens agent trace files (plain `Thought:` / `Action:` transcripts,
 chat-message JSON, OpenAI Responses output, and native event JSON) and draws
 them as a replayable graph with rule-based findings. Nothing runs a model yet.
 The findings are not reliable: [docs/PLAN.md](docs/PLAN.md) lists the known
-defects, and each has a test that fails until it is fixed.
+defects. Each one reproduced so far has a test, marked as an expected
+failure, that turns red once the bug is fixed.
 
 ```bash
 npm install
