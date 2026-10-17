@@ -91,7 +91,7 @@ Any change to a user-facing surface (GUI, CLI output, overlay, docs page) follow
 It is installed from the shared design kit, a separate master repository that lives next to
 this one at `../design-kit`, and recorded in `design/kit.json`.
 
-- Read `design/README.md` first: this project's direction. Skin: not chosen yet (default `lens`).
+- Read `design/README.md` first: this project's direction. Skin: `lens`.
 - Shared rules are in `design/system/DESIGN.md`. Check its "Before you add something" list
   before finishing a UI change.
 - Colours, type, spacing, radii, shadows and motion come only from `design/tokens/*.css`

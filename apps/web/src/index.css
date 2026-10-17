@@ -1,4 +1,8 @@
 @import "tailwindcss";
+@import "../../../design/tokens/base.css";
+@import "../../../design/tokens/skins.css";
+@import "../../../design/tokens/components.css";
+@import "../../../design/tokens/tailwind-theme.css";
 @import '@xyflow/react/dist/style.css';
 
 @theme {

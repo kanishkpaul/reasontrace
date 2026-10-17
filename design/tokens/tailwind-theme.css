@@ -1,0 +1,55 @@
+/* Optional Tailwind v4 bridge, for horizon or any React project that wants utilities.
+ *
+ *   @import 'tailwindcss';
+ *   @import './design/tokens/base.css';
+ *   @import './design/tokens/skins.css';
+ *   @import './design/tokens/components.css';
+ *   @import './design/tokens/tailwind-theme.css';
+ *
+ * Colours map to the derived --ui-* tokens, so `bg-card text-ink-2 border-stroke-3` follow
+ * the skin and the mode. Fonts and radii need no mapping: base.css sets --font-sans,
+ * --font-mono and --radius-xs…lg outside any cascade layer, so it overrides Tailwind's
+ * defaults of the same names and `font-mono`, `rounded-sm` follow the kit.
+ *
+ * Shadows do NOT follow: Tailwind inlines shadow values into `shadow-*` utilities. Don't use
+ * them. Elevation comes only from the `.float` and `.menu` classes.
+ *
+ * Use utilities for layout (flex, grid, gap, padding between regions). Use the component
+ * classes for controls. Don't rebuild a button out of utilities.
+ */
+
+@theme inline {
+  --color-chrome: var(--ui-bg-chrome);
+  --color-sidebar: var(--ui-bg-sidebar);
+  --color-card: var(--ui-bg-card);
+  --color-elevated: var(--ui-bg-elevated);
+  --color-popover: var(--ui-bg-popover);
+  --color-widget: var(--ui-bg-widget);
+
+  --color-ink-1: var(--ui-text-1);
+  --color-ink-2: var(--ui-text-2);
+  --color-ink-3: var(--ui-text-3);
+  --color-ink-4: var(--ui-text-4);
+
+  --color-stroke-1: var(--ui-stroke-1);
+  --color-stroke-2: var(--ui-stroke-2);
+  --color-stroke-3: var(--ui-stroke-3);
+  --color-stroke-4: var(--ui-stroke-4);
+
+  --color-fill-1: var(--ui-fill-1);
+  --color-fill-2: var(--ui-fill-2);
+  --color-fill-3: var(--ui-fill-3);
+  --color-fill-4: var(--ui-fill-4);
+  --color-fill-5: var(--ui-fill-5);
+  --color-row-hover: var(--ui-row-hover);
+  --color-row-active: var(--ui-row-active);
+
+  --color-accent: var(--ui-accent);
+  --color-primary: var(--ui-primary);
+  --color-warm: var(--ui-warm);
+  --color-ok: var(--ui-ok);
+  --color-warn: var(--ui-warn);
+  --color-error: var(--ui-error);
+  --color-info: var(--ui-info);
+  --color-inferred: var(--ui-purple);
+}

@@ -14,6 +14,9 @@ row says **adopted**, its licence column is unverified.
 | Zustand | viewer state | github.com/pmndrs/zustand | MIT | React state alone covers it | adopted |
 | Lucide | icons | github.com/lucide-icons/lucide | ISC | the design kit ships its own icon set | adopted |
 | Tailwind CSS | utility classes over the design tokens, through the kit's bridge | github.com/tailwindlabs/tailwindcss | MIT | components written against tokens directly | adopted |
+| JetBrains Mono | mono face for traces, IDs and numbers, bundled through Fontsource | github.com/JetBrains/JetBrainsMono | OFL-1.1 | — | adopted |
+| Newsreader | display face for empty states, bundled through Fontsource | github.com/productiontype/Newsreader | OFL-1.1 | — | adopted |
+| Archivo | wordmark face, bundled through Fontsource | github.com/Omnibus-Type/Archivo | OFL-1.1 | — | adopted |
 | Vite | dev server and build | github.com/vitejs/vite | MIT | — | adopted |
 | TypeScript | language and typecheck | github.com/microsoft/TypeScript | Apache-2.0 | — | adopted |
 | ESLint, typescript-eslint | lint | github.com/eslint/eslint | MIT | — | adopted |

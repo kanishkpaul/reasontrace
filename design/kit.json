@@ -4,9 +4,9 @@
     "source": "../design-kit"
   },
   "project": "reasontrace",
-  "skin": null,
+  "skin": "lens",
   "options": {
-    "tailwind": false
+    "tailwind": true
   },
   "ignore": [],
   "files": {
@@ -25,6 +25,7 @@
     "tokens/components.css": "062d7e955f2ba3e5",
     "tokens/loader.js": "b67d102ed7c34640",
     "tokens/skins.css": "f1905feefa450904",
+    "tokens/tailwind-theme.css": "4c9babf3e392fb7e",
     "tokens/tokens.json": "ad8b19e94aee9bef"
   },
   "pending": {}
