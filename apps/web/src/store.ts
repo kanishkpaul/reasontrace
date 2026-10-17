@@ -1,8 +1,8 @@
 import { create } from "zustand";
-import type { ReasonTrace, EventType } from "@reasontrace/format";
+import type { Attachment, ReasonTrace, EventType, Run, RunManifest } from "@reasontrace/format";
 import { sampleTraces } from "./data/sampleTraces";
 import { parseTrace } from "@reasontrace/analysis";
-import { saveTrace } from "./lib/savedTrace";
+import { saveOpenRunId, saveTrace } from "./lib/savedTrace";
 import type { ParseResult } from "@reasontrace/analysis";
 
 interface StoreFilters {
@@ -15,9 +15,19 @@ interface StoreSettings {
   highlightFailures: boolean;
 }
 
+/** A run as it streams in, before its directory is read back. */
+export interface LiveRun {
+  title: string;
+  reasoning: string;
+  output: string;
+}
+
 interface TraceState {
   // Data
   currentTrace: ReasonTrace | null;
+  /** The open trace's run, when it came from the server rather than a file. */
+  run: { manifest: RunManifest; attachments: Attachment[] } | null;
+  live: LiveRun | null;
   /** False when the browser refused to keep the open trace (quota, blocked storage). */
   savedInBrowser: boolean;
   selectedNodeId: string | null;
@@ -37,6 +47,8 @@ interface TraceState {
   
   // Actions
   setTrace: (trace: ReasonTrace) => void;
+  openRun: (run: Run) => void;
+  setLive: (live: LiveRun | null) => void;
   loadSampleTrace: (key: string) => void;
   parseAndSetTrace: (text: string) => ParseResult;
   setSelectedNodeId: (id: string | null) => void;
@@ -80,6 +92,8 @@ const defaultSettings: StoreSettings = {
 
 export const useTraceStore = create<TraceState>((set, get) => ({
   currentTrace: null,
+  run: null,
+  live: null,
   savedInBrowser: true,
   selectedNodeId: null,
   newestNodeId: null,
@@ -95,6 +109,7 @@ export const useTraceStore = create<TraceState>((set, get) => ({
 
   setTrace: (trace) => {
     get().stopPlayback();
+    saveOpenRunId(null);
     
     const sorted = [...trace.events].sort((a, b) => a.step - b.step);
     const steps = [...new Set(sorted.map(e => e.step))];
@@ -107,6 +122,7 @@ export const useTraceStore = create<TraceState>((set, get) => ({
     set({
       filters: { ...defaultFilters },
       currentTrace: trace,
+      run: null,
       savedInBrowser: trace.events.length === 0 || saveTrace(trace),
       steps,
       currentStep: steps.at(-1) ?? 0,
@@ -114,6 +130,14 @@ export const useTraceStore = create<TraceState>((set, get) => ({
       selectedNodeId: finalEvent ? finalEvent.id : null,
     });
   },
+
+  openRun: ({ manifest, trace, attachments }) => {
+    get().setTrace(trace);
+    set({ run: { manifest, attachments } });
+    saveOpenRunId(manifest.id);
+  },
+
+  setLive: (live) => set({ live }),
 
   loadSampleTrace: (key) => {
     const trace = sampleTraces[key];

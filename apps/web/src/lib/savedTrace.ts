@@ -49,3 +49,26 @@ export function saveTrace(trace: ReasonTrace): boolean {
     return false;
   }
 }
+
+const RUN_KEY = "reasontrace_open_run";
+
+/**
+ * The ID of the run that was open, so a reload reopens it from the server
+ * with its manifest, instead of showing its events as an imported file.
+ */
+export function loadOpenRunId(): string | null {
+  try {
+    return localStorage.getItem(RUN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function saveOpenRunId(id: string | null): void {
+  try {
+    if (id) localStorage.setItem(RUN_KEY, id);
+    else localStorage.removeItem(RUN_KEY);
+  } catch {
+    // Without storage a reload shows the saved trace as a file, which the status bar says.
+  }
+}

@@ -246,6 +246,51 @@ button { font: inherit; }
 .filters__toggle { cursor: pointer; }
 .sample-row .row__desc { grid-column: 1 / -1; color: var(--ui-text-3); font-size: var(--text-xs); }
 
+/* Runs: the run form, the run list, a run as it streams, how it ended */
+.run-panel { display: flex; flex-direction: column; gap: var(--space-1); }
+.run-panel .section-heading { margin: 0 0 var(--space-1); }
+.run-panel .label { margin-top: var(--space-1); }
+.run-panel .field { width: 100%; }
+.run-panel__where { font-family: var(--font-mono); overflow-wrap: anywhere; }
+.run-panel__unavailable { display: flex; flex-direction: column; gap: var(--space-1); margin: var(--space-1) 0 0; padding: 0; list-style: none; font-size: var(--text-xs); }
+.run-panel__key { display: flex; flex-direction: column; gap: var(--space-1); }
+.run-panel__key .btn { align-self: flex-start; }
+.run-panel__prompt { min-height: 6rem; font: var(--text-xs) / 1.5 var(--font-mono); resize: vertical; }
+.run-panel__max { max-width: 8rem; font-family: var(--font-mono); }
+.run-panel__actions { display: flex; gap: var(--space-2); margin-top: var(--space-2); }
+.run-group__model { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin: var(--space-2) 0 0; font: var(--text-2xs) / 1rem var(--font-mono); color: var(--ui-text-2); }
+.run-group__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.run-ending { display: flex; align-items: center; gap: var(--space-2); margin: 0; padding: 0 var(--space-3) var(--space-2); color: var(--ui-text-2); font-size: var(--text-xs); }
+.run-ending[data-state="error"], .run-ending[data-state="timeout"] { color: var(--ui-error); }
+.run-ending[data-state="truncated"], .run-ending[data-state="refused"] { color: var(--ui-warn); }
+.live-run { padding: var(--space-3); }
+.live-run__head { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-3); color: var(--ui-text-2); font-size: var(--text-xs); }
+.live-run__columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+.live-run__columns section { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.live-run__text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: var(--text-sm); }
+@media (max-width: 48rem) { .live-run__columns { grid-template-columns: minmax(0, 1fr); } }
+
+/* Token view: fill from --ui-accent in five steps, strongest for the least likely tokens */
+.token-view { display: flex; flex-direction: column; gap: var(--space-1); }
+.token-view .section-heading { margin: var(--space-2) 0 0; }
+.token-view__text { margin: 0; font: var(--text-xs) / 1.6 var(--font-mono); overflow-wrap: anywhere; }
+.token { position: relative; padding: 0; border: 0; border-radius: var(--radius-xs); background: transparent; color: var(--ui-text-1); font: inherit; white-space: pre-wrap; cursor: pointer; }
+.token::before { position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: var(--ui-accent); opacity: 0; content: ""; }
+.token[data-bin="1"]::before { opacity: 0.12; }
+.token[data-bin="2"]::before { opacity: 0.24; }
+.token[data-bin="3"]::before { opacity: 0.38; }
+.token[data-bin="4"]::before { opacity: 0.55; }
+.token[aria-pressed="true"] { outline: 1px solid var(--ui-focus); }
+.token-view__text { isolation: isolate; }
+.token-view__alternatives { display: flex; flex-direction: column; gap: var(--space-1); margin: var(--space-1) 0 0; }
+.prob-bar { display: grid; grid-template-columns: minmax(4rem, auto) 1fr; gap: var(--space-2); align-items: center; font: var(--text-2xs) / 1rem var(--font-mono); color: var(--ui-text-2); }
+.prob-bar[data-chosen] { color: var(--ui-text-1); }
+.prob-bar dt { overflow: hidden; text-overflow: ellipsis; white-space: pre; }
+.prob-bar dd { display: flex; align-items: center; gap: var(--space-2); margin: 0; font-variant-numeric: tabular-nums; }
+.prob-bar__track { flex: 1; height: 0.375rem; background: var(--ui-stroke-3); }
+.prob-bar__fill { display: block; height: 100%; background: var(--ui-info); }
+.prob-bar[data-chosen] .prob-bar__fill { background: var(--ui-accent); }
+
 /* ── Home ── */
 
 .home {

@@ -5,6 +5,7 @@ import { EVENT_TYPES } from "../lib/eventTypes";
 import { CheckIcon, CopyIcon, ICON } from "../lib/icons";
 import { useTraceStore } from "../store";
 import { EvidenceLabel } from "./EvidenceLabel";
+import { TokenView } from "./TokenView";
 
 /** What each event type can show, and what to check next. Says no more than the event records. */
 function readingOf(event: TraceEvent): string {
@@ -27,10 +28,11 @@ function readingOf(event: TraceEvent): string {
 
 /** The rail's step detail: the selected event, its evidence label and the events linked to it. */
 export function NodeInspector() {
-  const { trace, selectedId, select } = useTraceStore(useShallow((s) => ({
+  const { trace, selectedId, select, run } = useTraceStore(useShallow((s) => ({
     trace: s.currentTrace,
     selectedId: s.selectedNodeId,
     select: s.setSelectedNodeId,
+    run: s.run,
   })));
   const [copied, setCopied] = useState(false);
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -39,6 +41,7 @@ export function NodeInspector() {
   const event = useMemo(() => trace?.events.find((e) => e.id === selectedId) ?? null, [trace, selectedId]);
   const supportedBy = useMemo(() => (trace && event ? trace.events.filter((e) => event.supports.includes(e.id)) : []), [trace, event]);
   const supports = useMemo(() => (trace && event ? trace.events.filter((e) => e.supports.includes(event.id)) : []), [trace, event]);
+  const tokens = run?.attachments.find((a) => a.kind === "probs.top_k/1" && a.eventId === event?.id)?.data.tokens;
 
   if (!event) {
     return (
@@ -86,6 +89,8 @@ export function NodeInspector() {
       </dl>
 
       <p className="hint">{readingOf(event)}</p>
+
+      {tokens && <TokenView tokens={tokens} />}
 
       <LinkedEvents title="Supported by" events={supportedBy} empty="No support declared." onSelect={select} />
       <LinkedEvents title="Supports" events={supports} empty="Nothing declares this as support." onSelect={select} />

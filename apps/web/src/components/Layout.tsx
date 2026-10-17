@@ -3,12 +3,17 @@ import { useShallow } from "zustand/react/shallow";
 import { diagnosticsFor } from "../lib/diagnostics";
 import { downloadFile, fileNameFor } from "../lib/download";
 import { DownloadIcon, ICON, RailIcon, SidebarIcon } from "../lib/icons";
-import { loadSavedTrace } from "../lib/savedTrace";
+import { api, hasServer } from "../lib/api";
+import { COMPLETION } from "../lib/completion";
+import { loadOpenRunId, loadSavedTrace } from "../lib/savedTrace";
 import { useTraceStore } from "../store";
 import { DiagnosisPanel } from "./DiagnosisPanel";
 import { EventFilters } from "./EventFilters";
+import { LiveRun } from "./LiveRun";
 import { NodeInspector } from "./NodeInspector";
 import { ReasoningGraph } from "./ReasoningGraph";
+import { RunList } from "./RunList";
+import { RunPanel } from "./RunPanel";
 import { SampleTracePicker } from "./SampleTracePicker";
 import { StatusBar } from "./StatusBar";
 import { StepColumns } from "./StepColumns";
@@ -24,11 +29,14 @@ type Region = "trace" | "open" | "detail";
  * and an honest status bar.
  */
 export function Layout() {
-  const { trace, setTrace, selectedId, saved } = useTraceStore(useShallow((s) => ({
+  const { trace, setTrace, openRun, selectedId, saved, live, completion } = useTraceStore(useShallow((s) => ({
     trace: s.currentTrace,
     setTrace: s.setTrace,
+    openRun: s.openRun,
     selectedId: s.selectedNodeId,
     saved: s.savedInBrowser,
+    live: s.live !== null,
+    completion: s.run?.manifest.completion,
   })));
   const [view, setView] = useState<"steps" | "graph">("steps");
   const [railTab, setRailTab] = useState<"step" | "findings">("step");
@@ -37,15 +45,21 @@ export function Layout() {
   const [region, setRegion] = useState<Region>("trace");
 
   useEffect(() => {
-    const restored = loadSavedTrace();
-    if (restored) setTrace(restored);
-  }, [setTrace]);
+    const restoreTrace = () => {
+      const restored = loadSavedTrace();
+      if (restored) setTrace(restored);
+    };
+    const runId = hasServer ? loadOpenRunId() : null;
+    if (runId) api.run(runId).then(openRun, restoreTrace);
+    else restoreTrace();
+  }, [setTrace, openRun]);
 
   const diagnostics = trace ? diagnosticsFor(trace) : null;
   const toCheck = diagnostics?.findings.filter((f) => f.severity !== "info").length ?? 0;
   const selected = useMemo(() => trace?.events.find((e) => e.id === selectedId), [trace, selectedId]);
 
-  if (!trace) return <EmptyHome />;
+  if (!trace && !live) return <EmptyHome />;
+  if (!trace) return <div className="home"><LiveRun /></div>;
 
   const exportJson = () => downloadFile(fileNameFor(trace.title, ".json"), JSON.stringify(trace, null, 2), "application/json");
 
@@ -72,7 +86,9 @@ export function Layout() {
         <button type="button" aria-pressed={region === "detail"} onClick={() => setRegion("detail")}>Detail{toCheck ? ` · ${toCheck}` : ""}</button>
       </nav>
 
-      <aside className="app__sidebar" aria-label="Traces and filters">
+      <aside className="app__sidebar" aria-label="Runs, traces and filters">
+        {hasServer && <RunPanel onRun={() => setRegion("trace")} />}
+        {hasServer && <RunList onOpen={() => setRegion("trace")} />}
         <TraceInput onLoaded={() => setRegion("trace")} />
         <SampleTracePicker onLoaded={() => setRegion("trace")} />
         <EventFilters />
@@ -86,7 +102,12 @@ export function Layout() {
           </div>
           <span className="hint">{selected ? `Step ${selected.step} selected` : "Select an event to inspect it"}</span>
         </div>
-        <div className="app__surface">{view === "steps" ? <StepColumns /> : <ReasoningGraph />}</div>
+        {completion && completion.state !== "complete" && !live && (
+          <p className="run-ending" data-state={completion.state}>
+            <span className={`dot ${COMPLETION[completion.state].dot}`} /> {COMPLETION[completion.state].word}{completion.reason ? `: ${completion.reason}` : ""}
+          </p>
+        )}
+        <div className="app__surface">{live ? <LiveRun /> : view === "steps" ? <StepColumns /> : <ReasoningGraph />}</div>
         <TimelineControls />
       </main>
 
@@ -113,10 +134,12 @@ function EmptyHome() {
         <p className="wordmark">ReasonTrace</p>
         <h1 className="display-3">See what a model did, what it said it thought, and how far each can be trusted.</h1>
         <p className="hint">
-          Open a trace file or a sample. Every value carries its evidence label, and what a trace can't show is marked unavailable, with the reason.
+          {hasServer ? "Run a model, or open a trace file or a sample." : "Open a trace file or a sample."} Every value carries its evidence label, and what a trace can't show is marked unavailable, with the reason.
         </p>
       </div>
       <div className="home__open">
+        {hasServer && <RunPanel />}
+        {hasServer && <RunList />}
         <TraceInput />
         <SampleTracePicker />
       </div>

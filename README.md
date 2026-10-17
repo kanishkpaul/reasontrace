@@ -15,18 +15,29 @@ optional Python sidecar reads model internals.
 
 ## Where it is
 
-The viewer opens agent trace files (plain `Thought:` / `Action:` transcripts,
-chat-message JSON, OpenAI Responses output, and native event JSON) and draws
-them as a replayable graph with rule-based findings. Nothing runs a model yet.
-The findings are heuristics over the support links a trace declares, and
-each one states its rule and what it cannot tell. [docs/PLAN.md](docs/PLAN.md)
-lists the defects found in the prototype; each has a test named by its ID.
+The local server runs a prompt against a model on a local server (Ollama, LM
+Studio, llama.cpp, vLLM) or a provider you hold a key for (OpenAI, OpenRouter,
+Groq, Gemini, Anthropic). Each run is written to `runs/<id>/` with its
+manifest, and the viewer shows its behaviour, its stated reasoning and, where
+the source returns them, its token probabilities. Keys go to the OS keychain.
+Nothing reads model internals yet.
+
+The viewer also opens agent trace files (plain `Thought:` / `Action:`
+transcripts, chat-message JSON, OpenAI Responses output, and native event
+JSON) as a replayable graph with rule-based findings. The findings are
+heuristics over the support links a trace declares, and each one states its
+rule and what it cannot tell.
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173
+npm start          # builds the viewer and serves it at http://127.0.0.1:4317
+npm run dev        # the API server and Vite, at http://localhost:5173
 npm run check      # lint, typecheck, tests, dependency rules, build
+npm run test:live  # sources against a running llama.cpp server or a stored key
 ```
+
+`npm run test:live` picks a source with `RT_LIVE_SOURCE` (default `llamacpp`)
+and a model with `RT_LIVE_MODEL`. The default tests never touch the network.
 
 Needs Node 22.22.2+ or 24.15+ (the test tools, jsdom and ESLint, set the floor).
 
