@@ -24,7 +24,7 @@ row says **adopted**, its licence column is unverified.
 | jsdom | DOM for component tests | github.com/jsdom/jsdom | MIT | browser-mode tests | adopted |
 | React Testing Library | rendering components in tests | github.com/testing-library/react-testing-library | MIT | — | adopted |
 | Hono | local HTTP server | github.com/honojs/hono | to verify | — | planned (phase 3) |
-| @napi-rs/keyring | OS keychain access | github.com/Brooooooklyn/keyring-node | to verify | a platform keychain binding with fewer dependencies | planned (phase 3) |
+| @napi-rs/keyring | OS keychain access | github.com/Brooooooklyn/keyring-node | MIT | a platform keychain binding with fewer dependencies | adopted |
 | nnsight | activation capture and interventions in the sidecar | github.com/ndif-team/nnsight | to verify | TransformerLens covers every model family we need | planned (phase 4) |
 | safetensors | tensor storage in run directories | github.com/huggingface/safetensors | to verify | a format with better streaming writes | planned (phase 4) |
 | SAELens | loading and encoding SAEs | github.com/jbloomAus/SAELens | to verify | — | planned (phase 6) |
