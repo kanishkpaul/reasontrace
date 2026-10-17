@@ -17,6 +17,9 @@ row says **adopted**, its licence column is unverified.
 | Vite | dev server and build | github.com/vitejs/vite | MIT | — | adopted |
 | TypeScript | language and typecheck | github.com/microsoft/TypeScript | Apache-2.0 | — | adopted |
 | ESLint, typescript-eslint | lint | github.com/eslint/eslint | MIT | — | adopted |
+| Vitest | test runner | github.com/vitest-dev/vitest | MIT | — | adopted |
+| jsdom | DOM for component tests | github.com/jsdom/jsdom | MIT | browser-mode tests | adopted |
+| React Testing Library | rendering components in tests | github.com/testing-library/react-testing-library | MIT | — | adopted |
 | Hono | local HTTP server | github.com/honojs/hono | to verify | — | planned (phase 3) |
 | @napi-rs/keyring | OS keychain access | github.com/Brooooooklyn/keyring-node | to verify | a platform keychain binding with fewer dependencies | planned (phase 3) |
 | dagre or elkjs | graph layout instead of the hand-rolled pass | github.com/dagrejs/dagre, github.com/kieler/elkjs | to verify | — | planned (phase 1) |

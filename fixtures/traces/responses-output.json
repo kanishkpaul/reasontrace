@@ -1,0 +1,9 @@
+{
+  "model": "example-model",
+  "output": [
+    {"type": "message", "content": [{"type": "output_text", "text": "Checking the order."}]},
+    {"type": "function_call", "name": "get_order", "call_id": "c1", "arguments": "{\"id\": 1042}"},
+    {"type": "function_call_output", "call_id": "c1", "output": "{\"status\": \"delivered\"}"},
+    {"type": "message", "content": [{"type": "output_text", "text": "It was delivered."}]}
+  ]
+}

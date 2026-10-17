@@ -1,0 +1,6 @@
+Thought: I need the population of Lyon.
+Action: search
+Action Input: population of Lyon
+Observation: Lyon has about 520,000 inhabitants.
+Thought: That answers the question.
+Final Answer: About 520,000 people live in Lyon.

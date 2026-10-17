@@ -1,0 +1,9 @@
+{
+  "events": [
+    {"id": "r", "type": "hypothesis", "step": 1},
+    {"id": "p", "type": "action", "step": 2, "links": ["r"]},
+    {"id": "q", "type": "action", "step": 2, "links": ["r"]},
+    {"id": "c", "type": "hypothesis", "step": 3, "links": ["d"]},
+    {"id": "d", "type": "observation", "step": 4, "links": ["q"]}
+  ]
+}

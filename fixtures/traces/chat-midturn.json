@@ -1,0 +1,8 @@
+{
+  "messages": [
+    {"role": "user", "content": "Is order 1042 refundable?"},
+    {"role": "assistant", "content": "Let me check the order first."},
+    {"role": "user", "content": "Sure."},
+    {"role": "assistant", "content": "Order 1042 is refundable until 3 November."}
+  ]
+}

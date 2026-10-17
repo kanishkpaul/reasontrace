@@ -1,0 +1,7 @@
+{
+  "events": [
+    {"id": "o", "type": "observation", "step": 1, "content": "The disk is 40% full."},
+    {"id": "u", "type": "belief_update", "step": 2, "content": "The server is out of memory.", "confidence": 0.9},
+    {"id": "f", "type": "final_answer", "step": 3, "content": "Add RAM.", "links": ["u"]}
+  ]
+}

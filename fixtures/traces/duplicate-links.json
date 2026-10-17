@@ -1,0 +1,1 @@
+{"events": [{"id": "a", "type": "observation", "step": 1}, {"id": "b", "type": "hypothesis", "step": 2, "links": ["a", "a"]}]}

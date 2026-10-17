@@ -1,0 +1,8 @@
+{
+  "messages": [
+    {"role": "user", "content": "Is order 1042 refundable?"},
+    {"role": "assistant", "content": "I will look the order up.", "tool_calls": [{"id": "call_1", "function": {"name": "get_order", "arguments": "{\"id\": 1042}"}}]},
+    {"role": "tool", "tool_call_id": "call_1", "content": "{\"status\": \"delivered\", \"refund_until\": \"2026-11-03\"}"},
+    {"role": "assistant", "content": "Order 1042 is refundable until 3 November."}
+  ]
+}

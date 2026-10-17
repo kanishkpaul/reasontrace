@@ -1,0 +1,7 @@
+{
+  "title": 5,
+  "events": [
+    {"id": 0, "type": "hypothesis", "step": 1, "content": {"text": "Maybe the cache is stale."}, "confidence": 85},
+    {"id": 1, "type": "action", "step": 2, "content": "flush_cache()", "links": [0]}
+  ]
+}
