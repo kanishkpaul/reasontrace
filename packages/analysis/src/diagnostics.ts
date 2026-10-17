@@ -132,7 +132,7 @@ export function computeDiagnostics(trace: ReasonTrace): TraceDiagnostics {
   // 7. General failure node warnings
   events.forEach(e => {
     if (e.type === "failure") {
-      addFinding({ id: `failure-${e.id}`, severity: "critical", category: "contradiction", title: "Failure recorded", detail: `A failure event appears at step ${e.step}.`, eventIds: [e.id], recommendation: "Trace the incoming evidence and the next recovery action." });
+      addFinding({ id: `failure-${e.id}`, severity: "critical", category: "failure", title: "Failure recorded", detail: `A failure event appears at step ${e.step}.`, eventIds: [e.id], recommendation: "Trace the incoming evidence and the next recovery action." });
     }
   });
 

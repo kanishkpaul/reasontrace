@@ -95,7 +95,7 @@ describe("diagnostics", () => {
     expect(diagnose("Update: the host is wrong").findings.filter((f) => f.category === "confidence")).toHaveLength(1);
   });
 
-  knownBug("D10: a recorded failure is not categorised as a contradiction", () => {
+  test("D10: a recorded failure is not categorised as a contradiction", () => {
     const failure = diagnose("Failure: timed out").findings.find((f) => f.eventIds.includes("e1"));
     expect(failure?.category).not.toBe("contradiction");
   });

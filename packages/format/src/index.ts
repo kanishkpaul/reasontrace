@@ -94,7 +94,7 @@ export type FindingSeverity = "critical" | "warning" | "info";
 export interface TraceFinding {
   id: string;
   severity: FindingSeverity;
-  category: "grounding" | "planning" | "loop" | "contradiction" | "visibility" | "confidence";
+  category: "grounding" | "planning" | "loop" | "failure" | "visibility" | "confidence";
   title: string;
   detail: string;
   eventIds: string[];
