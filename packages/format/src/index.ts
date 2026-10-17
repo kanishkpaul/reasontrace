@@ -65,7 +65,8 @@ export interface TraceDiagnostics {
   beliefUpdateCount: number;
   decisionCount: number;
   finalAnswerCount: number;
-  hypothesisToObservationRatio: number;
+  /** Null when there are no observations to divide by. */
+  hypothesisToObservationRatio: number | null;
   unsupportedHypotheses: string[]; // Event IDs
   actionsWithoutPriorHypothesis: string[]; // Event IDs
   answerGrounding: AnswerGrounding;

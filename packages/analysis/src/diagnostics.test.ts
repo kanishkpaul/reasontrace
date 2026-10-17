@@ -1,5 +1,4 @@
 import { describe, expect, test } from "vitest";
-import { knownBug } from "../../../test/knownBug";
 import { parsed, traceFixture } from "../../../test/traces";
 import { computeDiagnostics } from "./diagnostics";
 
@@ -100,7 +99,7 @@ describe("diagnostics", () => {
     expect(failure?.category).not.toBe("contradiction");
   });
 
-  knownBug("D11: the hypothesis/observation ratio is undefined with no observations", () => {
+  test("D11: the hypothesis/observation ratio is undefined with no observations", () => {
     expect(diagnose("Thought: a\nThought: b").hypothesisToObservationRatio).toBeNull();
   });
 });

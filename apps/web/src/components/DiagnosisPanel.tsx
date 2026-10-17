@@ -33,7 +33,7 @@ export const DiagnosisPanel: React.FC = () => {
     md += `| Decisions | ${diagnostics.decisionCount} |\n`;
     md += `| Failures | ${diagnostics.failureCount} |\n`;
     md += `| Final Answers | ${diagnostics.finalAnswerCount} |\n`;
-    md += `| Hypothesis/Observation Ratio | ${diagnostics.hypothesisToObservationRatio} |\n\n`;
+    md += `| Hypothesis/Observation Ratio | ${diagnostics.hypothesisToObservationRatio ?? "n/a (no observations)"} |\n\n`;
 
     md += `## 2. Evidence Grounding Status\n\n`;
     md += `**${grounding.title}.** ${grounding.detail}\n`;
@@ -121,7 +121,7 @@ export const DiagnosisPanel: React.FC = () => {
             </div>
             <div className="bg-cyber-bg border border-cyber-border p-2 rounded-lg text-center" title="Hypothesis to Observation Ratio">
               <span className="text-[9px] text-cyber-muted uppercase block">H-O Ratio</span>
-              <span className="text-sm font-bold text-amber-400 font-mono">{diagnostics.hypothesisToObservationRatio}</span>
+              <span className="text-sm font-bold text-amber-400 font-mono">{diagnostics.hypothesisToObservationRatio ?? "—"}</span>
             </div>
           </div>
         </div>

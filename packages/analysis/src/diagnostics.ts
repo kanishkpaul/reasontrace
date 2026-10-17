@@ -35,7 +35,7 @@ export function computeDiagnostics(trace: ReasonTrace): TraceDiagnostics {
   });
 
   const hypothesisToObservationRatio = observationCount === 0
-    ? hypothesisCount
+    ? null
     : parseFloat((hypothesisCount / observationCount).toFixed(2));
 
   const { upstream, downstream } = supportGraph(events);
