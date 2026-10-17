@@ -154,6 +154,15 @@ function contentOf(value: unknown): string {
   return "";
 }
 
+/**
+ * A conversation's answer is its last assistant message, and only if no tool
+ * call follows it. Earlier assistant messages are intermediate output.
+ */
+function markFinalAnswer(events: TraceEvent[]): void {
+  const last = events.findLastIndex(e => e.source === "assistant message");
+  if (last >= 0 && !events.slice(last + 1).some(e => e.type === "action")) events[last].type = "final_answer";
+}
+
 /** Imports common chat-completion style logs without claiming assistant text is private reasoning. */
 function parseChatMessages(messages: Record<string, unknown>[], title: string): ReasonTrace {
   const events: TraceEvent[] = [];
@@ -175,7 +184,7 @@ function parseChatMessages(messages: Record<string, unknown>[], title: string): 
     if (role === "assistant") {
       const rawCalls = message.tool_calls || (message.function_call ? [message.function_call] : []);
       const calls = Array.isArray(rawCalls) ? rawCalls.filter((call): call is Record<string, unknown> => Boolean(call && typeof call === "object")) : [];
-      if (text) add({ type: calls.length ? "belief_update" : "final_answer", content: text, label: "observed", source: "assistant message", metadata: { role, note: "Observable output, not hidden reasoning." } });
+      if (text) add({ type: "belief_update", content: text, label: "observed", source: "assistant message", metadata: { role, note: "Observable output, not hidden reasoning." } });
       calls.forEach((call: Record<string, unknown>) => {
         const fn = call.function as Record<string, unknown> | undefined;
         const tool = String(fn?.name || call.name || "tool");
@@ -185,6 +194,7 @@ function parseChatMessages(messages: Record<string, unknown>[], title: string): 
     }
     if (text) add({ type: "observation", content: text, label: "observed", source: role || "input", metadata: { role } });
   });
+  markFinalAnswer(events);
   return importedTrace(title, events);
 }
 
@@ -203,11 +213,12 @@ function parseResponsesOutput(output: Record<string, unknown>[], title: string):
     } else if (item.type === "function_call_output") {
       add({ type: "observation", content: contentOf(item.output) || "Tool returned no text output.", tool: item.call_id ? String(item.call_id) : undefined, label: "observed", source: "tool result" });
     } else if (item.type === "message") {
-      add({ type: "final_answer", content: contentOf(item.content), label: "observed", source: "assistant message", metadata: { note: "Observable output, not hidden reasoning." } });
+      add({ type: "belief_update", content: contentOf(item.content), label: "observed", source: "assistant message", metadata: { note: "Observable output, not hidden reasoning." } });
     } else if (item.type === "reasoning" && contentOf(item.summary)) {
       add({ type: "belief_update", content: contentOf(item.summary), label: "stated", source: "reasoning summary" });
     }
   });
+  markFinalAnswer(events);
   return importedTrace(title, events);
 }
 

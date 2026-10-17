@@ -101,7 +101,7 @@ describe("JSON import", () => {
 });
 
 describe("chat and Responses import", () => {
-  knownBug("P4: only the last assistant message is the final answer", () => {
+  test("P4: only the last assistant message is the final answer", () => {
     const types = events(traceFixture("chat-midturn.json")).map((e) => e.type);
     expect(types.filter((t) => t === "final_answer")).toHaveLength(1);
     expect(types.at(-1)).toBe("final_answer");
@@ -117,7 +117,7 @@ describe("chat and Responses import", () => {
     expect(result?.tool).toBe("get_order");
   });
 
-  knownBug("P14: a Responses message before a tool call is not a final answer", () => {
+  test("P14: a Responses message before a tool call is not a final answer", () => {
     const types = events(traceFixture("responses-output.json")).map((e) => e.type);
     expect(types.filter((t) => t === "final_answer")).toHaveLength(1);
   });
