@@ -14,7 +14,7 @@ export const TimelineControls: React.FC = () => {
   const {
     currentTrace,
     currentStep,
-    maxStep,
+    steps,
     isPlaying,
     playbackSpeed,
     setCurrentStep,
@@ -28,8 +28,14 @@ export const TimelineControls: React.FC = () => {
 
   if (!currentTrace || currentTrace.events.length === 0) return null;
 
+  // The slider and labels count positions in the replay, not raw step values,
+  // which may be timestamps (T2).
+  const position = Math.max(0, steps.indexOf(currentStep));
+  const last = steps.length - 1;
+  const filled = last === 0 ? 100 : (position / last) * 100;
+
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCurrentStep(Number(e.target.value));
+    setCurrentStep(steps[Number(e.target.value)]);
   };
 
   const speedOptions = [
@@ -46,9 +52,9 @@ export const TimelineControls: React.FC = () => {
         {/* Reset */}
         <button
           onClick={resetReplay}
-          disabled={currentStep <= 1}
+          disabled={position === 0}
           className="p-2 rounded bg-cyber-bg border border-cyber-border hover:bg-cyber-hover text-cyber-muted hover:text-cyber-text disabled:opacity-40 transition-colors"
-          title="Reset to Step 1"
+          title="Reset to the first step"
         >
           <RotateCcw className="w-3.5 h-3.5" />
         </button>
@@ -56,7 +62,7 @@ export const TimelineControls: React.FC = () => {
         {/* Step Backward */}
         <button
           onClick={stepBackward}
-          disabled={currentStep <= 1}
+          disabled={position === 0}
           className="p-2 rounded bg-cyber-bg border border-cyber-border hover:bg-cyber-hover text-cyber-muted hover:text-cyber-text disabled:opacity-40 transition-colors"
           title="Step Backward"
         >
@@ -79,7 +85,7 @@ export const TimelineControls: React.FC = () => {
         {/* Step Forward */}
         <button
           onClick={stepForward}
-          disabled={currentStep >= maxStep}
+          disabled={position === last}
           className="p-2 rounded bg-cyber-bg border border-cyber-border hover:bg-cyber-hover text-cyber-muted hover:text-cyber-text disabled:opacity-40 transition-colors"
           title="Step Forward"
         >
@@ -89,7 +95,7 @@ export const TimelineControls: React.FC = () => {
         {/* Reveal All */}
         <button
           onClick={revealAll}
-          disabled={currentStep >= maxStep}
+          disabled={position === last}
           className="p-2 rounded bg-cyber-bg border border-cyber-border hover:bg-cyber-hover text-cyber-muted hover:text-cyber-text disabled:opacity-40 transition-colors"
           title="Skip to End"
         >
@@ -103,7 +109,7 @@ export const TimelineControls: React.FC = () => {
         <div className="flex flex-col text-left font-mono shrink-0">
           <span className="text-[10px] text-cyber-muted uppercase">Timeline</span>
           <span className="text-sm font-bold text-cyber-text">
-            Step {currentStep} <span className="text-cyber-muted text-xs">/ {maxStep}</span>
+            Step {position + 1} <span className="text-cyber-muted text-xs">/ {steps.length}</span>
           </span>
         </div>
 
@@ -111,24 +117,24 @@ export const TimelineControls: React.FC = () => {
         <div className="flex-1 relative flex items-center">
           <input
             type="range"
-            min="1"
-            max={maxStep}
-            value={currentStep}
+            min="0"
+            max={last}
+            value={position}
             onChange={handleSliderChange}
             className="w-full h-1 bg-cyber-border rounded-lg appearance-none cursor-pointer focus:outline-none accent-cyber-primary"
             style={{
-              background: `linear-gradient(to right, #3B82F6 0%, #3B82F6 ${((currentStep - 1) / (maxStep - 1)) * 100}%, #1F293D ${((currentStep - 1) / (maxStep - 1)) * 100}%, #1F293D 100%)`
+              background: `linear-gradient(to right, #3B82F6 0%, #3B82F6 ${filled}%, #1F293D ${filled}%, #1F293D 100%)`
             }}
           />
 
           {/* Stepped dot marks on timeline */}
           <div className="absolute inset-x-0 -top-1 flex justify-between pointer-events-none px-1">
-            {Array.from({ length: maxStep }).map((_, i) => (
-              <div 
-                key={i} 
+            {steps.map((step, i) => (
+              <div
+                key={step}
                 className={`w-1.5 h-1.5 rounded-full border transition-all ${
-                  i + 1 <= currentStep 
-                    ? "bg-cyber-primary border-cyber-primary" 
+                  i <= position
+                    ? "bg-cyber-primary border-cyber-primary"
                     : "bg-cyber-bg border-cyber-border"
                 }`}
                 title={`Step ${i + 1}`}

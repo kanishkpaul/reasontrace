@@ -20,9 +20,10 @@ interface TraceState {
   selectedNodeId: string | null;
   newestNodeId: string | null;
   
-  // Playback / Timeline Replay
+  // Playback / Timeline Replay. Replay moves through the trace's own step
+  // values, which can be sparse or timestamps, never by adding 1 (T3).
+  steps: number[];
   currentStep: number;
-  maxStep: number;
   isPlaying: boolean;
   playbackSpeed: number; // in ms
   playbackIntervalId: ReturnType<typeof setInterval> | null;
@@ -78,8 +79,8 @@ export const useTraceStore = create<TraceState>((set, get) => ({
   selectedNodeId: null,
   newestNodeId: null,
   
+  steps: [],
   currentStep: 0,
-  maxStep: 0,
   isPlaying: false,
   playbackSpeed: 1500,
   playbackIntervalId: null,
@@ -90,17 +91,16 @@ export const useTraceStore = create<TraceState>((set, get) => ({
   setTrace: (trace) => {
     get().stopPlayback();
     
-    // Sort events to find the max step
     const sorted = [...trace.events].sort((a, b) => a.step - b.step);
-    const maxStep = sorted.length > 0 ? sorted[sorted.length - 1].step : 0;
-    
+    const steps = [...new Set(sorted.map(e => e.step))];
+
     // Find final answer step or just the last step to default select
     const finalEvent = sorted.find(e => e.type === "final_answer") || sorted[sorted.length - 1];
 
     set({
       currentTrace: trace,
-      currentStep: maxStep,
-      maxStep,
+      steps,
+      currentStep: steps.at(-1) ?? 0,
       newestNodeId: sorted.length > 0 ? sorted[sorted.length - 1].id : null,
       selectedNodeId: finalEvent ? finalEvent.id : null,
     });
@@ -124,11 +124,11 @@ export const useTraceStore = create<TraceState>((set, get) => ({
   },
 
   setCurrentStep: (step) => {
-    const { currentTrace, maxStep } = get();
-    if (!currentTrace) return;
-    
-    const validatedStep = Math.max(1, Math.min(step, maxStep));
-    
+    const { currentTrace, steps } = get();
+    if (!currentTrace || steps.length === 0) return;
+
+    const validatedStep = steps.findLast(s => s <= step) ?? steps[0];
+
     // Find the latest node revealed up to this step
     const stepEvents = currentTrace.events.filter(e => e.step <= validatedStep);
     const newest = stepEvents.length > 0 ? stepEvents[stepEvents.length - 1] : null;
@@ -141,37 +141,34 @@ export const useTraceStore = create<TraceState>((set, get) => ({
     });
 
     // If we hit the end, stop playing
-    if (validatedStep === maxStep) {
+    if (validatedStep === steps.at(-1)) {
       get().stopPlayback();
     }
   },
 
   stepForward: () => {
-    const { currentStep, maxStep } = get();
-    if (currentStep < maxStep) {
-      get().setCurrentStep(currentStep + 1);
-    }
+    const { currentStep, steps } = get();
+    const next = steps.find(s => s > currentStep);
+    if (next !== undefined) get().setCurrentStep(next);
   },
 
   stepBackward: () => {
-    const { currentStep } = get();
-    if (currentStep > 1) {
-      get().setCurrentStep(currentStep - 1);
-    }
+    const { currentStep, steps } = get();
+    const previous = steps.findLast(s => s < currentStep);
+    if (previous !== undefined) get().setCurrentStep(previous);
   },
 
   startPlayback: () => {
-    const { isPlaying, currentStep, maxStep, playbackSpeed } = get();
+    const { isPlaying, currentStep, steps, playbackSpeed } = get();
     if (isPlaying) return;
 
-    // If we are at the end, start over from 1
-    if (currentStep === maxStep) {
-      get().setCurrentStep(1);
+    if (currentStep === steps.at(-1)) {
+      get().setCurrentStep(steps[0]);
     }
 
     const intervalId = setInterval(() => {
       const state = get();
-      if (state.currentStep < state.maxStep) {
+      if (state.currentStep !== state.steps.at(-1)) {
         state.stepForward();
       } else {
         state.stopPlayback();
@@ -214,12 +211,13 @@ export const useTraceStore = create<TraceState>((set, get) => ({
   },
 
   resetReplay: () => {
-    get().setCurrentStep(1);
+    const { steps } = get();
+    if (steps.length) get().setCurrentStep(steps[0]);
   },
 
   revealAll: () => {
-    const { maxStep } = get();
-    get().setCurrentStep(maxStep);
+    const { steps } = get();
+    if (steps.length) get().setCurrentStep(steps[steps.length - 1]);
   },
 
   setEventTypeFilter: (type, visible) => {
