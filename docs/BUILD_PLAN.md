@@ -19,10 +19,12 @@ Bug IDs (P1, D3, …) refer to the audit in [PLAN.md](PLAN.md).
 | 7 | First finding view: when the answer is committed | 2, 6 |
 | 8 | Symbolic engine: z3 | 2, 3 |
 | 9 | Neurosymbolic pipelines | 3 or 4, 8 |
-| 10 | Live testing against real providers, servers, models and engines | 3–9 |
-| 11 | The README, for researchers, engineers and recruiters | 10 |
+| 10 | The viewer's own hacker aesthetic, keyboard first | 2–9 |
+| 11 | Live testing against real providers, servers, models and engines | 3–10 |
+| 12 | The README, for researchers, engineers and recruiters | 11 |
 
-Phase 8 can start any time after phases 2 and 3. Phases 10 and 11 come last.
+Phase 8 can start any time after phases 2 and 3. Phases 10 to 12 come last,
+in that order.
 
 The tool does a few things well rather than everything: anything not listed
 here (more sources, more decoders, interventions, review annotations, a
@@ -184,7 +186,40 @@ hosted build) stays out until a phase above needs it.
 - A fixture with a deliberate translation error shows where the formula
   departs from the text.
 
-## Phase 10: Live testing
+## Phase 10: Hacker aesthetic
+
+**Builds**
+- The viewer's own look, made for this app rather than taken from the
+  design kit: a terminal on a dark ground. Monospace throughout,
+  phosphor-style text, box-drawing rules and panel borders, a vim-style
+  status line, a blinking cursor where input goes, and an ASCII bar for each
+  probability. Its colour, type and spacing tokens live in `apps/web`, and
+  `npm run check:colours` enforces them in place of `design/`.
+- Keyboard first: `j`/`k` between events, `h`/`l` and the arrow keys
+  between steps, `/` to search, `:` or Ctrl-K for a command palette that
+  reaches every action (open, run, stop, switch view, export), and `?` for
+  the key map. Every action still works with a mouse.
+- Every view from phases 2–9 restyled, including the token, decoder,
+  answer-commitment, proof-tree and handoff views.
+- The design rules move with it: AGENTS.md's Design section, `design/` and
+  `design/kit.json` are replaced by the app's own style notes in the same
+  change.
+
+**Gate**
+- Nothing in `apps/web` imports from `design/`, and `check:colours` passes
+  against the app's own tokens.
+- Each evidence label and each run ending (complete, truncated, refused,
+  error, timed out, stopped) and "unavailable" stay distinguishable without
+  colour: a component test checks each has its own mark and word.
+- A script checks every text and background token pair for WCAG AA
+  contrast.
+- A component test drives open, run, stop, step, search and export with
+  the keyboard alone.
+- With `prefers-reduced-motion`, nothing blinks or animates.
+- At 375 px wide there is no horizontal scroll, and the app loads and works
+  with the network disabled, fonts included.
+
+## Phase 11: Live testing
 
 **Builds**
 - Live runs of every source, tier and engine the earlier phases built:
@@ -207,7 +242,7 @@ hosted build) stays out until a phase above needs it.
 - Every defect the live runs find is fixed with a test, or listed in
   PLAN.md by ID.
 
-## Phase 11: README
+## Phase 12: README
 
 **Builds**
 - A README that answers, in order: what ReasonTrace shows and why it
@@ -218,7 +253,7 @@ hosted build) stays out until a phase above needs it.
   bear), engineers (install, architecture, how to add a source), and
   recruiters (what was built and how it was tested, in the first screen).
 - Screenshots and one short recording, taken from the current build with
-  real runs from phase 10, following `design/`.
+  real runs from phase 11, in the phase 10 aesthetic.
 
 **Gate**
 - Every command in the README, run in order on a fresh clone, works.
