@@ -44,9 +44,16 @@ export function computeDiagnostics(trace: ReasonTrace): TraceDiagnostics {
   const canReachType = (id: string, types: EventType[]) => ((downstream.get(id) ?? 0) & typeMask(types)) !== 0;
   const hasAncestorType = (id: string, types: EventType[]) => ((upstream.get(id) ?? 0) & typeMask(types)) !== 0;
 
+  // Without declared support links, the checks below would flag every claim
+  // and action; say once that they can't be run instead (D8).
+  const recordsSupport = events.some(e => e.supports.length > 0);
+  if (!recordsSupport) {
+    addFinding({ id: "support-not-recorded", severity: "info", category: "visibility", title: "Support links not recorded", detail: "This trace doesn't say which events support which, so grounding, unsupported claims and unexplained actions can't be checked.", eventIds: [], recommendation: "Use a trace format that records which observations each claim relies on." });
+  }
+
   // 2. Detect unsupported hypotheses (hypotheses with no downstream effect / no links going to observations/belief_updates/final_answers)
   const unsupportedHypotheses: string[] = [];
-  events.forEach(e => {
+  if (recordsSupport) events.forEach(e => {
     if (e.type === "hypothesis") {
       // An unsupported hypothesis has no children at all, or none that lead to updates or answers
       if (!childrenCount.get(e.id) || !canReachType(e.id, ["action", "observation", "belief_update", "final_answer"])) {
@@ -58,7 +65,7 @@ export function computeDiagnostics(trace: ReasonTrace): TraceDiagnostics {
 
   // 3. Detect actions taken without prior hypothesis or decision
   const actionsWithoutPriorHypothesis: string[] = [];
-  events.forEach(e => {
+  if (recordsSupport) events.forEach(e => {
     if (e.type === "action") {
       // Check if it has any ancestor that is a hypothesis or decision
       const hasPlanningAncestor = hasAncestorType(e.id, ["hypothesis", "decision"]);
@@ -74,7 +81,6 @@ export function computeDiagnostics(trace: ReasonTrace): TraceDiagnostics {
   // unsupported update can't ground an answer (D5).
   const finalAnswers = events.filter(e => e.type === "final_answer");
   const ungroundedAnswers = finalAnswers.filter(fa => !hasAncestorType(fa.id, ["observation"]));
-  const recordsSupport = events.some(e => e.supports.length > 0);
   let answerGrounding: AnswerGrounding;
   if (finalAnswers.length === 0) answerGrounding = "no_answer";
   else if (!recordsSupport) answerGrounding = "not_recorded";
@@ -128,8 +134,10 @@ export function computeDiagnostics(trace: ReasonTrace): TraceDiagnostics {
 
   const groundedAnswerCount = finalAnswers.length - ungroundedAnswers.length;
   const claims = events.filter(e => ["hypothesis", "belief_update", "decision", "final_answer"].includes(e.type));
-  const supportedClaims = claims.filter(event => hasAncestorType(event.id, ["observation"]) || canReachType(event.id, ["observation"]));
-  const evidenceCoverage = claims.length ? Math.round((supportedClaims.length / claims.length) * 100) : 0;
+  // Support flows from evidence to claim, so only observations upstream count.
+  // An observation a claim leads to is a test of it, not support for it (D3).
+  const supportedClaims = claims.filter(event => hasAncestorType(event.id, ["observation"]));
+  const evidenceCoverage = recordsSupport && claims.length ? Math.round((supportedClaims.length / claims.length) * 100) : null;
   const opaqueEventCount = events.filter(e => e.label === "observed").length;
   const inferredEventCount = events.filter(e => e.label === "inferred").length;
 

@@ -69,7 +69,12 @@ export interface TraceDiagnostics {
   unsupportedHypotheses: string[]; // Event IDs
   actionsWithoutPriorHypothesis: string[]; // Event IDs
   answerGrounding: AnswerGrounding;
-  evidenceCoverage: number;
+  /**
+   * Percentage of claims (hypotheses, updates, decisions, answers) with an
+   * observation upstream along declared support links. Null when the trace
+   * declares no links or has no claims.
+   */
+  evidenceCoverage: number | null;
   groundedAnswerCount: number;
   opaqueEventCount: number;
   inferredEventCount: number;

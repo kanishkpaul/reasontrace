@@ -68,7 +68,12 @@ describe("diagnostics", () => {
     expect(repeat?.eventIds).toEqual(["e1", "e2"]);
   });
 
-  knownBug("D8: chat actions are not called unexplained when the source never states plans", () => {
+  test("D3: an observation a claim leads to does not count as support for it", () => {
+    const text = '{"events":[{"id":"h","type":"hypothesis","step":1},{"id":"o","type":"observation","step":2,"supports":["h"]}]}';
+    expect(diagnose(text).evidenceCoverage).toBe(0);
+  });
+
+  test("D8: chat actions are not called unexplained when the source never states plans", () => {
     expect(diagnose(traceFixture("chat-tools.json")).actionsWithoutPriorHypothesis).toEqual([]);
   });
 

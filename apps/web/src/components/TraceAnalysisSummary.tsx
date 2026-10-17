@@ -19,8 +19,12 @@ export const TraceAnalysisSummary: React.FC = () => {
         <div className="mt-1 flex items-baseline gap-1.5"><span className="text-base font-semibold text-cyber-text">{currentTrace.events.length}</span><span className="text-[11px] text-cyber-muted">events</span></div>
       </div>
       <div className="px-3 py-2.5">
-        <div className="flex items-center gap-1.5 text-cyber-muted text-[10px] uppercase font-medium tracking-wider"><ShieldCheck className="w-3.5 h-3.5" /> Evidence coverage</div>
-        <div className="mt-1 flex items-baseline gap-1.5"><span className={`text-base font-semibold ${diagnostics.evidenceCoverage >= 70 ? "text-emerald-400" : diagnostics.evidenceCoverage >= 40 ? "text-amber-400" : "text-rose-400"}`}>{diagnostics.evidenceCoverage}%</span><span className="text-[11px] text-cyber-muted">of claims</span></div>
+        <div className="flex items-center gap-1.5 text-cyber-muted text-[10px] uppercase font-medium tracking-wider"><ShieldCheck className="w-3.5 h-3.5" /> Linked to observations</div>
+        {diagnostics.evidenceCoverage === null ? (
+          <div className="mt-1 text-[11px] leading-tight text-cyber-muted">{diagnostics.answerGrounding === "not_recorded" ? "Not recorded: the trace has no support links" : "No claims to check"}</div>
+        ) : (
+          <div className="mt-1 flex items-baseline gap-1.5"><span className="text-base font-semibold text-cyber-text">{diagnostics.evidenceCoverage}%</span><span className="text-[11px] text-cyber-muted">of claims, by declared links</span></div>
+        )}
       </div>
       <div className="px-3 py-2.5">
         <div className="flex items-center gap-1.5 text-cyber-muted text-[10px] uppercase font-medium tracking-wider"><Eye className="w-3.5 h-3.5" /> Visibility</div>
