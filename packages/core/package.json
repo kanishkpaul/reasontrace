@@ -1,0 +1,16 @@
+{
+  "name": "@reasontrace/core",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Extension interfaces, run directories and the determinism check.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p . && tsc -p tsconfig.test.json"
+  },
+  "dependencies": {
+    "@reasontrace/format": "*"
+  }
+}

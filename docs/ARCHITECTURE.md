@@ -116,11 +116,14 @@ the pull request that adds it.
 ```ts
 /** A model reached over HTTP: hosted APIs and local servers. */
 interface Source {
-  id: SourceId;
+  id: string;
+  needsKey: boolean;
   /** What this source can provide for this model. The viewer draws from this,
    *  so a missing depth shows as unavailable rather than empty. */
-  capabilities(model: ModelRef): Capabilities;
-  run(request: RunRequest, sink: EventSink, signal: AbortSignal): Promise<void>;
+  capabilities(model: string): Capabilities;
+  models(signal: AbortSignal): Promise<ModelInfo[]>;
+  /** Errors, refusals, truncation and timeouts are outcomes, not rejections. */
+  run(request: RunRequest, sink: EventSink, signal: AbortSignal): Promise<RunOutcome>;
 }
 
 /** A symbolic engine. Its derivations are recorded as `exact`. */
