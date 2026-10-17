@@ -3,9 +3,10 @@
 ReasonTrace is an interpretability tool. It runs a model or connects to one,
 and captures three things: what the model does, what it says about its own
 reasoning, and what happens inside it. It shows them side by side, step by
-step, and labels how far each one can be trusted. It works with neural,
-symbolic and neurosymbolic models, through your own API keys or with models
-running on your machine.
+step, and labels how far each one can be trusted. It works with neural
+models, LLMs first, with symbolic engines, and with neurosymbolic systems that
+join the two, through your own API keys or with models running on your
+machine.
 
 This page says what the tool is and what it will not claim. How it is built is
 in [ARCHITECTURE.md](ARCHITECTURE.md), and the order of work is in

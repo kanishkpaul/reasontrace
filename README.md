@@ -3,8 +3,9 @@
 An interpretability tool for seeing how models reason. It captures what a model
 does, what it says it was thinking, and what happens inside it, and shows them
 side by side, step by step, with each piece labelled by how far it can be
-trusted. It works with neural, symbolic and neurosymbolic models, using your
-own API keys or models running on your machine.
+trusted. It works with neural models (LLMs first), symbolic engines and
+neurosymbolic systems that join the two, using your own API keys or models
+running on your machine.
 
 It is a local web app: a TypeScript server on your machine holds your keys and
 talks to models and solvers, a React viewer runs in your browser, and an
@@ -28,6 +29,16 @@ npm run check      # lint, typecheck, tests, dependency rules, build
 ```
 
 Needs Node 22.22.2+ or 24.15+ (the test tools, jsdom and ESLint, set the floor).
+
+## Models
+
+| Kind | Models | How they are reached |
+|---|---|---|
+| LLMs, hosted | GPT (OpenAI), Claude (Anthropic), Gemini, and open models on OpenRouter or Groq | your own API key |
+| LLMs, local server | any model served by Ollama, LM Studio, llama.cpp server or vLLM (Llama, Qwen, Gemma, Mistral, DeepSeek, …) | the server's local URL |
+| LLMs, weights | Gemma 3 1B and Qwen3 0.6B, from Hugging Face | the Python sidecar |
+| Symbolic | z3 | in-process |
+| Neurosymbolic | an LLM that writes a formula or program, and the solver that runs it | an LLM above plus z3 |
 
 ## What it will show
 
