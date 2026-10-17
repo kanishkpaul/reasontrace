@@ -74,8 +74,8 @@ hosted build) stays out until a phase above needs it.
   graph stays as a second view.
 
 **Gate**
-- A lint rule rejecting hex, `rgb(` and Tailwind palette colours in
-  `apps/web/src` passes.
+- `npm run check:colours`, which rejects hex values, colour functions, seed
+  tokens and Tailwind palette classes in `apps/web/src`, passes.
 - The app loads and works with the network disabled.
 - At 375 px wide there is no horizontal scroll, in light and dark.
 
