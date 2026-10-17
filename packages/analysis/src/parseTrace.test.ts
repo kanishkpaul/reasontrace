@@ -24,11 +24,15 @@ describe("transcript import", () => {
     expect(events("Tool: web_search")[0].tool).toBe("web_search");
   });
 
-  knownBug("P12: 'confidence: 100%' is read as 1", () => {
+  test("P12: 'confidence: 100%' is read as 1", () => {
     expect(events("Update: sure (confidence: 100%)")[0].confidence).toBe(1);
   });
 
-  knownBug("P12: a percentage inside an observation is not taken as its confidence", () => {
+  test("P12: bracketed and fractional confidence still read", () => {
+    expect(events("Update: wrong host [confidence: 85%]\nUpdate: right host (confidence: 0.9)").map((e) => e.confidence)).toEqual([0.85, 0.9]);
+  });
+
+  test("P12: a percentage inside an observation is not taken as its confidence", () => {
     expect(events("Observation: disk usage rose (5%)")[0].confidence).toBeUndefined();
   });
 });

@@ -310,32 +310,16 @@ export function parseTranscriptTrace(input: string): ReasonTrace {
  */
 function finalizeEvent(event: Partial<TraceEvent>, step: number): TraceEvent {
   const content = event.content || "";
-  let confidence: number | undefined = undefined;
   let tool = event.tool;
 
-  // Extract confidence (e.g. "[confidence: 0.85]" or "(90%)" or "confidence: 0.9")
-  const confidenceRegexes = [
-    /(?:confidence|conf):\s*(0\.\d+|1\.0|\b\d{1,2}\b%?)/i,
-    /\[(?:confidence|conf):\s*(0\.\d+|1\.0|\d{1,2}%)\]/i,
-    /\((0\.\d+|1\.0|\d{1,2}%)\)/
-  ];
-
-  for (const rx of confidenceRegexes) {
-    const match = content.match(rx);
-    if (match) {
-      const valStr = match[1];
-      if (valStr.endsWith("%")) {
-        const val = parseFloat(valStr) / 100;
-        if (!isNaN(val)) confidence = val;
-      } else {
-        const val = parseFloat(valStr);
-        if (!isNaN(val)) {
-          // If it is an integer > 1, assume percentage (e.g. 85 -> 0.85)
-          confidence = val > 1 ? val / 100 : val;
-        }
-      }
-      break;
-    }
+  // Only an explicit "confidence:" counts. A bare "(5%)" is usually a
+  // quantity in the text, not the model's confidence.
+  let confidence: number | undefined;
+  const stated = content.match(/\b(?:confidence|conf):\s*(\d+(?:\.\d+)?)\s*(%?)/i);
+  if (stated) {
+    const value = Number(stated[1]);
+    const fraction = stated[2] || value > 1 ? value / 100 : value;
+    if (fraction >= 0 && fraction <= 1) confidence = fraction;
   }
 
   // Extract tool name if event is an action (e.g. "tool: file_read" or "[tool: file_read]" or "Action: file_read()")
