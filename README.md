@@ -1,59 +1,56 @@
-# ReasonTrace (archived browser prototype)
+# ReasonTrace
 
-This branch preserves the first version of ReasonTrace: a browser-only viewer
-for agent traces. It is no longer developed. The current project is on
-[`main`](https://github.com/kanishkpaul/reasontrace/tree/main), where ReasonTrace is being rebuilt as a runtime
-interpretability tool for neural, symbolic and neurosymbolic models.
+An interpretability tool for seeing how models reason. It captures what a model
+does, what it says it was thinking, and what happens inside it, and shows them
+side by side, step by step, with each piece labelled by how far it can be
+trusted. It works with neural, symbolic and neurosymbolic models, using your
+own API keys or models running on your machine.
 
-![The prototype reviewing a web-agent trace](docs/screenshot.png)
+It is a local web app: a TypeScript server on your machine holds your keys and
+talks to models and solvers, a React viewer runs in your browser, and an
+optional Python sidecar reads model internals.
 
-## What it did
+![The viewer reviewing a web-agent trace](docs/screenshot.png)
 
-You paste an agent log and get a graph you can replay step by step, plus
-rule-based findings. It accepts four input formats:
+## Where it is
 
-- plain transcripts with `Thought:` / `Action:` / `Observation:` /
-  `Final:` lines;
-- chat-message JSON, including `tool_calls`;
-- OpenAI Responses-style `output` arrays;
-- native event JSON with explicit IDs and parent links.
-
-Every event has one of seven types and an evidence mode (`explicit`,
-`observed` or `inferred`). The evidence mode keeps observed behaviour from
-being presented as the model's hidden reasoning.
-
-Stack: React 19, TypeScript, Vite, Tailwind 4, React Flow, Zustand. There is
-no backend.
+The viewer opens agent trace files (plain `Thought:` / `Action:` transcripts,
+chat-message JSON, OpenAI Responses output, and native event JSON) and draws
+them as a replayable graph with rule-based findings. Nothing runs a model yet.
+The findings are not reliable: [docs/PLAN.md](docs/PLAN.md) lists the known
+defects, and each has a test that fails until it is fixed.
 
 ```bash
 npm install
 npm run dev        # http://localhost:5173
+npm run check      # lint, typecheck, tests, dependency rules, build
 ```
 
 Needs Node 20.19+ or 22.12+.
 
-## Why it was retired
+## What it will show
 
-A browser can only read logs. It cannot run a model or see inside one, which
-is what the rebuild on `main` is for.
+| How the model is reached | What you can see |
+|---|---|
+| Weights run in the Python sidecar (Gemma 3, Qwen3 first) | behaviour, raw reasoning, token probabilities, activations, lenses, SAE features, probes, interventions |
+| A local server (Ollama, LM Studio, llama.cpp, vLLM) | behaviour, raw reasoning from open models, token probabilities where supported |
+| Your own API key (OpenAI, Anthropic, Gemini, OpenRouter, …) | behaviour, provider reasoning summaries, token probabilities where supported |
+| A symbolic engine (z3, Datalog) | queries, results, and the exact derivation |
 
-The prototype also has known defects. They are recorded here so nobody mistakes
-its findings for reliable ones:
+What a source cannot provide is shown as unavailable, with the reason. Signals
+decoded from a model's internals carry the result of their control.
 
-- **The transcript parser drops the evidence mode.** `finalizeEvent` in
-  `src/lib/parseTrace.ts` returns events without it.
-- **Grounding checks can't fail on transcripts or chat logs.** Those parsers
-  link each event to the one before it, so an unrelated earlier observation
-  counts as evidence. All six bundled samples score 100% evidence coverage.
-- **The loop detector misses the bundled web-agent loop.** It needs three
-  consecutive calls to the same tool; the sample has two.
-- **Diagnostics recurse once per event and overflow the call stack** somewhere
-  between 4,000 and 8,000 events.
-- **Chat import labels every assistant message without tool calls as a
-  final answer.**
-- **Clicking a node rebuilds the layout,** so manually dragged nodes snap
-  back.
-- **The timeline divides by zero** when a trace has a single step.
+## Documents
+
+- [Charter](docs/CHARTER.md): what the tool is and what it will not claim.
+- [Architecture](docs/ARCHITECTURE.md): packages, the trace format, extension
+  points, and how to add or remove a capability.
+- [Build plan](docs/BUILD_PLAN.md): phases and their gates.
+- [Plan](docs/PLAN.md): the bug audit and the stack decisions.
+- [Style](docs/STYLE.md): how code and comments are written.
+- [Failure modes](FAILURE_MODES.md): how work here goes wrong, and the checks.
+- [Borrowed](docs/BORROWED.md): external code, weights and ideas.
+- [AGENTS.md](AGENTS.md): rules for anyone, human or agent, writing code here.
 
 ## License
 

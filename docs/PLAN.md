@@ -6,7 +6,7 @@ web app that inspects neural, symbolic and neurosymbolic models, through your ow
 API keys (BYOK) or models on your machine, and labels every value by how far it
 can be trusted.
 
-## 0. Where things stand
+## 0. Starting point (2026-10-17)
 
 | Item | State |
 |---|---|
@@ -108,97 +108,20 @@ browser.
 - There are three evidence modes, but the charter defines six labels plus `unavailable`.
 - There are no tests, no fixtures and no CI on `main`. The commit hook and attribution check exist only on `new`.
 
-## 2. Decisions needed
+## 2. Decisions
 
-| # | Decision | Recommendation | Why |
-|---|---|---|---|
-| D-1 | Backend for BYOK, local models and internals | **TypeScript local server (Node, Hono) + Python sidecar for neural internals** | One language with the web app. Internals tooling (nnsight, TransformerLens, SAELens, Gemma Scope) is in Python, so borrowing beats rebuilding hooks in candle. Alternative: the Rust core from `new`, which costs more and has no web code yet. |
-| D-2 | Viewer framework | **Keep React + React Flow** | The working code is React. The design kit is plain CSS with a Tailwind bridge, so it works with either. `new`'s docs say Svelte; update them. |
-| D-3 | Where keys live | **Server-side only, in the OS keychain (`@napi-rs/keyring`)** | Charter rule 6. The browser never sees a key and never calls a provider. |
-| D-4 | Hosted static build | **Yes, import-only** (open trace files, no keys, no model calls) | A shareable demo that can't leak keys. |
-| D-5 | Skin | `lens` (kit default) | The direction doc is already written for it. |
+Decided on 2026-10-17:
 
-## 3. Plan
+| # | Decision | Why |
+|---|---|---|
+| D-1 | A TypeScript local server (Hono on Node) for sources, keys and engines, plus a Python sidecar for neural internals | One language with the web app. Internals tooling (nnsight, TransformerLens, SAELens, Gemma Scope) is in Python, so borrowing it beats rebuilding activation hooks. |
+| D-2 | Keep React and React Flow | The working code is React. The design kit is plain CSS with a Tailwind bridge. |
+| D-3 | Keys live server-side only, in the OS keychain | Charter rule 6. The browser never sees a key and never calls a provider. |
+| D-4 | A hosted static build opens trace files only | A shareable demo that can't leak keys. |
+| D-5 | Skin: `lens` | The direction in `design/README.md` is written for it. |
 
-Each phase ends at a gate: a test or command that fails if the work isn't done.
+## 3. Phases
 
-### Phase A: Foundation on `main`
-
-1. Bring the rules over from `new` without deleting `src/`:
-   `git checkout new -- AGENTS.md CLAUDE.md FAILURE_MODES.md .githooks scripts .github .claude design docs/CHARTER.md docs/STYLE.md docs/BORROWED.md`.
-   Rewrite ARCHITECTURE.md and BUILD_PLAN.md for D-1 and D-2. Set `core.hooksPath`.
-2. Turn the app into a workspace: `apps/web` (the current app), `apps/server`, `packages/format` (types + JSON schema), `packages/analysis` (parser + diagnostics, no DOM).
-3. Add Vitest. Turn every **ran** probe in §1 into a failing test plus fixtures in `fixtures/traces/`.
-4. CI: `npm ci`, lint, `tsc`, `vitest`, build, attribution check. Run `npm audit fix` for the vite dev deps.
-
-**Gate:** CI is green, and the probe tests exist and fail on the current code.
-
-### Phase B: Correctness fixes (in this order, each with its test)
-
-1. **Format v1** (`packages/format`): `format_version`, run → step → event; depth (`behaviour | stated | probabilities | internals`); the six charter labels + `unavailable{reason}`; separate `next` (time order) and `supports` (evidence) edges. Reader for v0 prototype JSON. Fixes P5 at the root.
-2. **Parser**: P1–P16. Deterministic IDs (`<source>-<index>`), duplicate-ID error, cycle detection, a strict JSON path that reports the JSON error instead of falling through, ReAct prefixes, a role-aware chat import (last assistant turn = answer; earlier turns are `observed` messages), Responses `call_id` → tool-name pairing, confidence clamped to [0, 1].
-3. **Diagnostics**: one iterative topological pass with memoised reachability (D1, D2), O(V+E). Grounding only over `supports` edges (D3–D5); no answer means "no answer", not "grounded". Loop rule: same tool **and** same normalised arguments ≥ 2, with no new observation in between, every loop reported with its own events (D6, D7). Planning and confidence rules gated on whether the source can provide them (D8, D9). Each finding carries `rule`, `supportingEventIds` and `limitations`. Compute once per trace, memoised in the store (D2).
-4. **Graph and replay**: layout depends only on events (cache by trace ID) and selection only restyles (G1); `fitView` on trace change (G2); rank by order index, not raw step (G3, T2, T3); parents placed first via topological order (G4); dagre or elkjs instead of the hand-rolled pass (G5, rule 7); edge IDs dedupe (G6); guarded timeline (T1); selectors with `useShallow` (S2); reset filters on load (S1).
-5. **Import/storage/export**: typed `ParseResult {ok, warnings[], errors[]}` (I1, I2); one timer ref (I3); 20 MB limit, `onerror`, a file `<input>` (I4); schema-validate restores, guard storage (I5, I6); revoke URLs, sanitise filenames (I7, I8).
-6. **Wording**: replace C1–C5 with what each rule checked and what it can't check.
-
-**Gate:** all §1 tests pass. A 50,000-event fixture runs diagnostics in under 500 ms and draws the first frame in under 2 s. A trace with no answer never shows "grounded".
-
-### Phase C: Design system (borrowed from `design/` and `../design-kit`)
-
-1. `node ../design-kit/scripts/kit.mjs use . lens`, then re-run with the Tailwind bridge (`tailwind-theme.css`) and set `"tailwind": true` in `design/kit.json`.
-2. Import `base.css`, `skins.css`, `components.css` once; replace every `cyber-*` class and hex value with `--ui-*` tokens. Gate it with a lint rule that fails on hex, `rgb(`, and Tailwind palette colours in `apps/web/src`.
-3. Bundle the fonts locally (`@fontsource`), and remove Google Fonts (I9).
-4. Build the evidence-label component from `design/README.md` (mark, colour, text treatment, badge) and use it for every value. `unavailable` shows its reason in words.
-5. Rebuild the layout to the direction: runs sidebar → three aligned columns (behaviour / stated / internals) on one step scrubber → step-detail rail → manifest status bar. Keep the React Flow graph as a second view of the same run.
-6. Use the primitives in `design/system/COMPONENTS.md` (button, badge, form controls, lists, surfaces, transcript, feedback). Check the DESIGN.md "Before you add something" list.
-
-**Gate:** the colour lint passes, the app works with the network off, light and dark both pass the kit's contrast checks, and the mobile width (375 px) has no horizontal scroll.
-
-### Phase D: Local server, BYOK and local models (text tier)
-
-1. `apps/server` (Hono on Node) on `127.0.0.1` only, serving the built web app plus `/api`. A random per-launch token, checked on every request, blocks other local pages. Strict CORS.
-2. Keys: `POST /api/keys/:provider` stores to the OS keychain; there's no read-back endpoint, and responses and logs are redacted. A test asserts key bytes appear nowhere in run directories or logs.
-3. Sources behind one `Source` interface, each declaring capabilities per model:
-   - OpenAI-compatible: OpenAI, OpenRouter, Groq, Together; **local**: Ollama, LM Studio, llama.cpp server, vLLM. Logprobs where offered; raw `<think>` text from open reasoning models → `stated`.
-   - Anthropic Messages (thinking blocks → `stated`, labelled "summary by provider"), OpenAI Responses (reasoning summaries), Gemini (thought parts).
-4. Run directory as in `new`'s ARCHITECTURE §3 (`manifest.json`, `events.jsonl`, `attachments/`). Record errors, refusals, truncation and timeouts as events (charter rule 5).
-5. Web UI: a provider/model picker, a prompt runner with streaming, a run list, and a token view with probabilities when present.
-
-**Gate:** recorded fixtures for every source (success, error, refusal, truncation, timeout) parse to the right events and labels; no default test touches the network; the key-leak test passes; a model without logprobs renders "unavailable: provider does not expose token probabilities".
-
-### Phase E: Neural internals (full tier, local only)
-
-1. Python sidecar (`bridge/python`, managed by `uv`) using **nnsight** or **TransformerLens** for activation capture on small open models (Gemma 3 1B, Qwen3 0.6B on MPS). It reads and writes run directories only; the server launches it.
-2. A capture plan: named layers, positions and pooling (charter rule 4). Tensors are stored as safetensors.
-3. Decoders: logit lens and tuned lens; SAE features via **SAELens** + Gemma Scope; linear probes. Every decoded signal ships with a control (random direction, shuffled inputs, untrained weights) or is shown "unvalidated".
-4. Ground truth first: planted-circuit toy models where the decoder must recover the planted variable and the controls must fail.
-5. The first finding view: the step where the answer becomes decodable internally vs the step where the stated reasoning commits to it.
-
-**Gate:** the planted-circuit test passes, its controls fail, and the determinism check passes on identical runs and fails with the cache toggled.
-
-### Phase F: Symbolic engines
-
-1. **z3** via `z3-solver` (official WebAssembly build): proofs, models, unsat cores → `exact` events, `symbolic.proof_tree/1`.
-2. **Datalog** via a JS engine with provenance (evaluate and add a BORROWED.md row; Soufflé through the sidecar if none records rule firings).
-3. Proof-tree view: an indented monospace tree, rule firings as `.tool-row`, unsat cores highlighted.
-
-**Gate:** derivations match hand-checked fixtures, and an oversized derivation is recorded as truncated, not dropped.
-
-### Phase G: Neurosymbolic pipelines
-
-1. Pipeline runner: LLM (any Source) → translation → solver → result, with `nesy.translation/1` as its own event between text and formula.
-2. Translation view: the NL span next to the formula, a "translation" badge, and a check that re-reads the formula back to text and flags departures.
-
-**Gate:** a fixture with a planted translation error shows where the formula departs from the text.
-
-### Phase H: MVP review features (from `TODO.md`)
-
-Tool-call inspector (request ↔ result, errors, durations); click a finding to focus its events and path; annotations, failure-point markers, accept/dismiss per finding; export and reopen a portable review (`.rtreview`: source trace + annotations + decisions + `format_version`); OpenTelemetry GenAI import.
-
-**Gate:** a review round-trips export → import byte-for-byte on its stable fields.
-
-## 4. Order and parallel work
-
-A → B → C is sequential (C rewrites the components B fixes). D can start after
-A. E, F and G each need D's run directory but not each other. H needs B and C.
+The phases, their order and their gates are in [BUILD_PLAN.md](BUILD_PLAN.md).
+Phase 1 fixes every bug in §1; each one has a test in `packages/analysis` or
+`apps/web` that names its ID.
