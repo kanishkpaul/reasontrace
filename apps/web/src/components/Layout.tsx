@@ -9,8 +9,8 @@ import { NodeInspector } from "./NodeInspector";
 import { DiagnosisPanel } from "./DiagnosisPanel";
 import { TimelineControls } from "./TimelineControls";
 import { TraceAnalysisSummary } from "./TraceAnalysisSummary";
-import { readTrace } from "@reasontrace/analysis";
 import { diagnosticsFor } from "../lib/diagnostics";
+import { loadSavedTrace, saveTrace } from "../lib/savedTrace";
 import { BrainCircuit, Download, Save, Info, Sparkles, PanelLeft, PanelRight, Upload, X } from "lucide-react";
 
 type MobileTab = "review" | "import" | "details";
@@ -23,21 +23,15 @@ export const Layout: React.FC = () => {
   const [leftOpen, setLeftOpen] = useState(true);
   const [rightOpen, setRightOpen] = useState(true);
   const [mobileTab, setMobileTab] = useState<MobileTab>("review");
-  const [saveStatus, setSaveStatus] = useState<"idle" | "saved">("idle");
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saved" | "failed">("idle");
 
   useEffect(() => {
-    const saved = localStorage.getItem("reasontrace_saved_trace");
-    if (!saved) return;
-    try {
-      const { trace } = readTrace(JSON.parse(saved));
-      if (trace) setTrace(trace);
-    } catch {
-      localStorage.removeItem("reasontrace_saved_trace");
-    }
+    const saved = loadSavedTrace();
+    if (saved) setTrace(saved);
   }, [setTrace]);
 
   useEffect(() => {
-    if (currentTrace?.events.length) localStorage.setItem("reasontrace_saved_trace", JSON.stringify(currentTrace));
+    if (currentTrace?.events.length) saveTrace(currentTrace);
   }, [currentTrace]);
 
   const diagnostics = currentTrace ? diagnosticsFor(currentTrace) : null;
@@ -59,8 +53,7 @@ export const Layout: React.FC = () => {
 
   const handleQuickSave = () => {
     if (!currentTrace) return;
-    localStorage.setItem("reasontrace_saved_trace", JSON.stringify(currentTrace));
-    setSaveStatus("saved");
+    setSaveStatus(saveTrace(currentTrace) ? "saved" : "failed");
     window.setTimeout(() => setSaveStatus("idle"), 1800);
   };
 
@@ -80,7 +73,7 @@ export const Layout: React.FC = () => {
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <button onClick={() => { setLeftOpen(true); setMobileTab("import"); }} className={`${utilityButton} hidden sm:inline-flex`} title="Import another trace"><Upload className="size-3.5" /><span>Import</span></button>
-          <button onClick={handleQuickSave} className={`${utilityButton} hidden sm:inline-flex`} title="Save trace in this browser"><Save className="size-3.5" /><span>{saveStatus === "saved" ? "Saved" : "Save"}</span></button>
+          <button onClick={handleQuickSave} className={`${utilityButton} hidden sm:inline-flex`} title="Save trace in this browser"><Save className="size-3.5" /><span>{saveStatus === "saved" ? "Saved" : saveStatus === "failed" ? "Browser refused to save" : "Save"}</span></button>
           <button onClick={exportTraceAsJson} className={utilityButton} title="Download trace as JSON"><Download className="size-3.5" /><span className="hidden sm:inline">Export</span></button>
         </div>
       </header>
