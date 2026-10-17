@@ -1,4 +1,4 @@
-import { describe, expect } from "vitest";
+import { describe, expect, test } from "vitest";
 import { knownBug, traceFixture } from "../../../test/knownBug";
 import { parseTrace } from "./parseTrace";
 
@@ -6,9 +6,9 @@ const parse = (text: string) => parseTrace(text);
 const events = (text: string) => parse(text).trace.events;
 
 describe("transcript import", () => {
-  knownBug("P1: transcript events keep their evidence label", () => {
-    const labels = events("Thought: a\nAction: b()\nObservation: c").map((e) => e.evidenceMode);
-    expect(labels).toEqual(["explicit", "observed", "observed"]);
+  test("P1: transcript events keep their evidence label", () => {
+    const labels = events("Thought: a\nAction: b()\nObservation: c").map((e) => e.label);
+    expect(labels).toEqual(["stated", "observed", "observed"]);
   });
 
   knownBug("P2: ReAct transcripts split Action Input and Final Answer into their own fields and events", () => {
@@ -45,13 +45,13 @@ describe("JSON import", () => {
 
   knownBug("P6: an 'assistant' event is observed output, not stated reasoning", () => {
     const [event] = events(traceFixture("assistant-type.json"));
-    expect(event.evidenceMode).toBe("observed");
+    expect(event.label).toBe("observed");
   });
 
   knownBug("P7: numeric id 0 is kept, so links to it resolve", () => {
     const parsed = events(traceFixture("json-edge-cases.json"));
     expect(parsed.map((e) => e.id)).toEqual(["0", "1"]);
-    expect(parsed[1].links).toEqual(["0"]);
+    expect(parsed[1].supports).toEqual(["0"]);
   });
 
   knownBug("P7: duplicate event ids are reported", () => {
@@ -96,5 +96,32 @@ describe("chat and Responses import", () => {
   knownBug("P14: a Responses message before a tool call is not a final answer", () => {
     const types = events(traceFixture("responses-output.json")).map((e) => e.type);
     expect(types.filter((t) => t === "final_answer")).toHaveLength(1);
+  });
+});
+
+describe("format versions", () => {
+  test("a v0 trace reads as v1: links become supports, explicit becomes stated", () => {
+    const { trace } = parse(JSON.stringify({
+      title: "v0",
+      events: [
+        { id: "a", type: "observation", step: 1, evidenceMode: "observed", links: [] },
+        { id: "b", type: "hypothesis", step: 2, evidenceMode: "explicit", links: ["a"] },
+      ],
+    }));
+    expect(trace.formatVersion).toBe(1);
+    expect(trace.events.map((e) => [e.label, e.depth, e.supports])).toEqual([
+      ["observed", "behaviour", []],
+      ["stated", "stated", ["a"]],
+    ]);
+  });
+
+  test("a v1 trace reads back equal to what was written", () => {
+    const { trace } = parse(traceFixture("answer-via-unsupported-update.json"));
+    expect(parse(JSON.stringify(trace)).trace).toEqual(trace);
+  });
+
+  test("an imported trace says which depths it cannot show, with reasons", () => {
+    const depths = parse("Thought: a").trace.unavailable.map((u) => u.depth);
+    expect(depths).toEqual(["probabilities", "internals"]);
   });
 });

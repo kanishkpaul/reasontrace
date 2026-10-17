@@ -50,13 +50,14 @@ export const TraceInput: React.FC<{ onLoaded?: () => void }> = ({ onLoaded }) =>
 
   const insertExampleJson = () => {
     const example = {
+      formatVersion: 1,
       title: "Custom Local Trace",
       events: [
-        { id: "1", type: "hypothesis", step: 1, content: "Looking for an API auth failure.", confidence: 0.9, links: [] },
-        { id: "2", type: "action", step: 2, content: "Check API keys config.", tool: "env_check", links: ["1"] },
-        { id: "3", type: "observation", step: 3, content: "API key starts with 'sk-proj-...'", links: ["2"] },
-        { id: "4", type: "belief_update", step: 4, confidence: 0.95, content: "API key is correct. Check headers.", links: ["3"] },
-        { id: "5", type: "final_answer", step: 5, content: "The key is valid. The issue was network connectivity.", links: ["4"] }
+        { id: "1", type: "hypothesis", step: 1, label: "stated", content: "Looking for an API auth failure.", confidence: 0.9, supports: [] },
+        { id: "2", type: "action", step: 2, label: "observed", content: "Check API keys config.", tool: "env_check", supports: ["1"] },
+        { id: "3", type: "observation", step: 3, label: "observed", content: "API key starts with 'sk-proj-...'", supports: ["2"] },
+        { id: "4", type: "belief_update", step: 4, label: "stated", confidence: 0.95, content: "API key is correct. Check headers.", supports: ["3"] },
+        { id: "5", type: "final_answer", step: 5, label: "observed", content: "The key is valid. The issue was network connectivity.", supports: ["4"] }
       ]
     };
     setText(JSON.stringify(example, null, 2));

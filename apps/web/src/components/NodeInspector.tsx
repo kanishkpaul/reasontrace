@@ -16,14 +16,14 @@ export const NodeInspector: React.FC = () => {
   // 2. Find parent events (predecessors)
   const parents = useMemo(() => {
     if (!currentTrace || !selectedEvent) return [];
-    const parentIds = selectedEvent.links || [];
+    const parentIds = selectedEvent.supports;
     return currentTrace.events.filter(e => parentIds.includes(e.id));
   }, [currentTrace, selectedEvent]);
 
   // 3. Find child events (successors)
   const children = useMemo(() => {
     if (!currentTrace || !selectedEvent) return [];
-    return currentTrace.events.filter(e => e.links?.includes(selectedEvent.id));
+    return currentTrace.events.filter(e => e.supports.includes(selectedEvent.id));
   }, [currentTrace, selectedEvent]);
 
   // 4. Generate heuristic debug interpretation

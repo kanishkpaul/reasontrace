@@ -174,11 +174,9 @@ export const CustomTraceNode = (props: { data: unknown }) => {
 
         {/* Newest Pulse Dot Indicator */}
         <div className="flex items-center gap-2">
-        {event.evidenceMode && (
-          <span className={`text-[8px] uppercase tracking-wider font-bold ${event.evidenceMode === "explicit" ? "text-purple-400" : event.evidenceMode === "inferred" ? "text-amber-400" : "text-cyan-400"}`}>
-            {event.evidenceMode === "explicit" ? "stated" : event.evidenceMode}
-          </span>
-        )}
+        <span className={`text-[8px] uppercase tracking-wider font-bold ${event.label === "stated" ? "text-purple-400" : event.label === "inferred" ? "text-amber-400" : "text-cyan-400"}`}>
+          {event.label}
+        </span>
         {isNewest && (
           <div className="flex items-center space-x-1">
             <span className="w-2 h-2 rounded-full bg-cyan-400" />

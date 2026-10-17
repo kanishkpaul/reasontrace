@@ -1,6 +1,9 @@
+import { readTrace } from "@reasontrace/analysis";
 import type { ReasonTrace } from "@reasontrace/format";
 
-export const sampleTraces: Record<string, ReasonTrace> = {
+// Written in format v0, the prototype's JSON, and read through the same reader
+// as an imported file, so the v0 reader stays exercised.
+const samplesV0: Record<string, unknown> = {
   "opaque-tool-agent": {
     "title": "Opaque Tool Agent: Unsupported Refund Answer",
     "events": [
@@ -445,3 +448,13 @@ export const sampleTraces: Record<string, ReasonTrace> = {
     ]
   }
 };
+
+function readSample(key: string, raw: unknown): ReasonTrace {
+  const result = readTrace(raw);
+  if (!result || result.error) throw new Error(`sample "${key}" is not a valid trace: ${result?.error ?? "unreadable"}`);
+  return result.trace;
+}
+
+export const sampleTraces: Record<string, ReasonTrace> = Object.fromEntries(
+  Object.entries(samplesV0).map(([key, raw]) => [key, readSample(key, raw)]),
+);

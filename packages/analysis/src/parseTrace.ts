@@ -1,7 +1,20 @@
-import type { ReasonTrace, TraceEvent, EventType, EvidenceMode } from "@reasontrace/format";
+import { FORMAT_VERSION } from "@reasontrace/format";
+import type { Depth, EventType, EvidenceLabel, ReasonTrace, TraceEvent, UnavailableDepth } from "@reasontrace/format";
 
 // Helper to generate a simple unique ID
 const generateId = () => `ev-${Math.random().toString(36).substring(2, 9)}`;
+
+const IMPORTED_UNAVAILABLE: UnavailableDepth[] = [
+  { depth: "probabilities", reason: "A trace file records what was emitted, not the token probabilities behind it." },
+  { depth: "internals", reason: "A trace file has no access to the model's internals." },
+];
+
+function importedTrace(title: string, events: TraceEvent[]): ReasonTrace {
+  return { formatVersion: FORMAT_VERSION, title, events, unavailable: IMPORTED_UNAVAILABLE };
+}
+
+/** Stated reasoning is its own depth; everything a trace file can otherwise show is behaviour. */
+const depthOf = (label: EvidenceLabel): Depth => (label === "stated" ? "stated" : "behaviour");
 
 /**
  * Attempts to parse a JSON string into a ReasonTrace object.
@@ -9,23 +22,32 @@ const generateId = () => `ev-${Math.random().toString(36).substring(2, 9)}`;
  */
 export function parseJsonTrace(input: string): ReasonTrace | null {
   try {
-    const parsed = JSON.parse(input);
-    if (!parsed || typeof parsed !== "object") return null;
+    return traceFromJson(JSON.parse(input));
+  } catch {
+    return null;
+  }
+}
+
+/** Reads an already-parsed JSON value in any supported shape, including format v0. */
+export function traceFromJson(value: unknown): ReasonTrace | null {
+  try {
+    if (!value || typeof value !== "object") return null;
+    const parsed = value as Record<string, unknown>;
 
     let events: unknown[] = [];
     if (Array.isArray(parsed.events)) {
       events = parsed.events;
-    } else if (Array.isArray(parsed)) {
-      events = parsed;
+    } else if (Array.isArray(value)) {
+      events = value;
     } else if (Array.isArray(parsed.messages)) {
-      return parseChatMessages(parsed.messages, parsed.title || parsed.model || "Imported chat and tool trace");
+      return parseChatMessages(parsed.messages as Record<string, unknown>[], String(parsed.title || parsed.model || "Imported chat and tool trace"));
     } else if (Array.isArray(parsed.output)) {
-      return parseResponsesOutput(parsed.output, parsed.title || parsed.model || "Imported model response trace");
+      return parseResponsesOutput(parsed.output as Record<string, unknown>[], String(parsed.title || parsed.model || "Imported model response trace"));
     } else {
       return null;
     }
 
-    const title = parsed.title || "Imported JSON Trace";
+    const title = (parsed.title || "Imported JSON Trace") as string;
 
     // Standardize and sanitize events
     const sanitizedEvents = events.map((rawEvent, idx: number) => {
@@ -37,8 +59,9 @@ export function parseJsonTrace(input: string): ReasonTrace | null {
       const confidence = typeof ev.confidence === "number" ? ev.confidence : (typeof ev.Confidence === "number" ? ev.Confidence : undefined);
       const rawTool = ev.tool || ev.Tool;
       const tool = rawTool === undefined ? undefined : String(rawTool);
-      const links = Array.isArray(ev.links) ? ev.links.map(String) : (Array.isArray(ev.Links) ? ev.Links.map(String) : []);
-      const evidenceMode = normaliseEvidenceMode(ev.evidenceMode || ev.evidence_mode || ev.provenance || ev.origin, type);
+      const rawSupports = ev.supports ?? ev.links ?? ev.Links;
+      const supports = Array.isArray(rawSupports) ? rawSupports.map(String) : [];
+      const label = normaliseLabel(ev.label || ev.evidenceMode || ev.evidence_mode || ev.provenance || ev.origin, type);
 
       return {
         id,
@@ -47,8 +70,9 @@ export function parseJsonTrace(input: string): ReasonTrace | null {
         content: content.trim(),
         confidence,
         tool,
-        links,
-        evidenceMode,
+        depth: depthOf(label),
+        label,
+        supports,
         source: ev.source || ev.provider ? String(ev.source || ev.provider) : undefined,
         metadata: (ev.metadata || ev.Metadata) as Record<string, unknown> | undefined
       };
@@ -57,10 +81,7 @@ export function parseJsonTrace(input: string): ReasonTrace | null {
     // Sort by step
     sanitizedEvents.sort((a, b) => a.step - b.step);
 
-    return {
-      title,
-      events: sanitizedEvents
-    };
+    return importedTrace(title, sanitizedEvents);
   } catch {
     return null;
   }
@@ -79,11 +100,13 @@ function normaliseType(value: unknown): EventType {
     : "hypothesis";
 }
 
-function normaliseEvidenceMode(value: unknown, type?: EventType): EvidenceMode {
+/** Accepts format v1 labels and the prototype's v0 evidence modes (`explicit` is v0 for `stated`). */
+function normaliseLabel(value: unknown, type?: EventType): EvidenceLabel {
   const raw = String(value || "").toLowerCase();
-  if (["explicit", "reasoning", "thought"].includes(raw)) return "explicit";
+  if (["stated", "explicit", "reasoning", "thought"].includes(raw)) return "stated";
   if (["inferred", "derived", "reconstructed"].includes(raw)) return "inferred";
-  return type === "hypothesis" || type === "belief_update" || type === "decision" ? "explicit" : "observed";
+  if (["observed", "exact", "measured", "decoded"].includes(raw)) return raw as EvidenceLabel;
+  return type === "hypothesis" || type === "belief_update" || type === "decision" ? "stated" : "observed";
 }
 
 function contentOf(value: unknown): string {
@@ -101,9 +124,9 @@ function parseChatMessages(messages: Record<string, unknown>[], title: string): 
   const events: TraceEvent[] = [];
   let step = 1;
   let previousId: string | undefined;
-  const add = (event: Omit<TraceEvent, "id" | "step" | "links">) => {
+  const add = (event: Omit<TraceEvent, "id" | "step" | "supports" | "depth">) => {
     const id = `m${step}`;
-    events.push({ ...event, id, step, links: previousId ? [previousId] : [] });
+    events.push({ ...event, id, step, depth: depthOf(event.label), supports: previousId ? [previousId] : [] });
     previousId = id;
     step++;
   };
@@ -111,46 +134,46 @@ function parseChatMessages(messages: Record<string, unknown>[], title: string): 
     const role = String(message.role || "").toLowerCase();
     const text = contentOf(message.content);
     if (role === "tool" || role === "function") {
-      add({ type: "observation", content: text || "Tool returned no text output.", tool: message.name || message.tool_call_id ? String(message.name || message.tool_call_id) : undefined, evidenceMode: "observed", source: "tool result", metadata: { role } });
+      add({ type: "observation", content: text || "Tool returned no text output.", tool: message.name || message.tool_call_id ? String(message.name || message.tool_call_id) : undefined, label: "observed", source: "tool result", metadata: { role } });
       return;
     }
     if (role === "assistant") {
       const rawCalls = message.tool_calls || (message.function_call ? [message.function_call] : []);
       const calls = Array.isArray(rawCalls) ? rawCalls.filter((call): call is Record<string, unknown> => Boolean(call && typeof call === "object")) : [];
-      if (text) add({ type: calls.length ? "belief_update" : "final_answer", content: text, evidenceMode: "observed", source: "assistant message", metadata: { role, note: "Observable output, not hidden reasoning." } });
+      if (text) add({ type: calls.length ? "belief_update" : "final_answer", content: text, label: "observed", source: "assistant message", metadata: { role, note: "Observable output, not hidden reasoning." } });
       calls.forEach((call: Record<string, unknown>) => {
         const fn = call.function as Record<string, unknown> | undefined;
         const tool = String(fn?.name || call.name || "tool");
-        add({ type: "action", content: contentOf(fn?.arguments || call.arguments) || `Called ${tool}`, tool, evidenceMode: "observed", source: "tool call", metadata: { callId: call.id } });
+        add({ type: "action", content: contentOf(fn?.arguments || call.arguments) || `Called ${tool}`, tool, label: "observed", source: "tool call", metadata: { callId: call.id } });
       });
       return;
     }
-    if (text) add({ type: "observation", content: text, evidenceMode: "observed", source: role || "input", metadata: { role } });
+    if (text) add({ type: "observation", content: text, label: "observed", source: role || "input", metadata: { role } });
   });
-  return { title, events };
+  return importedTrace(title, events);
 }
 
 /** Imports OpenAI Responses-style output records and preserves tool-call chronology. */
 function parseResponsesOutput(output: Record<string, unknown>[], title: string): ReasonTrace {
   const events: TraceEvent[] = [];
   let previousId: string | undefined;
-  const add = (event: Omit<TraceEvent, "id" | "step" | "links">) => {
+  const add = (event: Omit<TraceEvent, "id" | "step" | "supports" | "depth">) => {
     const id = `r${events.length + 1}`;
-    events.push({ ...event, id, step: events.length + 1, links: previousId ? [previousId] : [] });
+    events.push({ ...event, id, step: events.length + 1, depth: depthOf(event.label), supports: previousId ? [previousId] : [] });
     previousId = id;
   };
   output.forEach((item) => {
     if (item.type === "function_call") {
-      add({ type: "action", content: contentOf(item.arguments) || `Called ${item.name || "tool"}`, tool: item.name ? String(item.name) : undefined, evidenceMode: "observed", source: "tool call", metadata: { callId: item.call_id } });
+      add({ type: "action", content: contentOf(item.arguments) || `Called ${item.name || "tool"}`, tool: item.name ? String(item.name) : undefined, label: "observed", source: "tool call", metadata: { callId: item.call_id } });
     } else if (item.type === "function_call_output") {
-      add({ type: "observation", content: contentOf(item.output) || "Tool returned no text output.", tool: item.call_id ? String(item.call_id) : undefined, evidenceMode: "observed", source: "tool result" });
+      add({ type: "observation", content: contentOf(item.output) || "Tool returned no text output.", tool: item.call_id ? String(item.call_id) : undefined, label: "observed", source: "tool result" });
     } else if (item.type === "message") {
-      add({ type: "final_answer", content: contentOf(item.content), evidenceMode: "observed", source: "assistant message", metadata: { note: "Observable output, not hidden reasoning." } });
+      add({ type: "final_answer", content: contentOf(item.content), label: "observed", source: "assistant message", metadata: { note: "Observable output, not hidden reasoning." } });
     } else if (item.type === "reasoning" && contentOf(item.summary)) {
-      add({ type: "belief_update", content: contentOf(item.summary), evidenceMode: "explicit", source: "reasoning summary" });
+      add({ type: "belief_update", content: contentOf(item.summary), label: "stated", source: "reasoning summary" });
     }
   });
-  return { title, events };
+  return importedTrace(title, events);
 }
 
 /**
@@ -202,7 +225,7 @@ export function parseTranscriptTrace(input: string): ReasonTrace {
         id: `e${currentStep}`,
         type: matchedType,
         content: remainder,
-        evidenceMode: matchedType === "hypothesis" || matchedType === "belief_update" ? "explicit" : "observed"
+        label: matchedType === "hypothesis" || matchedType === "belief_update" ? "stated" : "observed"
       };
     } else {
       // If no prefix matches, this line either belongs to the current event or starts a default 'hypothesis'
@@ -214,7 +237,7 @@ export function parseTranscriptTrace(input: string): ReasonTrace {
           id: `e${currentStep}`,
           type: "hypothesis",
           content: trimmed,
-          evidenceMode: "explicit"
+          label: "stated"
         };
       }
     }
@@ -227,15 +250,12 @@ export function parseTranscriptTrace(input: string): ReasonTrace {
 
   // Auto-link sequential events temporally if no links exist
   for (let i = 0; i < events.length; i++) {
-    if (i > 0 && (!events[i].links || events[i].links!.length === 0)) {
-      events[i].links = [events[i - 1].id];
+    if (i > 0 && events[i].supports.length === 0) {
+      events[i].supports = [events[i - 1].id];
     }
   }
 
-  return {
-    title: "Parsed Transcript Trace",
-    events
-  };
+  return importedTrace("Parsed Transcript Trace", events);
 }
 
 /**
@@ -288,17 +308,39 @@ function finalizeEvent(event: Partial<TraceEvent>, step: number): TraceEvent {
     }
   }
 
-  // Clean up content by stripping out the metadata tags if they clutter the main text
-  const cleanedContent = content.trim();
-
+  const label = event.label ?? "stated";
   return {
     id: event.id || `e${step}`,
     type: event.type || "hypothesis",
     step: event.step || step,
-    content: cleanedContent,
+    content: content.trim(),
     confidence,
     tool,
-    links: event.links || []
+    depth: depthOf(label),
+    label,
+    supports: event.supports || []
+  };
+}
+
+/**
+ * Reads a parsed JSON value as a trace and drops `supports` entries that name
+ * no event. Returns null when the value is in no supported shape.
+ */
+export function readTrace(value: unknown): { trace: ReasonTrace; error?: string } | null {
+  const trace = traceFromJson(value);
+  if (!trace) return null;
+  const allIds = new Set(trace.events.map(e => e.id));
+  let danglingSupport = false;
+  trace.events.forEach(e => {
+    e.supports = e.supports.filter(id => {
+      const exists = allIds.has(id);
+      if (!exists) danglingSupport = true;
+      return exists;
+    });
+  });
+  return {
+    trace,
+    error: danglingSupport ? "Warning: Some events contained links to missing event IDs. These links were ignored." : undefined
   };
 }
 
@@ -310,33 +352,21 @@ export function parseTrace(input: string): { trace: ReasonTrace; error?: string 
   const trimmed = input.trim();
   if (!trimmed) {
     return {
-      trace: { title: "Empty Trace", events: [] },
+      trace: importedTrace("Empty Trace", []),
       error: "Empty input provided."
     };
   }
 
   // 1. Try JSON
   if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
-    const jsonTrace = parseJsonTrace(trimmed);
-    if (jsonTrace) {
-      // Validate that links reference valid nodes
-      const allIds = new Set(jsonTrace.events.map(e => e.id));
-      let linksWarning = false;
-      jsonTrace.events.forEach(e => {
-        if (e.links) {
-          e.links = e.links.filter(linkId => {
-            const exists = allIds.has(linkId);
-            if (!exists) linksWarning = true;
-            return exists;
-          });
-        }
-      });
-
-      return {
-        trace: jsonTrace,
-        error: linksWarning ? "Warning: Some events contained links to missing event IDs. These links were ignored." : undefined
-      };
+    let value: unknown;
+    try {
+      value = JSON.parse(trimmed);
+    } catch {
+      value = undefined;
     }
+    const result = readTrace(value);
+    if (result) return result;
   }
 
   // 2. Try Transcript
@@ -350,7 +380,7 @@ export function parseTrace(input: string): { trace: ReasonTrace; error?: string 
   }
 
   return {
-    trace: { title: "Fallback Trace", events: [] },
+    trace: importedTrace("Fallback Trace", []),
     error: "Failed to parse input as JSON or plain transcript. Please verify the format."
   };
 }

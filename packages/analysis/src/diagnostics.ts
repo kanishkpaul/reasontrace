@@ -38,7 +38,7 @@ export function computeDiagnostics(trace: ReasonTrace): TraceDiagnostics {
     : parseFloat((hypothesisCount / observationCount).toFixed(2));
 
   // Build graph representations for reachability
-  // dependency graph: child -> parent (represented by event.links)
+  // dependency graph: child -> parent (represented by event.supports)
   // We want to traverse forward (parent -> children) and backward (child -> parents)
   const childrenMap = new Map<string, string[]>(); // parentId -> childIds[]
   const parentMap = new Map<string, string[]>();   // childId -> parentIds[]
@@ -46,8 +46,8 @@ export function computeDiagnostics(trace: ReasonTrace): TraceDiagnostics {
 
   events.forEach(e => {
     eventMap.set(e.id, e);
-    parentMap.set(e.id, e.links || []);
-    e.links?.forEach(parentId => {
+    parentMap.set(e.id, e.supports);
+    e.supports.forEach(parentId => {
       if (!childrenMap.has(parentId)) {
         childrenMap.set(parentId, []);
       }
@@ -176,14 +176,14 @@ export function computeDiagnostics(trace: ReasonTrace): TraceDiagnostics {
   const claims = events.filter(e => ["hypothesis", "belief_update", "decision", "final_answer"].includes(e.type));
   const supportedClaims = claims.filter(event => hasAncestorType(event.id, ["observation"]) || canReachType(event.id, ["observation"]));
   const evidenceCoverage = claims.length ? Math.round((supportedClaims.length / claims.length) * 100) : 0;
-  const opaqueEventCount = events.filter(e => e.evidenceMode === "observed").length;
-  const inferredEventCount = events.filter(e => e.evidenceMode === "inferred").length;
+  const opaqueEventCount = events.filter(e => e.label === "observed").length;
+  const inferredEventCount = events.filter(e => e.label === "inferred").length;
 
   if (opaqueEventCount > 0) {
-    addFinding({ id: "opaque-trace", severity: "info", category: "visibility", title: "Observed behavior trace", detail: `${opaqueEventCount} events are observable outputs or tool records, not private model reasoning.`, eventIds: events.filter(e => e.evidenceMode === "observed").map(e => e.id), recommendation: "Use this trace to evaluate behavior and evidence paths; do not infer hidden thoughts from it." });
+    addFinding({ id: "opaque-trace", severity: "info", category: "visibility", title: "Observed behavior trace", detail: `${opaqueEventCount} events are observable outputs or tool records, not private model reasoning.`, eventIds: events.filter(e => e.label === "observed").map(e => e.id), recommendation: "Use this trace to evaluate behavior and evidence paths; do not infer hidden thoughts from it." });
   }
   if (inferredEventCount > 0) {
-    addFinding({ id: "inferred-events", severity: "info", category: "visibility", title: "Analyst inferences present", detail: `${inferredEventCount} events were reconstructed from behavior.`, eventIds: events.filter(e => e.evidenceMode === "inferred").map(e => e.id), recommendation: "Treat inferred nodes as hypotheses about behavior, not observations." });
+    addFinding({ id: "inferred-events", severity: "info", category: "visibility", title: "Analyst inferences present", detail: `${inferredEventCount} events were reconstructed from behavior.`, eventIds: events.filter(e => e.label === "inferred").map(e => e.id), recommendation: "Treat inferred nodes as hypotheses about behavior, not observations." });
   }
 
   return {

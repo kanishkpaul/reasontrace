@@ -50,7 +50,7 @@ export function buildGraphData(
   // Determine children mapping for explicit links
   const childrenMap = new Map<string, string[]>();
   events.forEach(e => {
-    e.links?.forEach(parentId => {
+    e.supports.forEach(parentId => {
       if (eventMap.has(parentId)) {
         if (!childrenMap.has(parentId)) {
           childrenMap.set(parentId, []);
@@ -82,7 +82,7 @@ export function buildGraphData(
 
   // Assign X positions based on parent links and offsets
   sortedEvents.forEach(event => {
-    const parentLinks = (event.links || []).filter(pId => eventMap.has(pId));
+    const parentLinks = event.supports.filter(pId => eventMap.has(pId));
 
     if (parentLinks.length === 0) {
       // Root node or unlinked node
@@ -157,7 +157,7 @@ export function buildGraphData(
   const explicitEdges = new Set<string>(); // Keep track of parentId-childId pairs
 
   sortedEvents.forEach(event => {
-    const parentLinks = (event.links || []).filter(pId => eventMap.has(pId));
+    const parentLinks = event.supports.filter(pId => eventMap.has(pId));
 
     parentLinks.forEach(parentId => {
       const edgeId = `edge-${parentId}-${event.id}`;
