@@ -19,6 +19,12 @@ describe("transcript import", () => {
     expect(parsed[4].content).toBe("About 520,000 people live in Lyon.");
   });
 
+  test("P13: an Error line inside tool output stays part of that output", () => {
+    const parsed = events("Action: read_file(config.yml)\nObservation: read failed\nError: ENOENT: no such file\nThought: wrong path");
+    expect(parsed.map((e) => e.type)).toEqual(["action", "observation", "hypothesis"]);
+    expect(parsed[1].content).toContain("ENOENT");
+  });
+
   test("P11: a 'Tool:' line keeps its tool name", () => {
     expect(events("Tool: web_search")[0].tool).toBe("web_search");
   });

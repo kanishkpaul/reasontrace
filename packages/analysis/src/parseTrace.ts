@@ -230,6 +230,7 @@ function parseResponsesOutput(output: Record<string, unknown>[], title: string):
 }
 
 const BARE_TOOL_NAME = /^[A-Za-z_][\w.-]*$/;
+const OUTPUT_LINE = /^(error|exception|output|result|response):/i;
 
 /**
  * Parses a simple text transcript.
@@ -279,7 +280,11 @@ export function parseTranscriptTrace(input: string): ReasonTrace {
       }
     }
 
-    if (matchedType) {
+    // Tool output often has its own "Error:" or "Result:" lines; inside an
+    // observation they are part of the output, not new events.
+    const insideToolOutput = currentEvent?.type === "observation" && OUTPUT_LINE.test(trimmed);
+
+    if (matchedType && !insideToolOutput) {
       // If there is an ongoing event, save it
       if (currentEvent) {
         events.push(finalizeEvent(currentEvent, currentStep++));
