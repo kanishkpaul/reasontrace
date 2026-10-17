@@ -1,0 +1,6 @@
+{
+ "recorded": "Written by hand from the OpenAI Chat Completions streaming reference (platform.openai.com/docs/api-reference/chat-streaming); not recorded",
+ "status": 200,
+ "contentType": "text/event-stream",
+ "body": "data: {\"id\": \"chatcmpl-x\", \"object\": \"chat.completion.chunk\", \"created\": 1792263000, \"model\": \"gpt-4o-2024-08-06\", \"choices\": [{\"index\": 0, \"delta\": {\"role\": \"assistant\", \"content\": null, \"refusal\": \"\"}, \"logprobs\": null, \"finish_reason\": null}]}\n\ndata: {\"id\": \"chatcmpl-x\", \"object\": \"chat.completion.chunk\", \"created\": 1792263000, \"model\": \"gpt-4o-2024-08-06\", \"choices\": [{\"index\": 0, \"delta\": {\"refusal\": \"I'm sorry, \"}, \"logprobs\": null, \"finish_reason\": null}]}\n\ndata: {\"id\": \"chatcmpl-x\", \"object\": \"chat.completion.chunk\", \"created\": 1792263000, \"model\": \"gpt-4o-2024-08-06\", \"choices\": [{\"index\": 0, \"delta\": {\"refusal\": \"I can't help with that.\"}, \"logprobs\": null, \"finish_reason\": null}]}\n\ndata: {\"id\": \"chatcmpl-x\", \"object\": \"chat.completion.chunk\", \"created\": 1792263000, \"model\": \"gpt-4o-2024-08-06\", \"choices\": [{\"index\": 0, \"delta\": {}, \"logprobs\": null, \"finish_reason\": \"stop\"}]}\n\ndata: [DONE]\n\n"
+}

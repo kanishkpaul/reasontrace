@@ -1,0 +1,18 @@
+{
+  "name": "@reasontrace/source-openai",
+  "private": true,
+  "version": "0.0.0",
+  "description": "OpenAI-compatible chat completions: OpenAI, OpenRouter, Groq, Gemini, Ollama, LM Studio, llama.cpp server, vLLM.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p . && tsc -p tsconfig.test.json"
+  },
+  "dependencies": {
+    "@reasontrace/core": "*",
+    "@reasontrace/format": "*",
+    "@reasontrace/keys": "*"
+  }
+}

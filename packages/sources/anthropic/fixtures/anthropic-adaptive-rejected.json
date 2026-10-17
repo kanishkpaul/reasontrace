@@ -1,0 +1,6 @@
+{
+ "recorded": "Written by hand in the error shape the Anthropic errors doc gives; not recorded",
+ "status": 400,
+ "contentType": "application/json",
+ "body": "{\"type\": \"error\", \"error\": {\"type\": \"invalid_request_error\", \"message\": \"\\\"thinking.type.adaptive\\\" is not supported for this model.\"}}"
+}

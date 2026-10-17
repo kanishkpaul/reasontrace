@@ -1,0 +1,6 @@
+{
+ "recorded": "Written by hand in the shape of an OpenAI-compatible 400 error; not recorded",
+ "status": 400,
+ "contentType": "application/json",
+ "body": "{\"error\": {\"message\": \"logprobs is not supported with this model\", \"type\": \"invalid_request_error\", \"param\": \"logprobs\", \"code\": null}}"
+}

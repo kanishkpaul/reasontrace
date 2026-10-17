@@ -1,0 +1,6 @@
+{
+ "recorded": "Written by hand: a 401 whose message repeats the key it was sent, which some providers do; not recorded",
+ "status": 401,
+ "contentType": "application/json",
+ "body": "{\"error\": {\"message\": \"Incorrect API key provided: sk-fixture-key-0123456789. You can find your API key at https://platform.openai.com/account/api-keys.\", \"type\": \"invalid_request_error\", \"code\": \"invalid_api_key\"}}"
+}

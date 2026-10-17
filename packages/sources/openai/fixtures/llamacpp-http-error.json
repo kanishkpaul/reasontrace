@@ -1,0 +1,11 @@
+{
+ "recorded": "llama.cpp server b9780 (1191758c5), Qwen/Qwen3-0.6B-GGUF Q8_0, Apple M5, 2026-10-18",
+ "request": {
+  "model": "Qwen/Qwen3-0.6B-GGUF:Q8_0",
+  "messages": "hello",
+  "stream": true
+ },
+ "status": 400,
+ "contentType": "application/json; charset=utf-8",
+ "body": "{\"error\":{\"code\":400,\"message\":\"Expected 'messages' to be an array\",\"type\":\"invalid_request_error\"}}"
+}

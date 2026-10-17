@@ -5,6 +5,7 @@
   "type": "module",
   "workspaces": [
     "packages/*",
+    "packages/sources/*",
     "apps/*"
   ],
   "engines": {
@@ -17,6 +18,7 @@
     "typecheck": "tsc -p tsconfig.scripts.json && npm run typecheck --workspaces --if-present",
     "check": "npm run lint && npm run typecheck && npm run check:deps && npm run check:colours && npm test && npm run build",
     "test": "vitest run",
+    "test:live": "RT_LIVE_TESTS=1 vitest run live",
     "check:deps": "node scripts/check-deps.mjs",
     "check:colours": "node scripts/check-colours.mjs"
   },
