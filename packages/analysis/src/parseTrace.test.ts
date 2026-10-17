@@ -49,13 +49,18 @@ describe("JSON import", () => {
     expect(event.label).toBe("observed");
   });
 
-  knownBug("P7: numeric id 0 is kept, so links to it resolve", () => {
+  test("P7: numeric id 0 is kept, so links to it resolve", () => {
     const parsed = events(traceFixture("json-edge-cases.json"));
     expect(parsed.map((e) => e.id)).toEqual(["0", "1"]);
     expect(parsed[1].supports).toEqual(["0"]);
   });
 
-  knownBug("P7: duplicate event ids are reported", () => {
+  test("P7: events without an id get the same id on every read", () => {
+    const text = '{"events":[{"type":"observation","step":1},{"type":"hypothesis","step":2}]}';
+    expect(events(text).map((e) => e.id)).toEqual(["e1", "e2"]);
+  });
+
+  test("P7: duplicate event ids are reported", () => {
     const result = parse('{"events":[{"id":"a","step":1},{"id":"a","step":2}]}');
     expect(result.errors.join(" ")).toMatch(/duplicate/i);
   });

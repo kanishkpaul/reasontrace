@@ -1,9 +1,6 @@
 import { FORMAT_VERSION } from "@reasontrace/format";
 import type { Depth, EventType, EvidenceLabel, ReasonTrace, TraceEvent, UnavailableDepth } from "@reasontrace/format";
 
-// Helper to generate a simple unique ID
-const generateId = () => `ev-${Math.random().toString(36).substring(2, 9)}`;
-
 const IMPORTED_UNAVAILABLE: UnavailableDepth[] = [
   { depth: "probabilities", reason: "A trace file records what was emitted, not the token probabilities behind it." },
   { depth: "internals", reason: "A trace file has no access to the model's internals." },
@@ -55,7 +52,8 @@ function traceFromJson(value: unknown): ReasonTrace {
 
   // Standardize and sanitize events
   const sanitizedEvents = records(events, "Event").map((ev, idx: number) => {
-    const id = String(ev.id || ev.Id || generateId());
+    const rawId = ev.id ?? ev.Id;
+    const id = rawId === undefined || rawId === null || rawId === "" ? `e${idx + 1}` : String(rawId);
     const type = normaliseType(ev.type || ev.Type || ev.event_type || "hypothesis");
     const step = typeof ev.step === "number" ? ev.step : (typeof ev.Step === "number" ? ev.Step : idx + 1);
     const content = String(ev.content || ev.Content || ev.text || ev.Text || "");
@@ -80,6 +78,14 @@ function traceFromJson(value: unknown): ReasonTrace {
       metadata: (ev.metadata || ev.Metadata) as Record<string, unknown> | undefined
     };
   });
+
+  const seen = new Set<string>();
+  const duplicates = new Set<string>();
+  for (const { id } of sanitizedEvents) {
+    if (seen.has(id)) duplicates.add(id);
+    seen.add(id);
+  }
+  if (duplicates.size) throw new TraceShapeError(`Duplicate event IDs: ${[...duplicates].join(", ")}.`);
 
   // Sort by step
   sanitizedEvents.sort((a, b) => a.step - b.step);
