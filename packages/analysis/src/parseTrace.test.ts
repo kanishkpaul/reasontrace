@@ -60,6 +60,11 @@ describe("JSON import", () => {
     expect(event.label).toBe("observed");
   });
 
+  test("a Responses API reasoning summary is stated reasoning written by the provider", () => {
+    const trace = parsed(JSON.stringify({ output: [{ type: "reasoning", summary: [{ text: "Compare both options." }] }] }));
+    expect(trace.events[0]).toMatchObject({ type: "reasoning", label: "stated", depth: "stated", providerSummary: true });
+  });
+
   test("P6: an event with no type is not presented as stated reasoning", () => {
     expect(events('{"events":[{"id":"a","step":1,"content":"x"}]}')[0].label).toBe("observed");
   });

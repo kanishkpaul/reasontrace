@@ -31,4 +31,9 @@ describe("evidence labels", () => {
     expect(screen.getByText("analyst's guess")).toBeTruthy();
     expect(screen.getByText("unvalidated")).toBeTruthy();
   });
+
+  test("stated text a provider summarised says so", () => {
+    render(<EvidenceLabel label="stated" providerSummary />);
+    expect(screen.getByText("summary by provider")).toBeTruthy();
+  });
 });

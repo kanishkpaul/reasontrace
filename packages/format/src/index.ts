@@ -12,7 +12,9 @@ export type EventType =
   | "belief_update"
   | "failure"
   | "decision"
-  | "final_answer";
+  | "final_answer"
+  /** Reasoning text a model emitted before its answer: `<think>` text, a reasoning field, a thinking block. */
+  | "reasoning";
 
 /** Which depth of a model an event comes from (docs/CHARTER.md §1). */
 export type Depth = "behaviour" | "stated" | "probabilities" | "internals";
@@ -40,6 +42,11 @@ export interface TraceEvent {
    */
   supports: string[];
   source?: string;
+  /**
+   * The text is a summary of the model's reasoning written by the provider's
+   * own summariser, not the model's reasoning text (docs/CHARTER.md §2).
+   */
+  providerSummary?: boolean;
   metadata?: Record<string, unknown>;
 }
 
@@ -105,4 +112,78 @@ export interface TraceFinding {
   rule: string;
   /** What the check cannot tell, so the finding is not read as more than it is. */
   limitations: string;
+}
+
+/** How a model was reached, which decides the depths it can have (docs/CHARTER.md §1). */
+export type Tier = "full" | "local" | "open" | "frontier" | "symbolic";
+
+/**
+ * How a run ended. Each is shown as itself, so a timeout or a refusal never
+ * reads as an empty answer (docs/CHARTER.md §3, rule 5).
+ */
+export type CompletionState = "running" | "complete" | "truncated" | "refused" | "error" | "timeout" | "aborted";
+
+export interface Completion {
+  state: CompletionState;
+  /** In words, from the provider where it gave one. */
+  reason?: string;
+}
+
+/** What was asked for, before any source turned it into a provider request. */
+export interface RunRequest {
+  model: string;
+  prompt: string;
+  maxTokens: number;
+  temperature?: number;
+  seed?: number;
+  /** How many alternatives to keep for each token, where the source returns probabilities. */
+  topLogprobs: number;
+  timeoutMs: number;
+}
+
+/** Everything needed to repeat a run and judge whether two runs are comparable. */
+export interface RunManifest {
+  formatVersion: typeof FORMAT_VERSION;
+  id: string;
+  title: string;
+  createdAt: string;
+  finishedAt?: string;
+  source: { id: string; name: string; tier: Tier; baseUrl: string };
+  request: RunRequest;
+  /** The body sent to the provider, as sent. Keys travel in headers and never appear here. */
+  providerRequest?: Record<string, unknown>;
+  /** The model the provider says answered, which can differ from the one asked for. */
+  respondingModel?: string;
+  unavailable: UnavailableDepth[];
+  completion: Completion;
+  /** `cachedInputTokens`: prompt tokens the server reused from its cache, which can change outputs (docs/CHARTER.md §3, rule 3). */
+  usage?: { inputTokens?: number; outputTokens?: number; cachedInputTokens?: number };
+  versions: Record<string, string>;
+}
+
+/** One generated token with its log-probability and the alternatives the source returned. */
+export interface TokenLogprob {
+  token: string;
+  logprob: number;
+  top: { token: string; logprob: number }[];
+}
+
+/**
+ * Typed data hung on an event. `kind` is namespaced and versioned
+ * (docs/ARCHITECTURE.md §3).
+ */
+export type Attachment = TopKAttachment;
+
+export interface TopKAttachment {
+  kind: "probs.top_k/1";
+  eventId: string;
+  label: "measured";
+  data: { tokens: TokenLogprob[] };
+}
+
+/** A run as stored in its run directory. */
+export interface Run {
+  manifest: RunManifest;
+  trace: ReasonTrace;
+  attachments: Attachment[];
 }

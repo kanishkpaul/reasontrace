@@ -17,6 +17,9 @@ function readingOf(event: TraceEvent): string {
       : "Output the model produced between steps. It shows what the model said, not what it believed.",
     failure: "A failure the trace recorded. Look at the steps around it to see what led there and whether the agent recovered.",
     decision: "A choice between options. Compare it with the alternatives the trace mentions.",
+    reasoning: event.providerSummary
+      ? "A summary of the model's reasoning, written by the provider's summariser rather than the model. It can leave out or reword what drove the answer."
+      : "Reasoning text the model emitted before answering. It is the model's own account, not a reading of its internal state; it can leave out what drove the answer.",
     final_answer: "The trace's final answer. Follow its support links back to see which observations it rests on; the links show what the trace declares, not whether the answer is right.",
   };
   return readings[event.type];
@@ -72,7 +75,7 @@ export function NodeInspector() {
           {copied ? "Copied" : "Copy as Markdown"}
         </button>
       </div>
-      <EvidenceLabel label={event.label} />
+      <EvidenceLabel label={event.label} providerSummary={event.providerSummary} />
       <p className="step-detail__content evidence-text" data-label={event.label}>{event.content || "(no text)"}</p>
 
       <dl className="step-detail__facts">

@@ -68,6 +68,7 @@ const defaultFilters: StoreFilters = {
     failure: true,
     decision: true,
     final_answer: true,
+    reasoning: true,
   },
   searchQuery: "",
 };

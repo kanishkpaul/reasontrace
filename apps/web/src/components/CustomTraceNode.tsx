@@ -32,7 +32,7 @@ export const CustomTraceNode = (props: { data: unknown }) => {
         {event.confidence !== undefined && <span className="event-cell__confidence">{Math.round(event.confidence * 100)}%</span>}
       </div>
       <p className="trace-node__content evidence-text" data-label={event.label}>{preview || "(no text)"}</p>
-      <EvidenceLabel label={event.label} />
+      <EvidenceLabel label={event.label} providerSummary={event.providerSummary} />
       <Handle type="source" position={Position.Bottom} className="trace-node__handle" />
     </div>
   );

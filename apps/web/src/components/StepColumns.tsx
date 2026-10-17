@@ -95,7 +95,7 @@ function EventCell({ event, selected, onSelect }: { event: TraceEvent; selected:
         <span className="event-cell__type">{label}</span>
         {event.tool && <span className="badge badge--mono badge--muted">{event.tool}</span>}
         {event.confidence !== undefined && <span className="event-cell__confidence">{Math.round(event.confidence * 100)}%</span>}
-        <EvidenceLabel label={event.label} />
+        <EvidenceLabel label={event.label} providerSummary={event.providerSummary} />
       </span>
       <span className="event-cell__content evidence-text" data-label={event.label}>{event.content || "(no text)"}</span>
     </button>

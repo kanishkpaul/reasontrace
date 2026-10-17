@@ -2,6 +2,7 @@
 // imports icons from here, so the set can be swapped in one place.
 export {
   IconAlertTriangle as AlertIcon,
+  IconBrain as ReasoningIcon,
   IconBulb as HypothesisIcon,
   IconCheck as CheckIcon,
   IconChevronLeft as StepBackIcon,

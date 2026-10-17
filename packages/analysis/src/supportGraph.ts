@@ -8,6 +8,7 @@ const TYPE_BIT: Record<EventType, number> = {
   failure: 16,
   decision: 32,
   final_answer: 64,
+  reasoning: 128,
 };
 
 /** A set of event types as a bitmask, for testing against `SupportGraph` masks. */

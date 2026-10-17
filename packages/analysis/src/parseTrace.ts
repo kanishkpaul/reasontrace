@@ -77,6 +77,7 @@ function traceFromJson(value: unknown): ReasonTrace {
       label,
       supports,
       source: ev.source || ev.provider ? String(ev.source || ev.provider) : undefined,
+      providerSummary: ev.providerSummary === true ? true : undefined,
       metadata: (ev.metadata || ev.Metadata) as Record<string, unknown> | undefined
     };
   });
@@ -99,11 +100,11 @@ function normaliseType(value: unknown): EventType {
   const raw = String(value || "").toLowerCase().replace(/[\s-]/g, "_");
   if (["tool_call", "function_call", "command", "run", "execute"].includes(raw)) return "action";
   if (["tool_result", "function_result", "function_call_output", "output", "result", "message", "user"].includes(raw)) return "observation";
-  if (["thought", "reasoning", "analysis", "claim", "assistant"].includes(raw)) return "hypothesis";
+  if (["thought", "analysis", "claim", "assistant"].includes(raw)) return "hypothesis";
   if (["answer", "final", "assistant_final"].includes(raw)) return "final_answer";
   if (["update", "belief", "conclusion"].includes(raw)) return "belief_update";
   if (["error", "exception", "hallucination"].includes(raw)) return "failure";
-  return ["hypothesis", "action", "observation", "belief_update", "failure", "decision", "final_answer"].includes(raw)
+  return ["hypothesis", "action", "observation", "belief_update", "failure", "decision", "final_answer", "reasoning"].includes(raw)
     ? raw as EventType
     : "hypothesis";
 }
@@ -217,7 +218,7 @@ function parseResponsesOutput(output: Record<string, unknown>[], title: string):
     } else if (item.type === "message") {
       add({ type: "belief_update", content: contentOf(item.content), label: "observed", source: "assistant message", metadata: { note: "Observable output, not hidden reasoning." } });
     } else if (item.type === "reasoning" && contentOf(item.summary)) {
-      add({ type: "belief_update", content: contentOf(item.summary), label: "stated", source: "reasoning summary" });
+      add({ type: "reasoning", content: contentOf(item.summary), label: "stated", source: "reasoning summary", providerSummary: true });
     }
   });
   markFinalAnswer(events);

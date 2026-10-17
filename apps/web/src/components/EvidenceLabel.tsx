@@ -20,9 +20,13 @@ export function EvidenceMark({ label }: { label: Label | "unavailable" }) {
   return <span className="evidence-mark" data-label={label} aria-hidden="true" />;
 }
 
-/** The mark, the label's name, and its badge if it has one. */
-export function EvidenceLabel({ label }: { label: Label }) {
-  const { word, badge } = TREATMENT[label];
+/**
+ * The mark, the label's name, and its badge if it has one. Stated text a
+ * provider summarised says so, since another model wrote it.
+ */
+export function EvidenceLabel({ label, providerSummary }: { label: Label; providerSummary?: boolean }) {
+  const { word } = TREATMENT[label];
+  const badge = label === "stated" && providerSummary ? "summary by provider" : TREATMENT[label].badge;
   return (
     <span className="evidence-label" data-label={label}>
       <EvidenceMark label={label} />
