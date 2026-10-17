@@ -56,7 +56,7 @@ function traceFromJson(value: unknown): ReasonTrace {
     const id = rawId === undefined || rawId === null || rawId === "" ? `e${idx + 1}` : String(rawId);
     const type = normaliseType(ev.type || ev.Type || ev.event_type || "hypothesis");
     const step = typeof ev.step === "number" ? ev.step : (typeof ev.Step === "number" ? ev.Step : idx + 1);
-    const content = String(ev.content || ev.Content || ev.text || ev.Text || "");
+    const content = contentOf(ev.content ?? ev.Content ?? ev.text ?? ev.Text);
     const confidence = typeof ev.confidence === "number" ? ev.confidence : (typeof ev.Confidence === "number" ? ev.Confidence : undefined);
     const rawTool = ev.tool || ev.Tool;
     const tool = rawTool === undefined ? undefined : String(rawTool);

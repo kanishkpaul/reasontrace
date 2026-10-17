@@ -65,7 +65,7 @@ describe("JSON import", () => {
     expect(result.errors.join(" ")).toMatch(/duplicate/i);
   });
 
-  knownBug("P8: object content is read as its text", () => {
+  test("P8: object content is read as its text", () => {
     expect(events(traceFixture("json-edge-cases.json"))[0].content).toBe("Maybe the cache is stale.");
   });
 
