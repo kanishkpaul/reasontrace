@@ -8,6 +8,13 @@ describe("bundled samples", () => {
     expect(new Set(coverage).size).toBeGreaterThan(1);
   });
 
+  test("D12: finding ids are unique within each sample", () => {
+    for (const trace of Object.values(sampleTraces)) {
+      const ids = computeDiagnostics(trace).findings.map((f) => f.id);
+      expect(new Set(ids).size).toBe(ids.length);
+    }
+  });
+
   test("the opaque-agent sample does not claim its unsupported refund is grounded", () => {
     expect(computeDiagnostics(sampleTraces["opaque-tool-agent"]).answerGrounding).toBe("not_recorded");
   });
