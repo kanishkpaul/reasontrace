@@ -19,8 +19,10 @@ Bug IDs (P1, D3, …) refer to the audit in [PLAN.md](PLAN.md).
 | 7 | First finding view: when the answer is committed | 2, 6 |
 | 8 | Symbolic engine: z3 | 2, 3 |
 | 9 | Neurosymbolic pipelines | 3 or 4, 8 |
+| 10 | Live testing against real providers, servers, models and engines | 3–9 |
+| 11 | The README, for researchers, engineers and recruiters | 10 |
 
-Phase 8 can start any time after phases 2 and 3.
+Phase 8 can start any time after phases 2 and 3. Phases 10 and 11 come last.
 
 The tool does a few things well rather than everything: anything not listed
 here (more sources, more decoders, interventions, review annotations, a
@@ -181,3 +183,48 @@ hosted build) stays out until a phase above needs it.
 **Gate**
 - A fixture with a deliberate translation error shows where the formula
   departs from the text.
+
+## Phase 10: Live testing
+
+**Builds**
+- Live runs of every source, tier and engine the earlier phases built:
+  each hosted provider with a key, each local server (Ollama, LM Studio,
+  llama.cpp, vLLM), the full tier on Gemma 3 1B and Qwen3 0.6B, z3, and a
+  neurosymbolic pipeline on a Virgil task.
+- Recorded responses replace the fixtures written by hand from provider
+  documentation, with keys scrubbed.
+- One live-test command that runs whatever is available on the machine and
+  reports each source as passed, failed (with the error) or skipped (with
+  the reason: no key, server not running, Python absent).
+
+**Gate**
+- `npm run test:live` passes for every source with a key or server present,
+  and reports every other source as skipped with its reason.
+- No fixture still says it was written from documentation.
+- Each live run leaves a run directory that the viewer opens, and the key
+  check (no key bytes in the run directory or the server log) passes on
+  those directories.
+- Every defect the live runs find is fixed with a test, or listed in
+  PLAN.md by ID.
+
+## Phase 11: README
+
+**Builds**
+- A README that answers, in order: what ReasonTrace shows and why it
+  matters; what it will not claim; how to run it; what each tier and
+  source can show; how it is built; how it was checked.
+- Readable by three audiences: researchers (the evidence labels, the
+  controls, the limits of stated reasoning, what a finding can and cannot
+  bear), engineers (install, architecture, how to add a source), and
+  recruiters (what was built and how it was tested, in the first screen).
+- Screenshots and one short recording, taken from the current build with
+  real runs from phase 10, following `design/`.
+
+**Gate**
+- Every command in the README, run in order on a fresh clone, works.
+- Every screenshot and the recording come from the current build and a run
+  directory in the repository or under `fixtures/`.
+- Every claim about behaviour links to the test or run directory that
+  shows it; nothing describes a feature that a test doesn't cover.
+- The README contains no status the tests could contradict: no hand-kept
+  progress lists or counts.
