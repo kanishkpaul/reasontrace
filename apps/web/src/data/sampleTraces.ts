@@ -1,4 +1,4 @@
-import type { ReasonTrace } from "../types";
+import type { ReasonTrace } from "@reasontrace/format";
 
 export const sampleTraces: Record<string, ReasonTrace> = {
   "opaque-tool-agent": {

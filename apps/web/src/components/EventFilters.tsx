@@ -1,6 +1,6 @@
 import React from "react";
 import { useTraceStore } from "../store";
-import type { EventType } from "../types";
+import type { EventType } from "@reasontrace/format";
 import { typeConfigs } from "./CustomTraceNode";
 import { Filter, Search, Sliders, CheckSquare, Square } from "lucide-react";
 

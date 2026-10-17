@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { useTraceStore } from "../store";
-import { computeDiagnostics } from "../lib/diagnostics";
+import { computeDiagnostics } from "@reasontrace/analysis";
 import { Activity, Eye, ShieldCheck, TriangleAlert } from "lucide-react";
 
 export const TraceAnalysisSummary: React.FC = () => {

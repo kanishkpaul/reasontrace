@@ -8,7 +8,7 @@ import { NodeInspector } from "./NodeInspector";
 import { DiagnosisPanel } from "./DiagnosisPanel";
 import { TimelineControls } from "./TimelineControls";
 import { TraceAnalysisSummary } from "./TraceAnalysisSummary";
-import { computeDiagnostics } from "../lib/diagnostics";
+import { computeDiagnostics } from "@reasontrace/analysis";
 import { BrainCircuit, Download, Save, Info, Sparkles, PanelLeft, PanelRight, Upload, X } from "lucide-react";
 
 type MobileTab = "review" | "import" | "details";

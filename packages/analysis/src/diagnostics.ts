@@ -1,4 +1,4 @@
-import type { ReasonTrace, TraceEvent, TraceDiagnostics, TraceFinding } from "../types";
+import type { ReasonTrace, TraceEvent, TraceDiagnostics, TraceFinding } from "@reasontrace/format";
 
 /**
  * Computes heuristic diagnostics for a reasoning trace.

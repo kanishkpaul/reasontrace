@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import type { TraceEvent } from "../types";
+import type { TraceEvent } from "@reasontrace/format";
 
 export interface GraphNode {
   id: string;

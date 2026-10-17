@@ -1,7 +1,7 @@
 import { create } from "zustand";
-import type { ReasonTrace, EventType } from "./types";
+import type { ReasonTrace, EventType } from "@reasontrace/format";
 import { sampleTraces } from "./data/sampleTraces";
-import { parseTrace } from "./lib/parseTrace";
+import { parseTrace } from "@reasontrace/analysis";
 
 interface StoreFilters {
   eventTypes: Record<EventType, boolean>;

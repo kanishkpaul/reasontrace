@@ -1,0 +1,13 @@
+{
+  "name": "@reasontrace/format",
+  "private": true,
+  "version": "0.0.0",
+  "description": "The trace format: types shared by every package. No I/O.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p ."
+  }
+}

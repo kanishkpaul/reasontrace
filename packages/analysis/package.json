@@ -1,0 +1,16 @@
+{
+  "name": "@reasontrace/analysis",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Trace import and diagnostics. No I/O and no DOM, so the server can run it too.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@reasontrace/format": "*"
+  }
+}

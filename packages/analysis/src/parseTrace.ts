@@ -1,4 +1,4 @@
-import type { ReasonTrace, TraceEvent, EventType, EvidenceMode } from "../types";
+import type { ReasonTrace, TraceEvent, EventType, EvidenceMode } from "@reasontrace/format";
 
 // Helper to generate a simple unique ID
 const generateId = () => `ev-${Math.random().toString(36).substring(2, 9)}`;

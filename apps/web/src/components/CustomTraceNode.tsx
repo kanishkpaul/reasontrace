@@ -10,7 +10,7 @@ import {
   CheckCircle, 
   Terminal 
 } from "lucide-react";
-import type { TraceEvent, EventType } from "../types";
+import type { TraceEvent, EventType } from "@reasontrace/format";
 
 // Map types to icons, colors and labels
 // eslint-disable-next-line react-refresh/only-export-components
