@@ -12,8 +12,8 @@ word.
 | Glyph | ∴ |
 | Kawaii | **Off.** It would undercut the evidence labels |
 | Mode | Follows the OS. Dark is the designed-first mode |
-| Surfaces | `reasontrace` CLI (Rust), viewer (Svelte + TypeScript, served by `rt-server`) |
-| Uses | `base.css`, `skins.css`, `components.css`, `loader.js`, `rust/theme.rs` |
+| Surfaces | Web viewer (React + TypeScript), served by the local TypeScript server |
+| Uses | `base.css`, `skins.css`, `components.css`, `tailwind-theme.css` |
 
 ## Feel
 

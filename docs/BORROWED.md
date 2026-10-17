@@ -12,7 +12,7 @@ row says **adopted**, its licence column is unverified.
 | React, React DOM | viewer framework | github.com/facebook/react | MIT | — | adopted |
 | xyflow (React Flow) | step graph in the viewer | github.com/xyflow/xyflow | MIT | a simpler graph renderer | adopted |
 | Zustand | viewer state | github.com/pmndrs/zustand | MIT | React state alone covers it | adopted |
-| Lucide | icons | github.com/lucide-icons/lucide | ISC | the design kit ships its own icon set | adopted |
+| Tabler Icons | interface icons, the design kit's chosen set | github.com/tabler/tabler-icons | MIT | — | adopted |
 | Tailwind CSS | utility classes over the design tokens, through the kit's bridge | github.com/tailwindlabs/tailwindcss | MIT | components written against tokens directly | adopted |
 | JetBrains Mono | mono face for traces, IDs and numbers, bundled through Fontsource | github.com/JetBrains/JetBrainsMono | OFL-1.1 | — | adopted |
 | Newsreader | display face for empty states, bundled through Fontsource | github.com/productiontype/Newsreader | OFL-1.1 | — | adopted |

@@ -1,0 +1,41 @@
+/* Evidence-label marks and text treatments (design/README.md, Evidence labels).
+   Tokens only. */
+
+.evidence-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font: var(--text-2xs) / 1rem var(--font-mono);
+  color: var(--ui-text-3);
+}
+
+.evidence-mark {
+  display: inline-block;
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+}
+.evidence-mark[data-label="observed"] { background: var(--ui-text-1); }
+.evidence-mark[data-label="stated"] { height: 0; border-bottom: 2px dashed var(--ui-warm); }
+.evidence-mark[data-label="exact"] {
+  display: inline-grid;
+  place-items: center;
+  width: 0.625rem;
+  height: 0.625rem;
+  background: var(--ui-ok);
+  color: var(--ui-bg-chrome);
+  font: 700 0.5rem / 1 var(--font-sans);
+}
+.evidence-mark[data-label="exact"]::after { content: "✓"; }
+.evidence-mark[data-label="measured"] { border-radius: var(--radius-full); background: var(--ui-info); }
+.evidence-mark[data-label="decoded"] { border-radius: var(--radius-full); box-shadow: inset 0 0 0 1.5px var(--ui-purple); }
+.evidence-mark[data-label="inferred"] { box-shadow: inset 0 0 0 1.5px var(--ui-text-3); }
+.evidence-mark[data-label="unavailable"] { height: 0; border-bottom: 1.5px solid var(--ui-text-4); }
+
+.evidence-label[data-label="stated"] { color: var(--ui-warm); }
+.evidence-label[data-label="unavailable"] { color: var(--ui-text-4); font-family: var(--font-sans); }
+
+/* Content in each label's text treatment. */
+.evidence-text[data-label="stated"] { font-style: italic; }
+.evidence-text[data-label="measured"] { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.evidence-text[data-label="inferred"] { color: var(--ui-text-3); }

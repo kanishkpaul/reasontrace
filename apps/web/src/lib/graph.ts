@@ -126,29 +126,19 @@ export function buildGraphData(
       const edgeId = `edge-${parentId}-${event.id}`;
       explicitEdges.add(`${parentId}->${event.id}`);
 
-      // Determine edge style based on node selection
-      let strokeColor = "#3B82F6"; // Default blue
-      let strokeWidth = 2;
-      let opacity = 0.6;
+      // Support edges touching the selected event stand out; the rest recede.
+      let strokeColor = "var(--ui-stroke-1)";
+      let strokeWidth = 1.5;
+      let opacity = 1;
       let animated = false;
 
       if (selectedNodeId) {
-        if (selectedNodeId === event.id) {
-          // Highlight incoming edge (cyan)
-          strokeColor = "#06B6D4";
-          strokeWidth = 3.5;
-          opacity = 1.0;
-          animated = true;
-        } else if (selectedNodeId === parentId) {
-          // Highlight outgoing edge (purple)
-          strokeColor = "#8B5CF6";
-          strokeWidth = 3.5;
-          opacity = 1.0;
+        if (selectedNodeId === event.id || selectedNodeId === parentId) {
+          strokeColor = "var(--ui-accent)";
+          strokeWidth = 2.5;
           animated = true;
         } else {
-          // Dim non-selected paths
-          strokeColor = "#1F293D";
-          opacity = 0.25;
+          opacity = 0.35;
         }
       }
 
@@ -175,13 +165,8 @@ export function buildGraphData(
 
       // Only add temporal edge if there isn't already an explicit edge between them
       if (!explicitEdges.has(`${prevEvent.id}->${currEvent.id}`)) {
-        let opacity = 0.25;
-        const strokeColor = "#1F293D";
-
-        if (selectedNodeId) {
-          // If a node is selected, dim temporal edges even further
-          opacity = 0.1;
-        }
+        const opacity = selectedNodeId ? 0.4 : 1;
+        const strokeColor = "var(--ui-stroke-3)";
 
         edges.push({
           id: `temp-${prevEvent.id}-${currEvent.id}`,

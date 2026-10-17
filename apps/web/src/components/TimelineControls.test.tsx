@@ -21,9 +21,8 @@ describe("timeline", () => {
   test("T1: a single-step trace draws a finite slider fill", () => {
     open("single-step.json");
     const { container } = render(<TimelineControls />);
-    const fill = container.querySelector('input[type="range"]')?.getAttribute("style") ?? "";
-    expect(fill).toContain("linear-gradient");
-    expect(fill).not.toContain("NaN");
+    const slider = container.querySelector<HTMLInputElement>('input[type="range"]');
+    expect(slider?.style.getPropertyValue("--fill")).toBe("100%");
   });
 
   test("T2: timestamp steps render without throwing", () => {

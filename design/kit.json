@@ -8,7 +8,9 @@
   "options": {
     "tailwind": true
   },
-  "ignore": [],
+  "ignore": [
+    "README.md"
+  ],
   "files": {
     "README.md": "714c4d3eaa362b65",
     "hermes.yaml": "a69b13e3fe2288e9",

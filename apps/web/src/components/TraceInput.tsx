@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useTraceStore } from "../store";
-import { Terminal, Upload, AlertCircle, FileText } from "lucide-react";
 
 // Four times the 50,000-event trace the diagnostics are tested on (4.7 MB of
 // JSON with short contents), leaving room for long tool outputs while
@@ -101,86 +100,35 @@ Final: Replace db.local host with 10.0.0.5 inside connection string.`;
   };
 
   return (
-    <div className="flex flex-col bg-cyber-card border border-cyber-border rounded-xl p-4 space-y-4 shadow-cyber-glow">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2 text-blue-500">
-          <Terminal className="w-5 h-5" />
-          <h3 className="text-sm font-semibold text-cyber-text tracking-wide">
-            Import a trace
-          </h3>
-        </div>
-        <div className="flex space-x-1">
-          <button
-            onClick={insertExampleJson}
-            className="text-[9px] font-semibold text-cyber-muted hover:text-cyan-400 bg-cyber-bg px-2 py-0.5 rounded border border-cyber-border transition-all"
-          >
-            + JSON
-          </button>
-          <button
-            onClick={insertExampleTranscript}
-            className="text-[9px] font-semibold text-cyber-muted hover:text-cyan-400 bg-cyber-bg px-2 py-0.5 rounded border border-cyber-border transition-all"
-          >
-            + Transcript
-          </button>
-        </div>
+    <section className="trace-input">
+      <div className="trace-input__head">
+        <h2 className="section-heading">Open a trace</h2>
+        <span className="trace-input__examples">
+          <button type="button" className="btn btn--text-strong btn--xs" onClick={insertExampleJson}>Example JSON</button>
+          <button type="button" className="btn btn--text-strong btn--xs" onClick={insertExampleTranscript}>Example transcript</button>
+        </span>
       </div>
 
-      {/* Drop Area & Text Area */}
-      <div 
-        onDrop={handleFileDrop}
-        onDragOver={handleDragOver}
-        className="relative group border border-dashed border-cyber-border hover:border-cyber-primary rounded-lg overflow-hidden transition-all bg-cyber-bg/50"
-      >
+      <div onDrop={handleFileDrop} onDragOver={handleDragOver}>
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
           aria-label="Trace input"
-          placeholder={`Paste a reasoning trace, chat/tool log JSON, or lines like:
-Thought: Maybe the key is invalid...
-Action: Check config...
-Observation: File is empty...
-Update: Confirmed empty file (confidence: 0.90)`}
-          className="w-full h-[180px] bg-transparent text-xs p-3 text-cyber-text placeholder-cyber-muted/60 focus:outline-none font-mono resize-none"
+          className="field trace-input__text"
+          placeholder={`Paste trace JSON, a chat or tool log, or a transcript:
+Thought: Maybe the key is invalid
+Action: check_config()
+Observation: The file is empty
+Or drop a .json or .txt file here.`}
         />
-
-        {/* Floating Upload Hint when textarea is empty */}
-        {!text && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-cyber-muted/50 p-4">
-            <Upload className="w-6 h-6 mb-1 text-cyber-border group-hover:text-cyber-primary transition-all" />
-            <span className="text-[10px] text-center">Drop a .json or .txt trace, chat log, or tool-call record</span>
-          </div>
-        )}
       </div>
 
-      {/* Feedback alerts */}
-      {error && (
-        <div className="p-2.5 rounded bg-rose-950/20 border border-rose-500/30 text-rose-400 text-[11px] flex items-start space-x-2">
-          <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-          <span>{error}</span>
-        </div>
-      )}
+      {error && <p className="hint hint--error" role="alert">{error}</p>}
+      {successMsg && <p className="hint" data-warning={successMsg.warning || undefined} role="status">{successMsg.text}</p>}
 
-      {successMsg && (
-        <div className={`p-2.5 rounded text-[11px] flex items-start space-x-2 border ${
-          successMsg.warning 
-            ? "bg-amber-950/20 border-amber-500/30 text-amber-400" 
-            : "bg-emerald-950/20 border-emerald-500/30 text-emerald-400"
-        }`}>
-          <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-          <span>{successMsg.text}</span>
-        </div>
-      )}
-
-      {/* Buttons */}
-      <div className="flex space-x-2">
-        <button
-          onClick={handleParse}
-          className="flex-1 bg-cyber-primary hover:bg-blue-600 text-white text-xs font-bold py-2 rounded-lg transition-all shadow-cyber-glow flex items-center justify-center space-x-1.5"
-        >
-          <FileText className="w-3.5 h-3.5" />
-          <span>Open trace</span>
-        </button>
-        <label className="px-3 flex items-center bg-cyber-border hover:bg-cyber-hover text-cyber-muted hover:text-cyber-text text-xs rounded-lg transition-all border border-cyber-border cursor-pointer focus-within:outline focus-within:outline-cyber-primary">
+      <div className="trace-input__actions">
+        <button type="button" className="btn btn--sm" onClick={handleParse}>Open trace</button>
+        <label className="btn btn--secondary btn--sm">
           Choose file
           <input
             type="file"
@@ -194,16 +142,17 @@ Update: Confirmed empty file (confidence: 0.90)`}
           />
         </label>
         <button
+          type="button"
+          className="btn btn--text btn--sm"
           onClick={() => {
             setText("");
             setError(null);
             setSuccessMsg(null);
           }}
-          className="px-3 bg-cyber-border hover:bg-cyber-hover text-cyber-muted hover:text-cyber-text text-xs rounded-lg transition-all border border-cyber-border"
         >
           Clear
         </button>
       </div>
-    </div>
+    </section>
   );
 };

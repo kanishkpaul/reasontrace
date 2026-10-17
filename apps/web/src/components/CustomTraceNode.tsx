@@ -1,199 +1,39 @@
-import React from "react";
 import { Handle, Position } from "@xyflow/react";
-import { 
-  Brain, 
-  Wrench, 
-  Eye, 
-  RefreshCw, 
-  AlertTriangle, 
-  GitBranch, 
-  CheckCircle, 
-  Terminal 
-} from "lucide-react";
-import type { TraceEvent, EventType } from "@reasontrace/format";
+import type { TraceEvent } from "@reasontrace/format";
+import { EVENT_TYPES } from "../lib/eventTypes";
+import { ICON } from "../lib/icons";
+import { EvidenceLabel } from "./EvidenceLabel";
 
-// Map types to icons, colors and labels
-// eslint-disable-next-line react-refresh/only-export-components
-export const typeConfigs: Record<
-  EventType, 
-  { 
-    icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
-    colorClass: string; 
-    borderClass: string;
-    bgClass: string;
-    glowClass: string;
-    textClass: string;
-    label: string; 
-  }
-> = {
-  hypothesis: {
-    icon: Brain,
-    colorClass: "bg-cyan-500",
-    borderClass: "border-cyan-500/40",
-    bgClass: "bg-cyan-950/20",
-    glowClass: "glow-hypothesis",
-    textClass: "text-cyan-400",
-    label: "Hypothesis",
-  },
-  action: {
-    icon: Wrench,
-    colorClass: "bg-blue-500",
-    borderClass: "border-blue-500/40",
-    bgClass: "bg-blue-950/20",
-    glowClass: "glow-action",
-    textClass: "text-blue-400",
-    label: "Action",
-  },
-  observation: {
-    icon: Eye,
-    colorClass: "bg-emerald-500",
-    borderClass: "border-emerald-500/40",
-    bgClass: "bg-emerald-950/20",
-    glowClass: "glow-observation",
-    textClass: "text-emerald-400",
-    label: "Observation",
-  },
-  belief_update: {
-    icon: RefreshCw,
-    colorClass: "bg-purple-500",
-    borderClass: "border-purple-500/40",
-    bgClass: "bg-purple-950/20",
-    glowClass: "glow-belief_update",
-    textClass: "text-purple-400",
-    label: "Belief Update",
-  },
-  failure: {
-    icon: AlertTriangle,
-    colorClass: "bg-rose-500",
-    borderClass: "border-rose-500/60",
-    bgClass: "bg-rose-950/30",
-    glowClass: "glow-failure",
-    textClass: "text-rose-400",
-    label: "Failure",
-  },
-  decision: {
-    icon: GitBranch,
-    colorClass: "bg-amber-500",
-    borderClass: "border-amber-500/40",
-    bgClass: "bg-amber-950/20",
-    glowClass: "glow-decision",
-    textClass: "text-amber-400",
-    label: "Decision",
-  },
-  final_answer: {
-    icon: CheckCircle,
-    colorClass: "bg-pink-500",
-    borderClass: "border-pink-500/60",
-    bgClass: "bg-pink-950/30",
-    glowClass: "glow-final_answer",
-    textClass: "text-pink-400",
-    label: "Final Answer",
-  },
-};
+const PREVIEW_CHARS = 80;
 
 export const CustomTraceNode = (props: { data: unknown }) => {
-  const data = props.data as {
+  const { event, isSelected, isHighlightedFailure, isNewest } = props.data as {
     event: TraceEvent;
     isSelected: boolean;
     isHighlightedFailure: boolean;
     isNewest: boolean;
   };
-  const { event, isSelected, isHighlightedFailure, isNewest } = data;
-  const config = typeConfigs[event.type as EventType] || typeConfigs.hypothesis;
-  const Icon = config.icon;
-
-  // Truncate content for a neat preview
-  const maxPreviewLength = 80;
-  const contentPreview = event.content.length > maxPreviewLength
-    ? `${event.content.substring(0, maxPreviewLength)}...`
-    : event.content;
+  const { label, icon: Icon } = EVENT_TYPES[event.type];
+  const preview = event.content.length > PREVIEW_CHARS ? `${event.content.slice(0, PREVIEW_CHARS)}…` : event.content;
 
   return (
     <div
-      className={`relative w-[280px] rounded-xl border bg-cyber-card p-4 text-sm text-cyber-text shadow-sm transition-shadow duration-200 cursor-pointer
-        ${config.borderClass} ${isSelected ? "ring-2 ring-cyber-primary shadow-cyan-glow" : ""}
-        ${isHighlightedFailure ? "ring-2 ring-cyber-danger shadow-rose-glow border-cyber-danger" : ""}
-        ${isNewest ? "ring-2 ring-cyan-400 border-cyan-400" : ""}
-      `}
+      className="trace-node"
+      data-type={event.type}
+      aria-current={isSelected}
+      data-failure={isHighlightedFailure || undefined}
+      data-newest={isNewest || undefined}
     >
-      {/* Target handle on top */}
-      <Handle
-        type="target"
-        position={Position.Top}
-        className="!bg-cyber-border !border-cyber-bg w-2 h-2 rounded-full"
-      />
-
-      {/* Node Header */}
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center space-x-2">
-          {/* Left colored bar / icon container */}
-          <div className={`p-1.5 rounded-lg ${config.bgClass} ${config.textClass}`}>
-            <Icon className="w-4 h-4" />
-          </div>
-          <span className={`font-semibold tracking-wide uppercase text-[10px] ${config.textClass}`}>
-            {config.label}
-          </span>
-        </div>
-
-        {/* Step indicator */}
-        <span className="bg-cyber-border text-cyber-muted text-[10px] px-2 py-0.5 rounded-full font-mono">
-          Step {event.step}
-        </span>
+      <Handle type="target" position={Position.Top} className="trace-node__handle" />
+      <div className="event-cell__head">
+        <Icon size={ICON.size} stroke={ICON.stroke} />
+        <span className="event-cell__type">{label}</span>
+        {event.tool && <span className="badge badge--mono badge--muted">{event.tool}</span>}
+        {event.confidence !== undefined && <span className="event-cell__confidence">{Math.round(event.confidence * 100)}%</span>}
       </div>
-
-      {/* Tool Name if Action */}
-      {event.type === "action" && event.tool && (
-        <div className="flex items-center space-x-1 mb-2 bg-blue-950/40 border border-blue-500/20 px-2 py-0.5 rounded w-max">
-          <Terminal className="w-3 h-3 text-blue-400" />
-          <span className="text-[10px] text-blue-300 font-mono font-bold">
-            {event.tool}
-          </span>
-        </div>
-      )}
-
-      {/* Main Content Preview */}
-      <p className="text-xs text-cyber-text leading-relaxed font-sans line-clamp-3">
-        {contentPreview}
-      </p>
-
-      {/* Node Footer: Badges */}
-      <div className="flex items-center justify-between mt-3 pt-2 border-t border-cyber-border">
-        {/* Confidence Badge */}
-        {event.confidence !== undefined ? (
-          <div className="flex items-center space-x-1">
-            <span className="text-[10px] text-cyber-muted">Conf:</span>
-            <span className={`text-[10px] font-bold font-mono ${
-              event.confidence >= 0.8 ? "text-emerald-400" : event.confidence >= 0.5 ? "text-amber-400" : "text-rose-400"
-            }`}>
-              {Math.round(event.confidence * 100)}%
-            </span>
-          </div>
-        ) : (
-          <div />
-        )}
-
-        {/* Newest Pulse Dot Indicator */}
-        <div className="flex items-center gap-2">
-        <span className={`text-[8px] uppercase tracking-wider font-bold ${event.label === "stated" ? "text-purple-400" : event.label === "inferred" ? "text-amber-400" : "text-cyan-400"}`}>
-          {event.label}
-        </span>
-        {isNewest && (
-          <div className="flex items-center space-x-1">
-            <span className="w-2 h-2 rounded-full bg-cyan-400" />
-            <span className="text-[8px] uppercase tracking-wider text-cyan-400 font-bold">
-              Active Step
-            </span>
-          </div>
-        )}
-        </div>
-      </div>
-
-      {/* Source handle at bottom */}
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        className="!bg-cyber-border !border-cyber-bg w-2 h-2 rounded-full"
-      />
+      <p className="trace-node__content evidence-text" data-label={event.label}>{preview || "(no text)"}</p>
+      <EvidenceLabel label={event.label} />
+      <Handle type="source" position={Position.Bottom} className="trace-node__handle" />
     </div>
   );
 };

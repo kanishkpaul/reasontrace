@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { ReasonTrace, EventType } from "@reasontrace/format";
 import { sampleTraces } from "./data/sampleTraces";
 import { parseTrace } from "@reasontrace/analysis";
+import { saveTrace } from "./lib/savedTrace";
 import type { ParseResult } from "@reasontrace/analysis";
 
 interface StoreFilters {
@@ -17,6 +18,8 @@ interface StoreSettings {
 interface TraceState {
   // Data
   currentTrace: ReasonTrace | null;
+  /** False when the browser refused to keep the open trace (quota, blocked storage). */
+  savedInBrowser: boolean;
   selectedNodeId: string | null;
   newestNodeId: string | null;
   
@@ -76,6 +79,7 @@ const defaultSettings: StoreSettings = {
 
 export const useTraceStore = create<TraceState>((set, get) => ({
   currentTrace: null,
+  savedInBrowser: true,
   selectedNodeId: null,
   newestNodeId: null,
   
@@ -102,6 +106,7 @@ export const useTraceStore = create<TraceState>((set, get) => ({
     set({
       filters: { ...defaultFilters },
       currentTrace: trace,
+      savedInBrowser: trace.events.length === 0 || saveTrace(trace),
       steps,
       currentStep: steps.at(-1) ?? 0,
       newestNodeId: sorted.length > 0 ? sorted[sorted.length - 1].id : null,

@@ -4,7 +4,16 @@ import { useTraceStore } from "../store";
 import { diagnosticsFor } from "../lib/diagnostics";
 import { downloadFile, fileNameFor } from "../lib/download";
 import { GROUNDING_TEXT } from "../lib/grounding";
-import { AlertCircle, CheckCircle, BarChart3, Download, Sparkles, Eye, Lightbulb } from "lucide-react";
+import { DownloadIcon, ICON } from "../lib/icons";
+
+// Red is kept for explicit failures (design/system/DESIGN.md); a heuristic
+// finding, however severe, is a warning to check.
+const SEVERITY_BADGE = {
+  failure: "badge--destructive",
+  critical: "badge--warn",
+  warning: "badge--warn",
+  info: "badge--muted",
+} as const;
 
 export const DiagnosisPanel: React.FC = () => {
   const { currentTrace, setSelectedNodeId } = useTraceStore(useShallow((s) => ({ currentTrace: s.currentTrace, setSelectedNodeId: s.setSelectedNodeId })));
@@ -38,7 +47,7 @@ export const DiagnosisPanel: React.FC = () => {
     md += `\n`;
 
     md += `## 3. Findings\n\n`;
-    if (diagnostics.warnings.length === 0) {
+    if (diagnostics.findings.length === 0) {
       md += `No check raised a finding. The checks cover declared support links, repeated calls, recorded failures and stated confidence; they do not judge whether the reasoning is correct.\n`;
     } else {
       diagnostics.findings.forEach(f => {
@@ -50,139 +59,68 @@ export const DiagnosisPanel: React.FC = () => {
     downloadFile(fileNameFor(currentTrace.title, "_diagnosis.md"), md, "text/markdown;charset=utf-8");
   };
 
-  if (!currentTrace || !diagnostics) {
-    return (
-      <div className="h-full flex items-center justify-center text-center p-6 text-cyber-muted text-xs">
-        No active trace loaded for diagnosis.
-      </div>
-    );
-  }
+  if (!currentTrace || !diagnostics) return null;
 
-  const hasWarnings = diagnostics.warnings.length > 0;
   const grounding = GROUNDING_TEXT[diagnostics.answerGrounding];
+  const counts: [string, number | string][] = [
+    ["Hypotheses", diagnostics.hypothesisCount],
+    ["Actions", diagnostics.actionCount],
+    ["Observations", diagnostics.observationCount],
+    ["Updates", diagnostics.beliefUpdateCount],
+    ["Decisions", diagnostics.decisionCount],
+    ["Failures", diagnostics.failureCount],
+    ["Answers", diagnostics.finalAnswerCount],
+    ["Hypotheses per observation", diagnostics.hypothesisToObservationRatio ?? "—"],
+  ];
 
   return (
-    <div className="flex flex-col bg-cyber-card border border-cyber-border rounded-xl overflow-hidden h-full shadow-cyber-glow">
-      {/* Header */}
-      <div className="p-4 border-b border-cyber-border bg-cyber-bg/50 flex items-center justify-between">
-        <div className="flex items-center space-x-2 text-cyber-primary">
-          <Sparkles className="w-5 h-5" />
-          <h3 className="text-sm font-bold text-cyber-text tracking-wide uppercase">
-            Trace Diagnosis
-          </h3>
-        </div>
-        <button
-          onClick={exportDiagnosisAsMarkdown}
-          className="flex items-center space-x-1 px-2.5 py-1 text-[10px] font-semibold text-cyber-text bg-cyber-border hover:bg-cyber-hover hover:text-cyber-primary border border-cyber-border rounded-lg transition-all"
-        >
-          <Download className="w-3.5 h-3.5" />
-          <span>Export MD</span>
+    <div className="findings">
+      <div className="findings__head">
+        <span className="dot" data-grounding={diagnostics.answerGrounding} />
+        <strong>{grounding.title}</strong>
+        <button type="button" className="btn btn--ghost btn--sm" onClick={exportDiagnosisAsMarkdown}>
+          <DownloadIcon size={ICON.size} stroke={ICON.stroke} />
+          Export Markdown
         </button>
       </div>
+      <p className="hint">{grounding.detail}</p>
+      <p className="hint">
+        Claims linked to observations:{" "}
+        <span className="findings__number">
+          {diagnostics.evidenceCoverage === null ? "not recorded" : `${diagnostics.evidenceCoverage}%`}
+        </span>
+      </p>
 
-      {/* Main Body */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-5">
-        {/* Metrics Grid */}
-        <div className="space-y-2">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-cyber-muted flex items-center">
-            <BarChart3 className="w-3.5 h-3.5 mr-1" /> Event counts
-          </span>
-          <div className="grid grid-cols-3 gap-2">
-            <div className="bg-cyber-bg border border-cyber-border p-2 rounded-lg text-center">
-              <span className="text-[9px] text-cyber-muted uppercase block">Hypotheses</span>
-              <span className="text-sm font-bold text-cyan-400 font-mono">{diagnostics.hypothesisCount}</span>
-            </div>
-            <div className="bg-cyber-bg border border-cyber-border p-2 rounded-lg text-center">
-              <span className="text-[9px] text-cyber-muted uppercase block">Actions</span>
-              <span className="text-sm font-bold text-blue-400 font-mono">{diagnostics.actionCount}</span>
-            </div>
-            <div className="bg-cyber-bg border border-cyber-border p-2 rounded-lg text-center">
-              <span className="text-[9px] text-cyber-muted uppercase block">Observations</span>
-              <span className="text-sm font-bold text-emerald-400 font-mono">{diagnostics.observationCount}</span>
-            </div>
-            <div className="bg-cyber-bg border border-cyber-border p-2 rounded-lg text-center">
-              <span className="text-[9px] text-cyber-muted uppercase block">Updates</span>
-              <span className="text-sm font-bold text-purple-400 font-mono">{diagnostics.beliefUpdateCount}</span>
-            </div>
-            <div className="bg-cyber-bg border border-cyber-border p-2 rounded-lg text-center">
-              <span className="text-[9px] text-cyber-muted uppercase block">Failures</span>
-              <span className={`text-sm font-bold font-mono ${diagnostics.failureCount > 0 ? "text-rose-400" : "text-cyber-muted"}`}>
-                {diagnostics.failureCount}
-              </span>
-            </div>
-            <div className="bg-cyber-bg border border-cyber-border p-2 rounded-lg text-center" title="Hypothesis to Observation Ratio">
-              <span className="text-[9px] text-cyber-muted uppercase block">H-O Ratio</span>
-              <span className="text-sm font-bold text-amber-400 font-mono">{diagnostics.hypothesisToObservationRatio ?? "—"}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Grounding Status Card */}
-        <div className={`p-3 rounded-lg border flex items-start space-x-2.5 ${
-          diagnostics.answerGrounding === "grounded"
-            ? "bg-emerald-950/10 border-emerald-500/20 text-emerald-400"
-            : diagnostics.answerGrounding === "ungrounded"
-              ? "bg-rose-950/10 border-rose-500/20 text-rose-400"
-              : "bg-cyber-bg border-cyber-border text-cyber-text"
-        }`}>
-          {diagnostics.answerGrounding === "grounded" ? (
-            <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" />
-          ) : (
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-          )}
-          <div className="text-xs">
-            <span className="font-semibold block">{grounding.title}</span>
-            <span className="text-cyber-muted block mt-0.5">{grounding.detail}</span>
-          </div>
-        </div>
-
-        <div className="rounded-lg border border-cyber-border bg-cyber-bg p-3 flex items-start gap-2.5">
-          <Eye className="w-4 h-4 shrink-0 mt-0.5 text-cyan-400" />
-          <div className="text-xs">
-            <span className="font-semibold text-cyber-text block">What this trace can tell you</span>
-            <span className="text-cyber-muted block mt-0.5">
-              {diagnostics.opaqueEventCount
-                ? `${diagnostics.opaqueEventCount} records are observed behavior. ReasonTrace can assess actions, evidence, and outcomes, but cannot recover hidden chain-of-thought.`
-                : "This trace includes stated reasoning. Treat it as a reported rationale and still verify it against observations and tool results."}
+      <h3 className="section-heading">
+        Findings · {diagnostics.findings.length}, {diagnostics.findings.filter((f) => f.severity !== "info").length} to check
+      </h3>
+      {diagnostics.findings.length === 0 ? (
+        <p className="hint">No check raised a finding. The checks cover declared support links, repeated calls, recorded failures and stated confidence; they do not judge whether the reasoning is correct.</p>
+      ) : (
+        diagnostics.findings.map((finding) => (
+          <button
+            key={finding.id}
+            type="button"
+            className="row finding"
+            disabled={finding.eventIds.length === 0}
+            onClick={() => setSelectedNodeId(finding.eventIds[0])}
+          >
+            <span className="row__title">{finding.title}</span>
+            <span className={`badge ${SEVERITY_BADGE[finding.category === "failure" ? "failure" : finding.severity]}`}>{finding.severity}</span>
+            <span className="row__desc">
+              {finding.detail}
+              <span className="finding__rule"><b>Rule:</b> {finding.rule}</span>
+              <span className="finding__rule"><b>Limits:</b> {finding.limitations}</span>
+              <span className="finding__rule">{finding.recommendation}</span>
             </span>
-          </div>
-        </div>
+          </button>
+        ))
+      )}
 
-        {/* Heuristic Issues Warnings */}
-        <div className="space-y-2">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-cyber-muted block">
-            Review findings ({diagnostics.findings.length})
-          </span>
-          {hasWarnings ? (
-            <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
-              {diagnostics.findings.map((finding) => (
-                <button
-                  key={finding.id}
-                  type="button"
-                  onClick={() => finding.eventIds[0] && setSelectedNodeId(finding.eventIds[0])}
-                  className="w-full p-3 bg-cyber-bg border border-cyber-border rounded-lg flex items-start space-x-2 text-left text-xs transition-colors hover:border-slate-500 hover:bg-cyber-hover focus-visible:outline-cyber-cyan"
-                  title={finding.eventIds.length ? "Focus related event" : "No related event"}
-                >
-                  <AlertCircle className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${finding.severity === "critical" ? "text-rose-400" : finding.severity === "warning" ? "text-amber-400" : "text-cyan-400"}`} />
-                  <div className="leading-relaxed">
-                    <span className="text-cyber-text font-semibold block">{finding.title}</span>
-                    <span className="text-cyber-muted block mt-0.5">{finding.detail}</span>
-                    <span className="mt-1.5 text-[10px] text-cyber-muted block"><span className="font-semibold text-cyber-text">Rule:</span> {finding.rule}</span>
-                    <span className="mt-0.5 text-[10px] text-cyber-muted block"><span className="font-semibold text-cyber-text">Limits:</span> {finding.limitations}</span>
-                    <span className="mt-1.5 text-[10px] text-cyber-primary flex items-center gap-1"><Lightbulb className="w-3 h-3" />{finding.recommendation}</span>
-                    {finding.eventIds.length > 0 && <span className="mt-2 block text-[10px] font-medium text-cyber-muted">View related event</span>}
-                  </div>
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div className="p-4 bg-cyber-bg border border-cyber-border rounded-lg text-center text-xs text-cyber-muted flex flex-col items-center justify-center">
-              <CheckCircle className="w-6 h-6 text-emerald-400 mb-2" />
-              <span>No check raised a finding. The checks cover declared support links, repeated calls, recorded failures and stated confidence; they do not judge whether the reasoning is correct.</span>
-            </div>
-          )}
-        </div>
-      </div>
+      <h3 className="section-heading">Event counts</h3>
+      <dl className="findings__counts">
+        {counts.map(([name, value]) => (<div key={name}><dt>{name}</dt><dd>{value}</dd></div>))}
+      </dl>
     </div>
   );
 };
