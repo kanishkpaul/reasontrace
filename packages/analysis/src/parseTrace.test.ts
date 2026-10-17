@@ -81,7 +81,11 @@ describe("JSON import", () => {
     expect(typeof parsed(traceFixture("json-edge-cases.json")).title).toBe("string");
   });
 
-  knownBug("P15: cyclic links are reported", () => {
+  test("P15: an event that supports itself is reported", () => {
+    expect(parse('{"events":[{"id":"a","step":1,"links":["a"]}]}').errors.join(" ")).toMatch(/cycle: a/);
+  });
+
+  test("P15: cyclic links are reported", () => {
     expect(parse(traceFixture("cyclic-links.json")).errors.join(" ")).toMatch(/cycl/i);
   });
 });

@@ -349,6 +349,34 @@ function finalizeEvent(event: Partial<TraceEvent>, step: number): TraceEvent {
 }
 
 /**
+ * Evidence cannot support itself, directly or through other events. Kahn's
+ * algorithm removes events whose supports are all removed; whatever is left
+ * sits on a cycle or downstream of one.
+ */
+function eventsInSupportCycles(events: TraceEvent[]): string[] {
+  const pending = new Map(events.map(e => [e.id, new Set(e.supports)]));
+  const supported = new Map<string, string[]>();
+  for (const e of events) {
+    for (const s of e.supports) {
+      const children = supported.get(s);
+      if (children) children.push(e.id);
+      else supported.set(s, [e.id]);
+    }
+  }
+  const ready = events.filter(e => e.supports.length === 0).map(e => e.id);
+  while (ready.length) {
+    const id = ready.pop()!;
+    pending.delete(id);
+    for (const child of supported.get(id) ?? []) {
+      const waiting = pending.get(child);
+      waiting?.delete(id);
+      if (waiting?.size === 0) ready.push(child);
+    }
+  }
+  return [...pending.keys()];
+}
+
+/**
  * The outcome of reading a trace. `trace` is null exactly when `errors` is
  * non-empty; `warnings` describe what was dropped or assumed while reading.
  */
@@ -379,6 +407,10 @@ export function readTrace(value: unknown): ParseResult {
       return exists;
     });
   });
+  const cyclic = eventsInSupportCycles(trace.events);
+  if (cyclic.length) {
+    return { trace: null, errors: [`Events support each other in a cycle: ${cyclic.join(", ")}.`], warnings: [] };
+  }
   return {
     trace,
     errors: [],
