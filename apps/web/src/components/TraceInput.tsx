@@ -3,6 +3,11 @@ import { useShallow } from "zustand/react/shallow";
 import { useTraceStore } from "../store";
 import { Terminal, Upload, AlertCircle, FileText } from "lucide-react";
 
+// Four times the 50,000-event trace the diagnostics are tested on (4.7 MB of
+// JSON with short contents), leaving room for long tool outputs while
+// refusing a file that is clearly not a trace.
+const MAX_FILE_BYTES = 20e6;
+
 export const TraceInput: React.FC<{ onLoaded?: () => void }> = ({ onLoaded }) => {
   const { parseAndSetTrace } = useTraceStore(useShallow((s) => ({ parseAndSetTrace: s.parseAndSetTrace })));
   const [text, setText] = useState("");
@@ -40,18 +45,27 @@ export const TraceInput: React.FC<{ onLoaded?: () => void }> = ({ onLoaded }) =>
     onLoaded?.();
   };
 
+  const loadFile = (file: File) => {
+    setError(null);
+    if (file.size > MAX_FILE_BYTES) {
+      setError(`${file.name} is ${(file.size / 1e6).toFixed(1)} MB; the limit is ${MAX_FILE_BYTES / 1e6} MB.`);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const content = String(reader.result ?? "");
+      // A NUL byte never appears in a text trace; it means a binary file.
+      if (content.includes("\u0000")) setError(`${file.name} is not a text file.`);
+      else setText(content);
+    };
+    reader.onerror = () => setError(`Could not read ${file.name}.`);
+    reader.readAsText(file);
+  };
+
   const handleFileDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          setText(event.target.result as string);
-        }
-      };
-      reader.readAsText(file);
-    }
+    if (file) loadFile(file);
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -166,6 +180,19 @@ Update: Confirmed empty file (confidence: 0.90)`}
           <FileText className="w-3.5 h-3.5" />
           <span>Open trace</span>
         </button>
+        <label className="px-3 flex items-center bg-cyber-border hover:bg-cyber-hover text-cyber-muted hover:text-cyber-text text-xs rounded-lg transition-all border border-cyber-border cursor-pointer focus-within:outline focus-within:outline-cyber-primary">
+          Choose file
+          <input
+            type="file"
+            accept=".json,.jsonl,.txt,.log,application/json,text/plain"
+            className="sr-only"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) loadFile(file);
+              e.target.value = "";
+            }}
+          />
+        </label>
         <button
           onClick={() => {
             setText("");
