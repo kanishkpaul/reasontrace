@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { useTraceStore } from "../store";
 import { computeDiagnostics } from "@reasontrace/analysis";
+import { GROUNDING_TEXT } from "../lib/grounding";
 import { AlertCircle, CheckCircle, BarChart3, Download, Sparkles, Eye, Lightbulb } from "lucide-react";
 
 export const DiagnosisPanel: React.FC = () => {
@@ -15,6 +16,7 @@ export const DiagnosisPanel: React.FC = () => {
   // 2. Export diagnosis as Markdown file
   const exportDiagnosisAsMarkdown = () => {
     if (!currentTrace || !diagnostics) return;
+    const grounding = GROUNDING_TEXT[diagnostics.answerGrounding];
 
     let md = `# ReasonTrace Diagnostics Report\n`;
     md += `**Trace Title:** ${currentTrace.title}\n`;
@@ -34,9 +36,7 @@ export const DiagnosisPanel: React.FC = () => {
     md += `| Hypothesis/Observation Ratio | ${diagnostics.hypothesisToObservationRatio} |\n\n`;
 
     md += `## 2. Evidence Grounding Status\n\n`;
-    md += diagnostics.hasEvidenceChain 
-      ? `✅ **Grounded:** The final answer shares a valid causal link tracing back to observations or evidence.\n`
-      : `⚠️ **Weakly Grounded:** The final answer does not have a direct causal connection tracing back to observations or belief updates in the reasoning graph.\n`;
+    md += `**${grounding.title}.** ${grounding.detail}\n`;
     md += `\n`;
 
     md += `## 3. Cognitive Warnings & Inconsistencies\n\n`;
@@ -68,6 +68,7 @@ export const DiagnosisPanel: React.FC = () => {
   }
 
   const hasWarnings = diagnostics.warnings.length > 0;
+  const grounding = GROUNDING_TEXT[diagnostics.answerGrounding];
 
   return (
     <div className="flex flex-col bg-cyber-card border border-cyber-border rounded-xl overflow-hidden h-full shadow-cyber-glow">
@@ -127,24 +128,20 @@ export const DiagnosisPanel: React.FC = () => {
 
         {/* Grounding Status Card */}
         <div className={`p-3 rounded-lg border flex items-start space-x-2.5 ${
-          diagnostics.hasEvidenceChain 
-            ? "bg-emerald-950/10 border-emerald-500/20 text-emerald-400" 
-            : "bg-rose-950/10 border-rose-500/20 text-rose-400"
+          diagnostics.answerGrounding === "grounded"
+            ? "bg-emerald-950/10 border-emerald-500/20 text-emerald-400"
+            : diagnostics.answerGrounding === "ungrounded"
+              ? "bg-rose-950/10 border-rose-500/20 text-rose-400"
+              : "bg-cyber-bg border-cyber-border text-cyber-text"
         }`}>
-          {diagnostics.hasEvidenceChain ? (
+          {diagnostics.answerGrounding === "grounded" ? (
             <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" />
           ) : (
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
           )}
           <div className="text-xs">
-            <span className="font-semibold block">
-              {diagnostics.hasEvidenceChain ? "Evidence-Grounded Output" : "Weak Evidence Grounding"}
-            </span>
-            <span className="text-cyber-muted block mt-0.5">
-              {diagnostics.hasEvidenceChain 
-                ? "The final answer is successfully linked back to empirical observations."
-                : "The final answer lacks a path tracking back to environmental observations."}
-            </span>
+            <span className="font-semibold block">{grounding.title}</span>
+            <span className="text-cyber-muted block mt-0.5">{grounding.detail}</span>
           </div>
         </div>
 

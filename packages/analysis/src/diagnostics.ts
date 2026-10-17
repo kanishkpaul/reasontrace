@@ -1,4 +1,4 @@
-import type { EventType, ReasonTrace, TraceEvent, TraceDiagnostics, TraceFinding } from "@reasontrace/format";
+import type { AnswerGrounding, EventType, ReasonTrace, TraceEvent, TraceDiagnostics, TraceFinding } from "@reasontrace/format";
 import { supportGraph, typeMask } from "./supportGraph";
 
 /**
@@ -69,16 +69,19 @@ export function computeDiagnostics(trace: ReasonTrace): TraceDiagnostics {
     }
   });
 
-  // 4. Verify grounding of final answer (is there a path from final answer back to observations or belief updates?)
-  let hasEvidenceChain = true;
-  if (finalAnswerCount > 0) {
-    const finalAnswers = events.filter(e => e.type === "final_answer");
-    const groundedAnswers = finalAnswers.filter(fa => hasAncestorType(fa.id, ["observation", "belief_update"]));
-    
-    if (groundedAnswers.length === 0) {
-      hasEvidenceChain = false;
-      addFinding({ id: "ungrounded-answer", severity: "critical", category: "grounding", title: "Answer lacks an evidence path", detail: "No final answer links back to an observation or an evidence-informed update.", eventIds: finalAnswers.map(event => event.id), recommendation: "Inspect the answer's parent links and add the observations that justify it." });
-    }
+  // 4. An answer is grounded when an observation lies upstream of it. A
+  // belief update on the path counts only through its own support, so an
+  // unsupported update can't ground an answer (D5).
+  const finalAnswers = events.filter(e => e.type === "final_answer");
+  const ungroundedAnswers = finalAnswers.filter(fa => !hasAncestorType(fa.id, ["observation"]));
+  const recordsSupport = events.some(e => e.supports.length > 0);
+  let answerGrounding: AnswerGrounding;
+  if (finalAnswers.length === 0) answerGrounding = "no_answer";
+  else if (!recordsSupport) answerGrounding = "not_recorded";
+  else if (ungroundedAnswers.length) answerGrounding = "ungrounded";
+  else answerGrounding = "grounded";
+  if (answerGrounding === "ungrounded") {
+    addFinding({ id: "ungrounded-answer", severity: "critical", category: "grounding", title: "Answer lacks an evidence path", detail: `${ungroundedAnswers.length} of ${finalAnswers.length} final answers have no support path back to an observation.`, eventIds: ungroundedAnswers.map(event => event.id), recommendation: "Inspect the answer's support links and add the observations that justify it." });
   }
 
   // 5. Detect loops or repeated action patterns
@@ -123,8 +126,7 @@ export function computeDiagnostics(trace: ReasonTrace): TraceDiagnostics {
     }
   });
 
-  const answerEvents = events.filter(e => e.type === "final_answer");
-  const groundedAnswerCount = answerEvents.filter(answer => hasAncestorType(answer.id, ["observation", "belief_update"])).length;
+  const groundedAnswerCount = finalAnswers.length - ungroundedAnswers.length;
   const claims = events.filter(e => ["hypothesis", "belief_update", "decision", "final_answer"].includes(e.type));
   const supportedClaims = claims.filter(event => hasAncestorType(event.id, ["observation"]) || canReachType(event.id, ["observation"]));
   const evidenceCoverage = claims.length ? Math.round((supportedClaims.length / claims.length) * 100) : 0;
@@ -149,7 +151,7 @@ export function computeDiagnostics(trace: ReasonTrace): TraceDiagnostics {
     hypothesisToObservationRatio,
     unsupportedHypotheses,
     actionsWithoutPriorHypothesis,
-    hasEvidenceChain,
+    answerGrounding,
     evidenceCoverage,
     groundedAnswerCount,
     opaqueEventCount,

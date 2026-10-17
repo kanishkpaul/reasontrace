@@ -46,12 +46,21 @@ describe("diagnostics", () => {
     expect(performance.now() - start).toBeLessThan(500);
   });
 
-  knownBug("D4: a trace with no final answer does not report an evidence chain", () => {
-    expect(diagnose("Thought: a\nAction: b()").hasEvidenceChain).toBe(false);
+  test("D4: a trace with no final answer does not report a grounded answer", () => {
+    expect(diagnose("Thought: a\nAction: b()").answerGrounding).toBe("no_answer");
   });
 
-  knownBug("D5: an answer resting on an unsupported update is not grounded", () => {
-    expect(diagnose(traceFixture("answer-via-unsupported-update.json")).hasEvidenceChain).toBe(false);
+  test("D5: an answer resting on an unsupported update is not grounded", () => {
+    expect(diagnose(traceFixture("answer-via-unsupported-update.json")).answerGrounding).toBe("ungrounded");
+  });
+
+  test("an answer supported through an update that rests on an observation is grounded", () => {
+    const text = '{"events":[{"id":"o","type":"observation","step":1},{"id":"u","type":"belief_update","step":2,"supports":["o"]},{"id":"f","type":"final_answer","step":3,"supports":["u"]}]}';
+    expect(diagnose(text).answerGrounding).toBe("grounded");
+  });
+
+  test("a trace that declares no support links reports grounding as not recorded", () => {
+    expect(diagnose(traceFixture("chat-tools.json")).answerGrounding).toBe("not_recorded");
   });
 
   knownBug("D7: two identical actions are reported as a repeat, naming only those two", () => {

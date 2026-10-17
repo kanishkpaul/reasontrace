@@ -68,7 +68,7 @@ export interface TraceDiagnostics {
   hypothesisToObservationRatio: number;
   unsupportedHypotheses: string[]; // Event IDs
   actionsWithoutPriorHypothesis: string[]; // Event IDs
-  hasEvidenceChain: boolean;
+  answerGrounding: AnswerGrounding;
   evidenceCoverage: number;
   groundedAnswerCount: number;
   opaqueEventCount: number;
@@ -76,6 +76,13 @@ export interface TraceDiagnostics {
   findings: TraceFinding[];
   warnings: string[];
 }
+
+/**
+ * Whether the final answers rest on observations, along the `supports` links
+ * the trace declares. `not_recorded`: the trace declares no links at all, so
+ * the question can't be answered from it.
+ */
+export type AnswerGrounding = "grounded" | "ungrounded" | "no_answer" | "not_recorded";
 
 export type FindingSeverity = "critical" | "warning" | "info";
 

@@ -10,7 +10,7 @@ export const TraceAnalysisSummary: React.FC = () => {
   if (!currentTrace || !diagnostics) return null;
 
   const critical = diagnostics.findings.filter(finding => finding.severity === "critical").length;
-  const isGrounded = diagnostics.hasEvidenceChain;
+  const isGrounded = diagnostics.answerGrounding === "grounded";
 
   return (
     <div className="grid grid-cols-2 divide-x divide-y divide-cyber-border overflow-hidden rounded-lg border border-cyber-border bg-cyber-card sm:grid-cols-4 sm:divide-y-0 shrink-0">
