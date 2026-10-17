@@ -10,6 +10,7 @@ import { DiagnosisPanel } from "./DiagnosisPanel";
 import { TimelineControls } from "./TimelineControls";
 import { TraceAnalysisSummary } from "./TraceAnalysisSummary";
 import { diagnosticsFor } from "../lib/diagnostics";
+import { downloadFile, fileNameFor } from "../lib/download";
 import { loadSavedTrace, saveTrace } from "../lib/savedTrace";
 import { BrainCircuit, Download, Save, Info, Sparkles, PanelLeft, PanelRight, Upload, X } from "lucide-react";
 
@@ -40,15 +41,7 @@ export const Layout: React.FC = () => {
 
   const exportTraceAsJson = () => {
     if (!currentTrace) return;
-    const blob = new Blob([JSON.stringify(currentTrace, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${currentTrace.title.replace(/\s+/g, "_")}.json`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
+    downloadFile(fileNameFor(currentTrace.title, ".json"), JSON.stringify(currentTrace, null, 2), "application/json");
   };
 
   const handleQuickSave = () => {

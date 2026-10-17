@@ -2,6 +2,7 @@ import React from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useTraceStore } from "../store";
 import { diagnosticsFor } from "../lib/diagnostics";
+import { downloadFile, fileNameFor } from "../lib/download";
 import { GROUNDING_TEXT } from "../lib/grounding";
 import { AlertCircle, CheckCircle, BarChart3, Download, Sparkles, Eye, Lightbulb } from "lucide-react";
 
@@ -45,15 +46,7 @@ export const DiagnosisPanel: React.FC = () => {
       });
     }
 
-    // Trigger download
-    const blob = new Blob([md], { type: "text/markdown;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", `${currentTrace.title.replace(/\s+/g, "_")}_diagnosis.md`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    downloadFile(fileNameFor(currentTrace.title, "_diagnosis.md"), md, "text/markdown;charset=utf-8");
   };
 
   if (!currentTrace || !diagnostics) {
