@@ -97,7 +97,10 @@ export const useTraceStore = create<TraceState>((set, get) => ({
     // Find final answer step or just the last step to default select
     const finalEvent = sorted.find(e => e.type === "final_answer") || sorted[sorted.length - 1];
 
+    // Filters belong to the trace they were set on; a stale search could
+    // hide every event of the next one (S1).
     set({
+      filters: { ...defaultFilters },
       currentTrace: trace,
       steps,
       currentStep: steps.at(-1) ?? 0,
