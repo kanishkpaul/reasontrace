@@ -69,8 +69,12 @@ describe("JSON import", () => {
     expect(events(traceFixture("json-edge-cases.json"))[0].content).toBe("Maybe the cache is stale.");
   });
 
-  knownBug("P9: confidence above 1 is read as a percentage", () => {
+  test("P9: confidence above 1 is read as a percentage", () => {
     expect(events(traceFixture("json-edge-cases.json"))[0].confidence).toBe(0.85);
+  });
+
+  test("P9: confidence outside 0–100 is an error", () => {
+    expect(parse('{"events":[{"id":"a","step":1,"confidence":250}]}').errors.join(" ")).toMatch(/confidence 250/);
   });
 
   knownBug("P10: the trace title is always a string", () => {

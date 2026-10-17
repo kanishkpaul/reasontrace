@@ -57,7 +57,8 @@ function traceFromJson(value: unknown): ReasonTrace {
     const type = normaliseType(ev.type || ev.Type || ev.event_type || "hypothesis");
     const step = typeof ev.step === "number" ? ev.step : (typeof ev.Step === "number" ? ev.Step : idx + 1);
     const content = contentOf(ev.content ?? ev.Content ?? ev.text ?? ev.Text);
-    const confidence = typeof ev.confidence === "number" ? ev.confidence : (typeof ev.Confidence === "number" ? ev.Confidence : undefined);
+    const rawConfidence = ev.confidence ?? ev.Confidence;
+    const confidence = typeof rawConfidence === "number" ? normaliseConfidence(rawConfidence, id) : undefined;
     const rawTool = ev.tool || ev.Tool;
     const tool = rawTool === undefined ? undefined : String(rawTool);
     const rawSupports = ev.supports ?? ev.links ?? ev.Links;
@@ -104,6 +105,17 @@ function normaliseType(value: unknown): EventType {
   return ["hypothesis", "action", "observation", "belief_update", "failure", "decision", "final_answer"].includes(raw)
     ? raw as EventType
     : "hypothesis";
+}
+
+/**
+ * Confidence is stored in [0, 1]. Values up to 100 are read as percentages.
+ *
+ * @throws {TraceShapeError} for a value outside both ranges.
+ */
+function normaliseConfidence(value: number, eventId: string): number {
+  if (value >= 0 && value <= 1) return value;
+  if (value > 1 && value <= 100) return value / 100;
+  throw new TraceShapeError(`Event ${eventId} has confidence ${value}, which is neither in 0–1 nor a percentage.`);
 }
 
 /** Accepts format v1 labels and the prototype's v0 evidence modes (`explicit` is v0 for `stated`). */
