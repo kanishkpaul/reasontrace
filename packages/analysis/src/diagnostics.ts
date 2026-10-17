@@ -121,9 +121,10 @@ export function computeDiagnostics(trace: ReasonTrace): TraceDiagnostics {
   }
   closeRun();
 
-  // 6. Warnings for missing confidence on updates
+  // 6. Missing confidence matters only where the model states its own belief
+  // update; observed output, such as a chat message, never carries one (D9).
   events.forEach(e => {
-    if (e.type === "belief_update" && e.confidence === undefined) {
+    if (e.type === "belief_update" && e.label === "stated" && e.confidence === undefined) {
       addFinding({ id: `missing-confidence-${e.id}`, severity: "info", category: "confidence", title: "Uncalibrated update", detail: `Step ${e.step} changes a belief without a confidence value.`, eventIds: [e.id], recommendation: "Record confidence when the runtime provides it; do not invent it after the fact." });
     }
   });

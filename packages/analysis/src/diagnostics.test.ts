@@ -86,9 +86,13 @@ describe("diagnostics", () => {
     expect(diagnose(traceFixture("chat-tools.json")).actionsWithoutPriorHypothesis).toEqual([]);
   });
 
-  knownBug("D9: chat updates without confidence raise no calibration finding", () => {
+  test("D9: chat updates without confidence raise no calibration finding", () => {
     const findings = diagnose(traceFixture("chat-tools.json")).findings;
     expect(findings.filter((f) => f.category === "confidence")).toEqual([]);
+  });
+
+  test("D9: a stated update without confidence is still reported", () => {
+    expect(diagnose("Update: the host is wrong").findings.filter((f) => f.category === "confidence")).toHaveLength(1);
   });
 
   knownBug("D10: a recorded failure is not categorised as a contradiction", () => {
