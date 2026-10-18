@@ -27,8 +27,15 @@ row says **adopted**, its licence column is unverified.
 | @hono/node-server | runs Hono on Node's HTTP server | github.com/honojs/node-server | MIT | — | adopted |
 | @napi-rs/keyring | OS keychain access | github.com/Brooooooklyn/keyring-node | MIT | a platform keychain binding with fewer dependencies | adopted |
 | Qwen3 0.6B (GGUF, Q8_0) | the model behind the recorded llama.cpp fixtures | huggingface.co/Qwen/Qwen3-0.6B-GGUF | Apache-2.0 | — | adopted (fixtures only) |
-| nnsight | activation capture and interventions in the sidecar | github.com/ndif-team/nnsight | to verify | TransformerLens covers every model family we need | planned (phase 4) |
-| safetensors | tensor storage in run directories | github.com/huggingface/safetensors | to verify | a format with better streaming writes | planned (phase 4) |
+| nnsight | activation capture in the sidecar | github.com/ndif-team/nnsight | MIT | TransformerLens covers every model family we need | adopted |
+| safetensors | tensor storage in run directories | github.com/huggingface/safetensors | Apache-2.0 | a format with better streaming writes | adopted |
+| PyTorch | the sidecar's tensor runtime, on MPS, CUDA or CPU | github.com/pytorch/pytorch | BSD-3-Clause, with third-party notices | — | adopted |
+| transformers | loading models and generating in the sidecar; the independent reference for captures | github.com/huggingface/transformers | Apache-2.0 | — | adopted |
+| huggingface_hub | downloading and locating cached weights | github.com/huggingface/huggingface_hub | Apache-2.0 | — | adopted |
+| uv | the sidecar's Python environment and lockfile | github.com/astral-sh/uv | MIT or Apache-2.0 | — | adopted (tool) |
+| pytest | the sidecar's tests | github.com/pytest-dev/pytest | MIT | — | adopted |
+| Qwen3 0.6B | full-tier model; source of the stored capture reference | huggingface.co/Qwen/Qwen3-0.6B | Apache-2.0 | — | adopted |
+| Gemma 3 1B instruct | full-tier model | huggingface.co/google/gemma-3-1b-it | to verify: the repository is gated, so its terms weren't read here | Qwen3 alone covers the full tier | supported, not downloaded |
 | SAELens | loading and encoding SAEs | github.com/jbloomAus/SAELens | to verify | — | planned (phase 6) |
 | Gemma Scope 2 | SAE and transcoder weights for Gemma 3 | huggingface.co/google/gemma-scope-2-* | to verify; weights may carry terms separate from code | decoder support dropped for Gemma | planned (phase 6) |
 | z3-solver | SMT solver, official WebAssembly build | github.com/Z3Prover/z3 | to verify | — | planned (phase 8) |

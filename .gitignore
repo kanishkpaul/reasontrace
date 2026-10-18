@@ -11,6 +11,11 @@ node_modules
 
 # Run directories, written by the local server
 /runs
+
+# The sidecar's Python environment
+bridge/python/.venv
+__pycache__
+.pytest_cache
 dist
 dist-ssr
 *.local

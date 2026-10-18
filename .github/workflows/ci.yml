@@ -29,3 +29,11 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
+
+  sidecar:
+    name: python sidecar tests, without the model runtime
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv run --directory bridge/python --frozen --group dev pytest

@@ -71,7 +71,13 @@ dependency-rule check and the build:
 npm run check
 ```
 
-Once phase 4 lands, the sidecar adds `uv run --directory bridge/python pytest`.
+The Python sidecar has its own tests. Without the model runtime they skip the
+reference test; with it and the Qwen3 0.6B weights they run it:
+
+```bash
+uv run --directory bridge/python --frozen --group dev pytest
+uv run --directory bridge/python --frozen --extra model --group dev pytest
+```
 
 ## Changing things
 

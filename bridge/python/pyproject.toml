@@ -1,0 +1,25 @@
+[project]
+name = "reasontrace-sidecar"
+version = "0.0.0"
+description = "Runs open-weights models for ReasonTrace and captures their activations. Speaks JSON-RPC on stdio."
+requires-python = ">=3.12,<3.14"
+dependencies = []
+
+[project.optional-dependencies]
+# The model runtime. Without it the sidecar still answers, and reports the
+# full tier as unavailable with the reason.
+model = [
+    "safetensors>=0.6",
+    "torch>=2.8",
+    "transformers>=4.56",
+    "nnsight>=0.5",
+]
+
+[dependency-groups]
+dev = ["pytest>=8.4"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.uv]
+package = false
