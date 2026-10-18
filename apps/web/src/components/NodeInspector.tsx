@@ -21,6 +21,7 @@ function readingOf(event: TraceEvent): string {
     reasoning: event.providerSummary
       ? "A summary of the model's reasoning, written by the provider's summariser rather than the model. It can leave out or reword what drove the answer."
       : "Reasoning text the model emitted before answering. It is the model's own account, not a reading of its internal state; it can leave out what drove the answer.",
+    activation: "Raw values captured from inside the model. They are measurements with no interpretation; what a layer represents takes a decoder and its control.",
     final_answer: "The trace's final answer. Follow its support links back to see which observations it rests on; the links show what the trace declares, not whether the answer is right.",
   };
   return readings[event.type];
@@ -41,7 +42,8 @@ export function NodeInspector() {
   const event = useMemo(() => trace?.events.find((e) => e.id === selectedId) ?? null, [trace, selectedId]);
   const supportedBy = useMemo(() => (trace && event ? trace.events.filter((e) => event.supports.includes(e.id)) : []), [trace, event]);
   const supports = useMemo(() => (trace && event ? trace.events.filter((e) => e.supports.includes(event.id)) : []), [trace, event]);
-  const tokens = run?.attachments.find((a) => a.kind === "probs.top_k/1" && a.eventId === event?.id)?.data.tokens;
+  const attached = run?.attachments.filter((a) => a.eventId === event?.id) ?? [];
+  const tokens = attached.find((a) => a.kind === "probs.top_k/1")?.data.tokens;
 
   if (!event) {
     return (

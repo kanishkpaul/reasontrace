@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import type { Attachment, TraceEvent } from "@reasontrace/format";
+import type { Attachment, TopKAttachment, TraceEvent } from "@reasontrace/format";
 
 /** A provider response as stored under a source's `fixtures/` folder. */
 export interface HttpFixture {
@@ -71,6 +71,10 @@ export function memorySink() {
     },
     attach(attachment: Attachment) {
       sink.attachments.push(attachment);
+    },
+    /** The token-probability attachments, in the order they were attached. */
+    probs() {
+      return sink.attachments.filter((a): a is TopKAttachment => a.kind === "probs.top_k/1");
     },
     /** Streamed text on one channel, joined. */
     streamed(channel: "reasoning" | "output") {

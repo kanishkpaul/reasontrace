@@ -4,6 +4,7 @@ export {
   IconAlertTriangle as AlertIcon,
   IconBrain as ReasoningIcon,
   IconBulb as HypothesisIcon,
+  IconCpu as ActivationIcon,
   IconCheck as CheckIcon,
   IconChevronLeft as StepBackIcon,
   IconChevronRight as StepForwardIcon,

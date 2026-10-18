@@ -42,7 +42,7 @@ describe("OpenAI-compatible source, recorded llama.cpp replies", () => {
     expect(sink.events[0].content).toMatch(/^Okay, the user just said "hi"/);
     expect(sink.events[0].providerSummary).toBeUndefined();
     expect(sink.events[1].content).toBe("hi");
-    const [reasoningProbs, outputProbs] = sink.attachments;
+    const [reasoningProbs, outputProbs] = sink.probs();
     expect(reasoningProbs).toMatchObject({ kind: "probs.top_k/1", eventId: "reasoning", label: "measured" });
     expect(reasoningProbs.data.tokens[0].token).toBe("<think>");
     expect(outputProbs.eventId).toBe("output");
@@ -63,7 +63,7 @@ describe("OpenAI-compatible source, recorded llama.cpp replies", () => {
     expect(reasoning).toMatchObject({ type: "reasoning", label: "stated", metadata: { via: "<think> tags" } });
     expect(reasoning.content).not.toContain("<think>");
     expect(output.content).toBe("hi");
-    expect(sink.attachments.find((a) => a.eventId === "output")?.data.tokens.map((t) => t.token)).toEqual(["hi"]);
+    expect(sink.probs().find((a) => a.eventId === "output")?.data.tokens.map((t) => t.token)).toEqual(["hi"]);
     expect(sink.streamed("reasoning")).not.toContain("think>");
     expect(sink.streamed("output")).toBe("hi");
   });

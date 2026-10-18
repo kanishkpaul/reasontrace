@@ -14,7 +14,9 @@ export type EventType =
   | "decision"
   | "final_answer"
   /** Reasoning text a model emitted before its answer: `<think>` text, a reasoning field, a thinking block. */
-  | "reasoning";
+  | "reasoning"
+  /** Internal values captured from a model, such as its residual stream. */
+  | "activation";
 
 /** Which depth of a model an event comes from (docs/CHARTER.md §1). */
 export type Depth = "behaviour" | "stated" | "probabilities" | "internals";
@@ -139,6 +141,32 @@ export interface RunRequest {
   /** How many alternatives to keep for each token, where the source returns probabilities. */
   topLogprobs: number;
   timeoutMs: number;
+  /** Whether generation may reuse its key-value cache. Sources that run the weights honour it; HTTP sources can't. */
+  cache?: boolean;
+  /** What to capture from inside the model, for sources that run the weights. */
+  plan?: CapturePlan;
+}
+
+/** Which layers and positions to keep from the residual stream, and how to pool them (docs/CHARTER.md §3, rule 4). */
+export interface CapturePlan {
+  layers: "all" | number[];
+  positions: "all" | "generated" | "last";
+  pooling: "none" | "mean";
+}
+
+/** How a model was run, for sources that run the weights themselves. */
+export interface Runtime {
+  device: string;
+  dtype: string;
+  quantization: string;
+  cache: boolean;
+  seed: number;
+  /** The weights' commit on Hugging Face. */
+  revision: string;
+  libraries: Record<string, string>;
+  /** The largest figure seen when memory was sampled, at each generated token and after capture; the true peak can be higher. */
+  peakMemoryBytes: number;
+  captureMethod: string;
 }
 
 /** Everything needed to repeat a run and judge whether two runs are comparable. */
@@ -156,6 +184,7 @@ export interface RunManifest {
   respondingModel?: string;
   unavailable: UnavailableDepth[];
   completion: Completion;
+  runtime?: Runtime;
   /** `cachedInputTokens`: prompt tokens the server reused from its cache, which can change outputs (docs/CHARTER.md §3, rule 3). */
   usage?: { inputTokens?: number; outputTokens?: number; cachedInputTokens?: number };
   versions: Record<string, string>;
@@ -172,13 +201,34 @@ export interface TokenLogprob {
  * Typed data hung on an event. `kind` is namespaced and versioned
  * (docs/ARCHITECTURE.md §3).
  */
-export type Attachment = TopKAttachment;
+export type Attachment = TopKAttachment | ResidualAttachment;
 
 export interface TopKAttachment {
   kind: "probs.top_k/1";
   eventId: string;
   label: "measured";
   data: { tokens: TokenLogprob[] };
+}
+
+/** Residual-stream slices stored in the run's `tensors/` folder, one tensor per layer named `layer.<i>`. */
+export interface ResidualAttachment {
+  kind: "activations.residual/1";
+  eventId: string;
+  label: "measured";
+  data: {
+    /** Relative to the run directory. */
+    file: string;
+    layers: number[];
+    /** Sequence positions kept, counting the prompt from 0. */
+    positions: number[];
+    /** The token at each kept position. */
+    tokens: string[];
+    pooling: CapturePlan["pooling"];
+    dModel: number;
+    dtype: string;
+    /** The L2 norm of the last kept position at each layer: a raw number, not an interpretation. */
+    norms: number[];
+  };
 }
 
 /** A run as stored in its run directory. */

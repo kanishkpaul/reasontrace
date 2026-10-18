@@ -14,6 +14,8 @@ export interface Capabilities {
 
 /** Where a running source puts what it captures. */
 export interface EventSink {
+  /** The run directory, for sources that write tensors into its `tensors/` folder. */
+  readonly dir?: string;
   /** Text as it streams in, for the live view. What is stored is what `event` receives. */
   delta(channel: "reasoning" | "output", text: string): void;
   event(event: TraceEvent): void;
@@ -28,6 +30,7 @@ export interface RunOutcome {
   providerRequest?: RunManifest["providerRequest"];
   respondingModel?: string;
   usage?: RunManifest["usage"];
+  runtime?: RunManifest["runtime"];
 }
 
 /** A model reached over HTTP: hosted APIs and local servers. */
