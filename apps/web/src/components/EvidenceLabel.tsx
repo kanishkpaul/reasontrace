@@ -10,26 +10,27 @@ const TREATMENT: Record<Label, { word: string; badge?: string }> = {
   stated: { word: "stated" },
   exact: { word: "exact" },
   measured: { word: "measured" },
-  // No decoder in the format records a control yet, so every decoded value
-  // is unvalidated until one does (docs/CHARTER.md §3, rule 1).
+  // Unvalidated unless the caller says its controls passed (docs/CHARTER.md §3, rule 1).
   decoded: { word: "decoded", badge: "unvalidated" },
   inferred: { word: "inferred", badge: "analyst's guess" },
 };
 
-export function EvidenceMark({ label }: { label: Label | "unavailable" }) {
-  return <span className="evidence-mark" data-label={label} aria-hidden="true" />;
+export function EvidenceMark({ label, validated }: { label: Label | "unavailable"; validated?: boolean }) {
+  return <span className="evidence-mark" data-label={label} data-validated={validated || undefined} aria-hidden="true" />;
 }
 
 /**
  * The mark, the label's name, and its badge if it has one. Stated text a
- * provider summarised says so, since another model wrote it.
+ * provider summarised says so, since another model wrote it. Decoded values
+ * are unvalidated unless `validated`, which only a validation that passed sets.
  */
-export function EvidenceLabel({ label, providerSummary }: { label: Label; providerSummary?: boolean }) {
+export function EvidenceLabel({ label, providerSummary, validated }: { label: Label; providerSummary?: boolean; validated?: boolean }) {
   const { word } = TREATMENT[label];
-  const badge = label === "stated" && providerSummary ? "summary by provider" : TREATMENT[label].badge;
+  const passed = label === "decoded" && validated === true;
+  const badge = label === "stated" && providerSummary ? "summary by provider" : passed ? "validated" : TREATMENT[label].badge;
   return (
     <span className="evidence-label" data-label={label}>
-      <EvidenceMark label={label} />
+      <EvidenceMark label={label} validated={passed} />
       {word}
       {badge && <span className="badge badge--outline">{badge}</span>}
     </span>

@@ -201,7 +201,7 @@ export interface TokenLogprob {
  * Typed data hung on an event. `kind` is namespaced and versioned
  * (docs/ARCHITECTURE.md §3).
  */
-export type Attachment = TopKAttachment | ResidualAttachment;
+export type Attachment = TopKAttachment | ResidualAttachment | DecodedAttachment;
 
 export interface TopKAttachment {
   kind: "probs.top_k/1";
@@ -229,6 +229,48 @@ export interface ResidualAttachment {
     /** The L2 norm of the last kept position at each layer: a raw number, not an interpretation. */
     norms: number[];
   };
+}
+
+/** A run where the decoder has nothing to find. It should fail (docs/CHARTER.md §3, rule 1). */
+export type ControlName = "random direction" | "shuffled inputs" | "untrained weights";
+
+/**
+ * A decoder's result on a model with a planted circuit, and its controls'
+ * results, as the sidecar's harness writes it
+ * (bridge/python/reasontrace_sidecar/ground_truth). It is `unvalidated` when
+ * the decoder misses the planted variable or any control also finds it.
+ */
+export interface Validation {
+  decoder: { kind: string; name: string; version: string };
+  status: "validated" | "unvalidated";
+  /** Why it is unvalidated. Null when it is validated. */
+  reason: string | null;
+  /** The planted circuit, in words. */
+  groundTruth: string;
+  metric: string;
+  items: number;
+  /** The decoder's best score over layers. */
+  score: number;
+  /** The score needed to count as recovering the planted variable. */
+  required: number;
+  chance: number;
+  /** A control scoring this or more counts as succeeding: guessing reaches it with probability under 1%. */
+  chanceBound: number;
+  byLayer: number[];
+  /** The first layer where the decoder recovers the variable, or null when it never does. */
+  recoveredFrom: number | null;
+  controls: { control: ControlName; score: number; succeeded: boolean }[];
+}
+
+/** An interpretation of internals by a decoder (docs/CHARTER.md §2, `decoded`). */
+export interface DecodedAttachment {
+  kind: `lens.${string}` | `sae.${string}`;
+  eventId: string;
+  label: "decoded";
+  method: { name: string; version: string };
+  /** Null when no control was run; the viewer then shows the attachment as unvalidated. */
+  validation: Validation | null;
+  data: Record<string, unknown>;
 }
 
 /** A run as stored in its run directory. */

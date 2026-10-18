@@ -4,6 +4,7 @@ import { useShallow } from "zustand/react/shallow";
 import { EVENT_TYPES } from "../lib/eventTypes";
 import { CheckIcon, CopyIcon, ICON } from "../lib/icons";
 import { useTraceStore } from "../store";
+import { DecodedView } from "./DecodedView";
 import { EvidenceLabel } from "./EvidenceLabel";
 import { ResidualView } from "./ResidualView";
 import { TokenView } from "./TokenView";
@@ -46,6 +47,7 @@ export function NodeInspector() {
   const attached = run?.attachments.filter((a) => a.eventId === event?.id) ?? [];
   const tokens = attached.find((a) => a.kind === "probs.top_k/1")?.data.tokens;
   const residual = attached.find((a) => a.kind === "activations.residual/1")?.data;
+  const decoded = attached.filter((a) => a.label === "decoded");
 
   if (!event) {
     return (
@@ -96,6 +98,7 @@ export function NodeInspector() {
 
       {tokens && <TokenView tokens={tokens} />}
       {residual && <ResidualView capture={residual} />}
+      {decoded.map((a, i) => <DecodedView key={`${a.kind}-${i}`} attachment={a} />)}
 
       <LinkedEvents title="Supported by" events={supportedBy} empty="No support declared." onSelect={select} />
       <LinkedEvents title="Supports" events={supports} empty="Nothing declares this as support." onSelect={select} />

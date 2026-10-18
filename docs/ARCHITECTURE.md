@@ -146,7 +146,9 @@ from the harness in `reasontrace_sidecar/ground_truth/`, which runs the decoder
 on a model with a planted circuit and on three controls (random direction,
 shuffled inputs, untrained weights). The decoder is validated only if it
 recovers the planted variable and every control fails to. The result is stored
-under `fixtures/validation/`, and a test reruns the harness against it.
+under `fixtures/validation/`, and a test reruns the harness against it. The
+viewer shows an attachment as unvalidated when it has no validation, when the
+validation failed, or when it was made for another version of the decoder.
 
 The fifth is in the viewer: a **view** is a React component registered for
 one attachment kind in `apps/web/src/views/`. An attachment kind with no view
