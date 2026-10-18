@@ -1,15 +1,43 @@
-# ReasonTrace
+<div align="center">
 
-ReasonTrace runs a model and shows three things side by side, step by step:
-what the model did, what it said it was thinking, and what happened inside
-it. Every value carries a label for how far it can be trusted, and whatever
-a model cannot show is marked unavailable, with the reason. It works with
-LLMs, with the z3 solver, and with pipelines in which an LLM writes a formula
-and z3 solves it.
+<img src="docs/media/banner.gif" alt="The viewer's home screen: the greeting “∴ hello, friend”, the ReasonTrace wordmark glitching, and a prompt with a blinking cursor" width="100%">
 
-It is a local web app. A TypeScript server holds your keys and talks to models
-and solvers, a React viewer runs in your browser, and an optional Python
-sidecar runs small models from their weights to read their internals.
+**A model will tell you how it reasoned. ReasonTrace sets that story beside the receipts.**
+
+Every value wears a label for how far it can be trusted, and whatever a model
+can't show is marked unavailable, with the reason.
+
+[![ci](https://img.shields.io/github/actions/workflow/status/kanishkpaul/reasontrace/ci.yml?branch=main&style=flat-square&label=ci&labelColor=050607&color=3dff7f)](https://github.com/kanishkpaul/reasontrace/actions/workflows/ci.yml)
+![node](https://img.shields.io/badge/node-22.22.2%2B%20%7C%2024.15%2B-43d3e6?style=flat-square&labelColor=050607)
+![sidecar](https://img.shields.io/badge/sidecar-python%203.12%20%C2%B7%20uv-b69cff?style=flat-square&labelColor=050607)
+![keys](https://img.shields.io/badge/keys-OS%20keychain-ffb02e?style=flat-square&labelColor=050607)
+![license](https://img.shields.io/badge/license-MIT-e4e8e1?style=flat-square&labelColor=050607)
+
+</div>
+
+```text
+reasontrace:~$ open qwen3-0.6b · What is 6 + 7? Answer with the number.
+
+  behaviour   ■ observed      6 + 7 = 13
+  stated      “ stated        Okay, so the question is asking what is 6 plus 7…
+  probs       ● measured      the 5 likeliest tokens at each generated token
+  internals   ● measured      residual stream, 3 layers × 183 positions, float32
+              ◆ decoded       logit lens, validated on a planted circuit: 3 of 3 controls failed
+              ∅ unavailable   SAE features: Gemma Scope 2 has SAEs for Gemma 3 only
+
+[ OK ] complete · tier full · mps · float32 · seed 0
+```
+
+*Read from the run in
+[`fixtures/runs/20261018-132758-5105d8`](fixtures/runs/20261018-132758-5105d8),
+Qwen3 0.6B run from its weights. The marks are the viewer's own, so no label
+depends on colour.*
+
+It works with LLMs, with the z3 solver, and with pipelines in which an LLM
+writes a formula and z3 solves it. It is a local web app: a TypeScript server
+holds your keys and talks to models and solvers, a React viewer runs in your
+browser, and an optional Python sidecar runs small models from their weights
+to read their internals.
 
 ![Opening a pipeline run: Qwen3-VL 8B translates a problem into SMT-LIB, z3 finds it unsatisfiable, and the handoff view shows where the formula departs from the words it quotes](docs/media/walk.gif)
 
