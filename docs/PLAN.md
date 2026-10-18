@@ -118,9 +118,11 @@ Decided on 2026-10-17:
 | D-3 | Keys live server-side only, in the OS keychain | Charter rule 6. The browser never sees a key and never calls a provider. |
 | D-4 | Skin: `lens` | The direction in `design/README.md` is written for it. |
 | D-5 | Leave out extra and optional features | The tool needs to do a few things well, not everything. BUILD_PLAN.md lists what is in. |
+| D-6 | Live-test hosted sources against a local server standing in for each API, with a dummy key, rather than with provider keys | Decided 2026-10-18. llama.cpp serves both the OpenAI and the Anthropic Messages API and refuses any key but the one it was started with, which tests our side of each API and the key check. It cannot show that a provider still replies in the shape we expect, so the fixtures for replies only a provider sends stay written from its documentation. |
 
 ## 3. Phases
 
 The phases, their order and their gates are in [BUILD_PLAN.md](BUILD_PLAN.md).
 Phase 1 fixes every bug in §1; each one has a test in `packages/analysis` or
 `apps/web` that names its ID.
+

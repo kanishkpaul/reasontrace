@@ -36,12 +36,23 @@ npm install
 npm start          # builds the viewer and serves it at http://127.0.0.1:4317
 npm run dev        # the API server and Vite, at http://localhost:5173
 npm run check      # lint, typecheck, tests, dependency rules, build
-npm run test:live  # sources against a running llama.cpp server or a stored key
+npm run test:live  # every source, engine and tier this machine can run
 ```
 
-`npm run test:live` picks a source with `RT_LIVE_SOURCE` (default `llamacpp`)
-and a model with `RT_LIVE_MODEL`, and runs the sidecar's determinism check on
-Qwen3 0.6B. The default tests never touch the network.
+`npm run test:live` runs each source through the server and reports it as
+passed, failed or skipped with the reason. A local server is tested when it is
+running, a hosted source when the keychain holds its key, the full tier and the
+sidecar's determinism check when uv is installed. To test the hosted sources
+without provider keys, start a llama.cpp server with a dummy key and point the
+tests at it:
+
+```bash
+llama-server -hf Qwen/Qwen3-0.6B-GGUF:Q8_0 --jinja --port 8081 --api-key dummy-key
+RT_LIVE_STAND_IN=http://127.0.0.1:8081/v1 RT_LIVE_STAND_IN_KEY=dummy-key npm run test:live
+```
+
+`RT_LIVE_MODEL` picks the model, and `RT_LIVE_RUNS` where the run directories
+go. The default tests never touch the network.
 
 The sidecar needs [uv](https://docs.astral.sh/uv/). Install its model runtime
 once; the weights download on first run (Gemma 3 needs its licence accepted on

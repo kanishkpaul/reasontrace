@@ -219,11 +219,12 @@ hosted build) stays out until a phase above needs it.
 
 **Builds**
 - Live runs of every source, tier and engine the earlier phases built:
-  each hosted provider with a key, each local server (Ollama, LM Studio,
-  llama.cpp, vLLM), the full tier on Gemma 3 1B and Qwen3 0.6B, z3, and a
-  neurosymbolic pipeline on a Virgil task.
-- Recorded responses replace the fixtures written by hand from provider
-  documentation, with keys scrubbed.
+  each hosted provider, with its key or with a dummy key against a local
+  server standing in for its API (PLAN.md D-6), each local server (Ollama,
+  LM Studio, llama.cpp, vLLM), the full tier on Gemma 3 1B and Qwen3 0.6B,
+  z3, and a neurosymbolic pipeline on a Virgil task.
+- Responses recorded from local servers, including the stand-ins, join the
+  fixtures written by hand from provider documentation, with keys scrubbed.
 - One live-test command that runs whatever is available on the machine and
   reports each source as passed, failed (with the error) or skipped (with
   the reason: no key, server not running, Python absent).
@@ -231,7 +232,9 @@ hosted build) stays out until a phase above needs it.
 **Gate**
 - `npm run test:live` passes for every source with a key or server present,
   and reports every other source as skipped with its reason.
-- No fixture still says it was written from documentation.
+- Every fixture says where it came from. One written from documentation
+  remains only for a reply no local server sends (a refusal, an error
+  mid-stream, a key echoed back, a provider's own stream and error shapes).
 - Each live run leaves a run directory that the viewer opens, and the key
   check (no key bytes in the run directory or the server log) passes on
   those directories.
