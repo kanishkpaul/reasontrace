@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Attachment, ReasonTrace, EventType, Run, RunManifest } from "@reasontrace/format";
+import type { AnswerCommitmentFinding, Attachment, ReasonTrace, EventType, Run, RunManifest } from "@reasontrace/format";
 import { sampleTraces } from "./data/sampleTraces";
 import { parseTrace } from "@reasontrace/analysis";
 import { saveOpenRunId, saveTrace } from "./lib/savedTrace";
@@ -28,6 +28,8 @@ interface TraceState {
   /** The open trace's run, when it came from the server rather than a file. */
   run: { manifest: RunManifest; attachments: Attachment[] } | null;
   live: LiveRun | null;
+  /** A stored finding, shown in place of the trace while it is open. */
+  finding: AnswerCommitmentFinding | null;
   /** False when the browser refused to keep the open trace (quota, blocked storage). */
   savedInBrowser: boolean;
   selectedNodeId: string | null;
@@ -49,6 +51,7 @@ interface TraceState {
   setTrace: (trace: ReasonTrace) => void;
   openRun: (run: Run) => void;
   setLive: (live: LiveRun | null) => void;
+  setFinding: (finding: AnswerCommitmentFinding | null) => void;
   loadSampleTrace: (key: string) => void;
   parseAndSetTrace: (text: string) => ParseResult;
   setSelectedNodeId: (id: string | null) => void;
@@ -95,6 +98,7 @@ export const useTraceStore = create<TraceState>((set, get) => ({
   currentTrace: null,
   run: null,
   live: null,
+  finding: null,
   savedInBrowser: true,
   selectedNodeId: null,
   newestNodeId: null,
@@ -131,6 +135,8 @@ export const useTraceStore = create<TraceState>((set, get) => ({
       selectedNodeId: finalEvent ? finalEvent.id : null,
     });
   },
+
+  setFinding: (finding) => set({ finding }),
 
   openRun: ({ manifest, trace, attachments }) => {
     get().setTrace(trace);

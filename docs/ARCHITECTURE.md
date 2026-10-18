@@ -219,5 +219,15 @@ decoder that can't run (no SAE for the model, its layer not captured, a pooled
 capture) is recorded with its reason on the activation event, as
 `metadata.decoders`.
 
+A **finding** asks one question of a model across a fixed problem set, with
+controls, and is stored whole under `fixtures/findings/`. The first,
+answer commitment (`reasontrace_sidecar/findings/`, run by
+`scripts/answer_commitment.py`), splits each reasoning text into sentence
+steps (`steps.py`), reads the ten digit tokens through the logit lens at each
+step's last token, and compares the step from which the answer stays
+decodable with the first step that states it. Its rules are free of torch, so
+CI recomputes the stored summary from the stored readouts. The viewer opens
+stored findings from the sidebar.
+
 Without uv, Python or the model runtime, every depth of the full tier is
 unavailable with that reason, and nothing else changes.

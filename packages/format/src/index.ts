@@ -319,6 +319,72 @@ export interface DecoderOutcome {
   reason: string | null;
 }
 
+/** The digits read through the logit lens at one position, by layer. */
+export interface DigitReadout {
+  /** Sequence position, counting the prompt from 0. */
+  position: number;
+  /** The top digit at each layer, among the ten digit tokens alone. */
+  top: number[];
+  /** The model's answer's probability among the ten digits, by layer. */
+  p: number[];
+  /** Whether the answer is decodable here under the finding's internal rule. */
+  decodable: boolean;
+  /** The top digit with a random unembedding, and in an untrained copy of the model: controls. */
+  randomTop: number[];
+  untrainedTop: number[];
+}
+
+/** The answer-commitment measures over a problem set, for the model's own readout or for one control. */
+export interface CommitmentMeasures {
+  /** Share of problems whose answer is decodable at the position before it is emitted. */
+  atAnswer: number;
+  /** Share of reasoning steps where the answer is decodable. */
+  steps: number;
+  /** Share of problems with a stated commitment whose internal commitment comes earlier. */
+  beforeStated: number;
+}
+
+/**
+ * When a model commits to its answer, over a fixed problem set
+ * (bridge/python/reasontrace_sidecar/findings). Written by
+ * scripts/answer_commitment.py and stored under fixtures/findings.
+ */
+export interface AnswerCommitmentFinding {
+  kind: "finding.answer_commitment/1";
+  title: string;
+  model: { id: string; name: string; repo: string; revision: string };
+  runtime: { device: string; dtype: string; seed: number; maxTokens: number; greedy: boolean; libraries: Record<string, string>; captureMethod: string };
+  layers: number;
+  /** How each commitment point is found, in words. */
+  rules: { internal: string; stated: string };
+  lens: { name: string; version: string; validation: Validation };
+  problems: {
+    prompt: string;
+    correct: number;
+    output: string;
+    finish: string;
+    /** The model's answer, or null when it gave no single digit. */
+    answer: number | null;
+    /** Why the problem is left out of the measures. */
+    excluded: string | null;
+    /** The reasoning split into sentences, each read at its last token. */
+    steps: (DigitReadout & { text: string })[];
+    answerStep: DigitReadout | null;
+    /** Index into `steps`; `steps.length` means only at the answer; null means not even there. */
+    internalCommitment: number | null;
+    statedCommitment: number | null;
+  }[];
+  summary: {
+    answered: number;
+    real: CommitmentMeasures;
+    controls: (CommitmentMeasures & { control: ControlName; succeeded: boolean })[];
+    chance: number;
+    chanceBound: number;
+    status: "validated" | "unvalidated";
+    reason: string | null;
+  };
+}
+
 /** A run as stored in its run directory. */
 export interface Run {
   manifest: RunManifest;

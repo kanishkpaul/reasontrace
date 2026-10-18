@@ -9,6 +9,8 @@ import { loadOpenRunId, loadSavedTrace } from "../lib/savedTrace";
 import { useTraceStore } from "../store";
 import { DiagnosisPanel } from "./DiagnosisPanel";
 import { EventFilters } from "./EventFilters";
+import { FindingPicker } from "./FindingPicker";
+import { FindingView } from "./FindingView";
 import { LiveRun } from "./LiveRun";
 import { NodeInspector } from "./NodeInspector";
 import { ReasoningGraph } from "./ReasoningGraph";
@@ -29,7 +31,7 @@ type Region = "trace" | "open" | "detail";
  * and an honest status bar.
  */
 export function Layout() {
-  const { trace, setTrace, openRun, selectedId, saved, live, completion } = useTraceStore(useShallow((s) => ({
+  const { trace, setTrace, openRun, selectedId, saved, live, completion, finding, setFinding } = useTraceStore(useShallow((s) => ({
     trace: s.currentTrace,
     setTrace: s.setTrace,
     openRun: s.openRun,
@@ -37,6 +39,8 @@ export function Layout() {
     saved: s.savedInBrowser,
     live: s.live !== null,
     completion: s.run?.manifest.completion,
+    finding: s.finding,
+    setFinding: s.setFinding,
   })));
   const [view, setView] = useState<"steps" | "graph">("steps");
   const [railTab, setRailTab] = useState<"step" | "findings">("step");
@@ -58,6 +62,7 @@ export function Layout() {
   const toCheck = diagnostics?.findings.filter((f) => f.severity !== "info").length ?? 0;
   const selected = useMemo(() => trace?.events.find((e) => e.id === selectedId), [trace, selectedId]);
 
+  if (finding) return <FindingView finding={finding} onClose={() => setFinding(null)} />;
   if (!trace && !live) return <EmptyHome />;
   if (!trace) return <div className="home"><LiveRun /></div>;
 
@@ -91,6 +96,7 @@ export function Layout() {
         {hasServer && <RunList onOpen={() => setRegion("trace")} />}
         <TraceInput onLoaded={() => setRegion("trace")} />
         <SampleTracePicker onLoaded={() => setRegion("trace")} />
+        <FindingPicker />
         <EventFilters />
       </aside>
 
@@ -142,6 +148,7 @@ function EmptyHome() {
         {hasServer && <RunList />}
         <TraceInput />
         <SampleTracePicker />
+        <FindingPicker />
       </div>
     </div>
   );

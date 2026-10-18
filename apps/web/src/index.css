@@ -315,3 +315,27 @@ button { font: inherit; }
 @media (prefers-reduced-motion: reduce) {
   .react-flow__edge-path { animation: none; }
 }
+
+/* A stored finding, shown as its own page. */
+.finding { display: flex; flex-direction: column; height: 100dvh; overflow-y: auto; background: var(--ui-bg); }
+.finding__body { display: flex; flex-direction: column; gap: var(--space-5); width: 100%; max-width: 64rem; margin: 0 auto; padding: var(--space-4); }
+.finding__section { display: flex; flex-direction: column; gap: var(--space-2); }
+.finding__section .section-heading { margin: 0; }
+.finding__table { width: 100%; border-collapse: collapse; font-size: var(--text-xs); }
+.finding__table th, .finding__table td { padding: var(--space-1) var(--space-2); border-bottom: 1px solid var(--ui-stroke-3); text-align: left; vertical-align: top; }
+.finding__table thead th { color: var(--ui-text-3); font-weight: normal; }
+.finding__table td { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.finding__table tr[aria-selected="true"] { background: var(--ui-row-active); }
+.finding__steps { display: flex; flex-direction: column; gap: var(--space-1); margin: 0; padding: 0; list-style: none; }
+.finding__step { display: grid; grid-template-columns: 2rem minmax(0, 1fr) auto; gap: var(--space-2); align-items: center; font-size: var(--text-xs); }
+.finding__step-number { color: var(--ui-text-3); font-family: var(--font-mono); }
+.finding__step-text { display: flex; flex-wrap: wrap; gap: var(--space-1); align-items: center; color: var(--ui-warm); font-style: italic; }
+.finding__step-text .badge { font-style: normal; }
+.layer-strip { display: grid; grid-auto-flow: column; grid-auto-columns: 0.375rem; gap: 1px; height: 0.875rem; }
+.layer-strip__cell { background: var(--ui-stroke-3); }
+.layer-strip__cell[data-on] { background: var(--ui-accent); }
+@media (max-width: 47.99rem) {
+  .finding__step { grid-template-columns: 2rem minmax(0, 1fr); }
+  .finding__step .layer-strip { grid-column: 2; }
+  .finding__table { display: block; overflow-x: auto; }
+}
