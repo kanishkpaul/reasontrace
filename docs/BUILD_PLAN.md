@@ -19,7 +19,7 @@ Bug IDs (P1, D3, …) refer to the audit in [PLAN.md](PLAN.md).
 | 7 | First finding view: when the answer is committed | 2, 6 |
 | 8 | Symbolic engine: z3 | 2, 3 |
 | 9 | Neurosymbolic pipelines | 3 or 4, 8 |
-| 10 | The viewer's own hacker aesthetic, keyboard first | 2–9 |
+| 10 | The viewer's own hacker aesthetic | 2–9 |
 | 11 | Live testing against real providers, servers, models and engines | 3–10 |
 | 12 | The README, for researchers, engineers and recruiters | 11 |
 
@@ -190,17 +190,15 @@ hosted build) stays out until a phase above needs it.
 
 **Builds**
 - The viewer's own look, made for this app rather than taken from the
-  design kit: a terminal on a dark ground. Monospace throughout,
-  phosphor-style text, box-drawing rules and panel borders, a vim-style
-  status line, a blinking cursor where input goes, and an ASCII bar for each
-  probability. Its colour, type and spacing tokens live in `apps/web`, and
-  `npm run check:colours` enforces them in place of `design/`.
-- Keyboard first: `j`/`k` between events, `h`/`l` and the arrow keys
-  between steps, `/` to search, `:` or Ctrl-K for a command palette that
-  reaches every action (open, run, stop, switch view, export), and `?` for
-  the key map. Every action still works with a mouse.
+  design kit, and replacing phase 2's: a terminal on a dark ground, after Mr.
+  Robot. Dark only. Monospace throughout, phosphor-style text, box-drawing
+  rules and panel borders, a vim-style status line, a blinking cursor where
+  input goes, and an ASCII bar for each probability. Its colour, type and
+  spacing tokens live in `apps/web`, and `npm run check:colours` enforces
+  them in place of `design/`.
 - Every view from phases 2–9 restyled, including the token, decoder,
-  answer-commitment, proof-tree and handoff views.
+  answer-commitment, proof-tree and handoff views. Every action still works
+  as it did.
 - The design rules move with it: AGENTS.md's Design section, `design/` and
   `design/kit.json` are replaced by the app's own style notes in the same
   change.
@@ -213,8 +211,6 @@ hosted build) stays out until a phase above needs it.
   colour: a component test checks each has its own mark and word.
 - A script checks every text and background token pair for WCAG AA
   contrast.
-- A component test drives open, run, stop, step, search and export with
-  the keyboard alone.
 - With `prefers-reduced-motion`, nothing blinks or animates.
 - At 375 px wide there is no horizontal scroll, and the app loads and works
   with the network disabled, fonts included.
