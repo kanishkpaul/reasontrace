@@ -110,3 +110,35 @@ describe("Anthropic source", () => {
     expect(models).toEqual([{ id: "claude-opus-5-5", name: "Claude Opus 5.5" }, { id: "claude-haiku-5-5", name: "Claude Haiku 5.5" }]);
   });
 });
+
+describe("Anthropic source, against llama.cpp's Messages endpoint (recorded)", () => {
+  test("thinking and the answer come through as from Anthropic", async () => {
+    const { outcome, sink } = await run(fixture("llamacpp-messages-thinking"));
+    expect(outcome.completion).toEqual({ state: "complete" });
+    expect(sink.events.map((e) => [e.type, e.label, e.providerSummary])).toEqual([
+      ["reasoning", "stated", true],
+      ["final_answer", "observed", undefined],
+    ]);
+    expect(sink.events[1].content).toBe("hi");
+    expect(outcome.usage).toEqual({ inputTokens: 15, outputTokens: 83 });
+  });
+
+  test("a reply cut off while thinking is truncated, with the thinking kept", async () => {
+    const fake = replay(fixture("llamacpp-messages-max-tokens"));
+    const sink = memorySink();
+    const outcome = await anthropicSource({ keys: memoryStore({ anthropic: KEY }), fetch: fake.fetch }).run({ ...request, maxTokens: 12 }, sink, new AbortController().signal);
+    expect(outcome.completion).toEqual({ state: "truncated", reason: "Reached the limit of 12 output tokens." });
+    expect(sink.events.map((e) => e.type)).toEqual(["reasoning"]);
+  });
+
+  test("a wrong key is an error with the server's message", async () => {
+    const { outcome } = await run(fixture("llamacpp-messages-401"));
+    expect(outcome.completion).toEqual({ state: "error", reason: "HTTP 401: Invalid API Key" });
+  });
+
+  test("lists the server's models", async () => {
+    const fake = replay(fixture("llamacpp-messages-models"));
+    const models = await anthropicSource({ keys: memoryStore({ anthropic: KEY }), fetch: fake.fetch }).models(new AbortController().signal);
+    expect(models.map((m) => m.id)).toEqual(["Qwen/Qwen3-0.6B-GGUF:Q8_0"]);
+  });
+});

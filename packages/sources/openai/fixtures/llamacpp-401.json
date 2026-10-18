@@ -1,0 +1,22 @@
+{
+  "recorded": "llama.cpp server b9780 (1191758c5), started with a dummy --api-key and sent another; Qwen/Qwen3-0.6B-GGUF Q8_0, Apple M5, 2026-10-18",
+  "request": {
+    "model": "Qwen/Qwen3-0.6B-GGUF:Q8_0",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Reply with just the word: hi"
+      }
+    ],
+    "stream": true,
+    "stream_options": {
+      "include_usage": true
+    },
+    "max_tokens": 12,
+    "logprobs": true,
+    "top_logprobs": 2
+  },
+  "status": 401,
+  "contentType": "application/json",
+  "body": "{\"error\":{\"message\":\"Invalid API Key\",\"type\":\"authentication_error\",\"code\":401}}"
+}

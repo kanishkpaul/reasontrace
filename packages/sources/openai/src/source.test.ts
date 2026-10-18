@@ -81,6 +81,13 @@ describe("OpenAI-compatible source, recorded llama.cpp replies", () => {
     expect(outcome.unavailable).toEqual([]);
   });
 
+  test("a wrong key is an error with the server's message, and the key sent is not recorded", async () => {
+    const { outcome, sink, requests } = await run("groq", fixture("llamacpp-401"));
+    expect(requests[0].headers.authorization).toBe(`Bearer ${KEY}`);
+    expect(outcome.completion).toEqual({ state: "error", reason: "HTTP 401: Invalid API Key" });
+    expect(JSON.stringify([outcome, sink.events])).not.toContain(KEY);
+  });
+
   test("a server that ignores the probabilities request leaves that depth unavailable, with the reason", async () => {
     const { outcome, sink } = await run("llamacpp", withoutLogprobs(fixture("llamacpp-reasoning-field")));
     expect(sink.attachments).toEqual([]);

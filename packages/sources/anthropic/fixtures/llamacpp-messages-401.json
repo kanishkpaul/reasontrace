@@ -1,0 +1,21 @@
+{
+  "recorded": "llama.cpp server b9780 (1191758c5) standing in for Anthropic through its Messages endpoint, started with a dummy --api-key; Qwen/Qwen3-0.6B-GGUF Q8_0, Apple M5, 2026-10-18. Shows our side of the API, not Anthropic's replies.",
+  "request": {
+    "model": "Qwen/Qwen3-0.6B-GGUF:Q8_0",
+    "max_tokens": 400,
+    "messages": [
+      {
+        "role": "user",
+        "content": "Reply with just the word: hi"
+      }
+    ],
+    "stream": true,
+    "thinking": {
+      "type": "adaptive",
+      "display": "summarized"
+    }
+  },
+  "status": 401,
+  "contentType": "application/json",
+  "body": "{\"error\":{\"message\":\"Invalid API Key\",\"type\":\"authentication_error\",\"code\":401}}"
+}

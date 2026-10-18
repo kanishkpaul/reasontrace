@@ -1,0 +1,21 @@
+{
+  "recorded": "llama.cpp server b9780 (1191758c5) standing in for Anthropic through its Messages endpoint, started with a dummy --api-key; Qwen/Qwen3-0.6B-GGUF Q8_0, Apple M5, 2026-10-18. Shows our side of the API, not Anthropic's replies.",
+  "request": {
+    "model": "Qwen/Qwen3-0.6B-GGUF:Q8_0",
+    "max_tokens": 12,
+    "messages": [
+      {
+        "role": "user",
+        "content": "Reply with just the word: hi"
+      }
+    ],
+    "stream": true,
+    "thinking": {
+      "type": "adaptive",
+      "display": "summarized"
+    }
+  },
+  "status": 200,
+  "contentType": "text/event-stream",
+  "body": "event: message_start\ndata: {\"type\":\"message_start\",\"message\":{\"id\":\"chatcmpl-YeT3RU3dehUzXudQ80pJa8pD8Kve8i06\",\"type\":\"message\",\"role\":\"assistant\",\"content\":[],\"model\":\"Qwen/Qwen3-0.6B-GGUF:Q8_0\",\"stop_reason\":null,\"stop_sequence\":null,\"usage\":{\"cache_read_input_tokens\":14,\"input_tokens\":1,\"output_tokens\":0}}}\n\nevent: content_block_start\ndata: {\"type\":\"content_block_start\",\"index\":0,\"content_block\":{\"type\":\"thinking\",\"thinking\":\"\"}}\n\nevent: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"thinking_delta\",\"thinking\":\"Okay\"}}\n\nevent: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"thinking_delta\",\"thinking\":\",\"}}\n\nevent: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"thinking_delta\",\"thinking\":\" the\"}}\n\nevent: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"thinking_delta\",\"thinking\":\" user\"}}\n\nevent: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"thinking_delta\",\"thinking\":\" just\"}}\n\nevent: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"thinking_delta\",\"thinking\":\" asked\"}}\n\nevent: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"thinking_delta\",\"thinking\":\",\"}}\n\nevent: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"thinking_delta\",\"thinking\":\" \\\"\"}}\n\nevent: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"thinking_delta\",\"thinking\":\"hi\"}}\n\nevent: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"thinking_delta\",\"thinking\":\",\\\"\"}}\n\nevent: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"signature_delta\",\"signature\":\"\"}}\n\nevent: content_block_stop\ndata: {\"type\":\"content_block_stop\",\"index\":0}\n\nevent: message_delta\ndata: {\"type\":\"message_delta\",\"delta\":{\"stop_reason\":\"max_tokens\",\"stop_sequence\":null},\"usage\":{\"output_tokens\":12}}\n\nevent: message_stop\ndata: {\"type\":\"message_stop\"}\n\n"
+}
