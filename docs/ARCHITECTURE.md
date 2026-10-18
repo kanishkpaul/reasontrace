@@ -41,7 +41,7 @@ packages/
     z3/              z3-solver (WebAssembly)
   sidecar/           @reasontrace/sidecar    starts and talks to bridge/python
 bridge/python/       capture and decoders (uv project); reads and writes run directories only
-fixtures/            recorded provider responses, trace files, small tensors
+fixtures/            recorded provider responses, trace files, small tensors, and runs/: the run directories the README shows
 ```
 
 ## 2. Dependency rules

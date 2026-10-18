@@ -1,0 +1,36 @@
+{
+  "formatVersion": 1,
+  "id": "20261018-132821-e91589",
+  "title": "z3 · p, and p implies q, yet not q.",
+  "createdAt": "2026-10-18T13:28:21.795Z",
+  "source": {
+    "id": "z3",
+    "name": "z3",
+    "tier": "symbolic",
+    "baseUrl": "this machine: z3-solver WebAssembly"
+  },
+  "request": {
+    "engine": "z3",
+    "problem": "; p, and p implies q, yet not q.\n(declare-const p Bool)\n(declare-const q Bool)\n(assert p)\n(assert (=> p q))\n(assert (not q))\n(check-sat)\n",
+    "timeoutMs": 30000
+  },
+  "unavailable": [
+    {
+      "depth": "stated",
+      "reason": "A solver does not narrate. Its derivation is under internals."
+    },
+    {
+      "depth": "probabilities",
+      "reason": "A solver has no token probabilities."
+    }
+  ],
+  "versions": {
+    "reasontrace": "0.0.0",
+    "node": "v24.18.0",
+    "z3": "5.1.0"
+  },
+  "completion": {
+    "state": "complete"
+  },
+  "finishedAt": "2026-10-18T13:28:21.959Z"
+}

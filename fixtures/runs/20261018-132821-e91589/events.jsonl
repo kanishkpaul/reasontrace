@@ -1,0 +1,3 @@
+{"id":"d1","type":"derivation","step":1,"content":"Proof of unsatisfiability: 7 steps","depth":"internals","label":"exact","supports":[],"source":"z3"}
+{"id":"d2","type":"derivation","step":1,"content":"Unsat core: assertions 1, 2, 3 of 3","depth":"internals","label":"exact","supports":[],"source":"z3"}
+{"id":"a1","type":"final_answer","step":1,"content":"unsat","depth":"behaviour","label":"observed","supports":["d1","d2"],"source":"z3"}
