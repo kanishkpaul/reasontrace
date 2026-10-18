@@ -86,7 +86,11 @@ function parse(tokens: Token[]): Sexp {
   return read();
 }
 
-/** Each top-level `(assert …)` with the comments written between it and the form before. */
+/**
+ * Each top-level `(assert …)` with the comments written since the assertion
+ * before it. Declarations and definitions in between keep a comment waiting,
+ * since models declare a constant just before the assertion that uses it.
+ */
 function assertions(formula: string): { text: string; body: Sexp; comments: string[] }[] {
   const tokens = tokenise(formula);
   const found: { text: string; body: Sexp; comments: string[] }[] = [];
@@ -105,8 +109,8 @@ function assertions(formula: string): { text: string; body: Sexp; comments: stri
         const form = tokens.slice(start, i + 1).filter((t) => t.kind !== "comment");
         if (form[1]?.text === "assert") {
           found.push({ text: formula.slice(tokens[start].start, token.end), body: parse(form.slice(2, -1)), comments });
+          comments = [];
         }
-        comments = [];
       }
     }
   }

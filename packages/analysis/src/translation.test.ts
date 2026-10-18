@@ -56,6 +56,12 @@ describe("lining a formula up against its problem", () => {
     ]);
   });
 
+  test("a declaration between a comment and its assertion does not part them", () => {
+    const read = readTranslation(TEXT, ['; "Ann is 30"', "(declare-const ann Int)", "(assert (= ann 30))", "(assert (> ann 0))"].join("\n"));
+    expect(read.assertions.map((a) => a.quote)).toEqual(["Ann is 30", null]);
+    expect(read.assertions[0].departures).toEqual([]);
+  });
+
   test("a sentence no assertion quotes is listed as not encoded", () => {
     const read = readTranslation(TEXT, formula('; "Ann is 30"', "(assert (= ann 30))"));
     expect(read.unencoded.map((u) => u.text)).toEqual(["Ben is more than 5 years older than Ann.", "Ben is younger than 34."]);

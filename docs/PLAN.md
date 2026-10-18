@@ -126,3 +126,10 @@ The phases, their order and their gates are in [BUILD_PLAN.md](BUILD_PLAN.md).
 Phase 1 fixes every bug in §1; each one has a test in `packages/analysis` or
 `apps/web` that names its ID.
 
+## 4. Found by live testing
+
+Defects the phase 11 live runs found and left open. The ones fixed have tests.
+
+| ID | Bug | Where | Evidence |
+|---|---|---|---|
+| L1 | The numbers check reads "one" as the number 1 even where it isn't a quantity ("one coordinate at a time"), so a faithful assertion is flagged. The rule says number words count, and the attachment's limitations say the checks read words, not meaning | `packages/analysis/src/translation.ts`, `numbersInWords` | ran: the Virgil pipeline on Qwen3-VL 8B, "The words give 1" |
