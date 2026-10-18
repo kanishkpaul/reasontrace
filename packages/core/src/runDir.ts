@@ -59,6 +59,7 @@ export class RunWriter implements EventSink {
       respondingModel: outcome.respondingModel,
       usage: outcome.usage,
       runtime: outcome.runtime,
+      versions: { ...this.manifest.versions, ...outcome.versions },
     };
     this.writeManifest();
     return this.manifest;

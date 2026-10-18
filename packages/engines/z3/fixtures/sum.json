@@ -1,0 +1,61 @@
+{
+  "checked": "x = 6 and y = 4: 6 > 4, and 6 + 4 = 10.",
+  "outcome": {
+    "completion": {
+      "state": "complete"
+    },
+    "unavailable": [],
+    "versions": {
+      "z3": "5.1.0"
+    }
+  },
+  "events": [
+    {
+      "id": "d1",
+      "type": "derivation",
+      "step": 1,
+      "content": "Model: 2 values",
+      "depth": "internals",
+      "label": "exact",
+      "supports": [],
+      "source": "z3"
+    },
+    {
+      "id": "a1",
+      "type": "final_answer",
+      "step": 1,
+      "content": "sat",
+      "depth": "behaviour",
+      "label": "observed",
+      "supports": [
+        "d1"
+      ],
+      "source": "z3"
+    }
+  ],
+  "attachments": [
+    {
+      "kind": "symbolic.model/1",
+      "eventId": "d1",
+      "label": "exact",
+      "engine": {
+        "name": "z3",
+        "version": "5.1.0"
+      },
+      "data": {
+        "values": [
+          {
+            "name": "y",
+            "sort": "Int",
+            "value": "4"
+          },
+          {
+            "name": "x",
+            "sort": "Int",
+            "value": "6"
+          }
+        ]
+      }
+    }
+  ]
+}

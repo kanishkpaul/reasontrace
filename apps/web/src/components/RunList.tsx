@@ -1,9 +1,13 @@
-import type { RunManifest } from "@reasontrace/format";
+import { isSolveRequest, type RunManifest } from "@reasontrace/format";
 import { useEffect, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { api } from "../lib/api";
 import { COMPLETION, TIER } from "../lib/completion";
 import { useTraceStore } from "../store";
+
+/** A prompt's first line, or a problem's, without the comment marker it often starts with. */
+const firstLine = (request: RunManifest["request"]) =>
+  isSolveRequest(request) ? request.problem.trim().split("\n")[0].replace(/^;+\s*/, "") : request.prompt.trim().split("\n")[0];
 
 const time = (iso: string) => new Date(iso).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
@@ -34,7 +38,7 @@ export function RunList({ onOpen }: { onOpen?: () => void }) {
 
   const groups = new Map<string, RunManifest[]>();
   for (const run of runs) {
-    const key = run.request.model;
+    const key = isSolveRequest(run.request) ? run.request.engine : run.request.model;
     groups.set(key, [...(groups.get(key) ?? []), run]);
   }
 
@@ -53,7 +57,7 @@ export function RunList({ onOpen }: { onOpen?: () => void }) {
             const { word, dot } = COMPLETION[run.completion.state];
             return (
               <button key={run.id} type="button" className="row sample-row" aria-current={run.id === current} onClick={() => void open(run.id)}>
-                <span className="row__title">{run.request.prompt.trim().split("\n")[0]}</span>
+                <span className="row__title">{firstLine(run.request)}</span>
                 <span className="row__meta">{time(run.createdAt)}</span>
                 <span className="row__desc"><span className={`dot ${dot}`} /> {word} · {run.source.name}</span>
               </button>

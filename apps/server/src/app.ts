@@ -1,8 +1,8 @@
 import { timingSafeEqual } from "node:crypto";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { extname, join, normalize, sep } from "node:path";
-import { isRunId, listRuns, newRunId, readRun, RunReadError, RunWriter, type RunOutcome, type Source } from "@reasontrace/core";
-import type { CapturePlan, RunRequest } from "@reasontrace/format";
+import { isRunId, listRuns, newRunId, readRun, RunReadError, RunWriter, type Engine, type RunOutcome, type Source } from "@reasontrace/core";
+import type { CapturePlan, RunRequest, SolveRequest } from "@reasontrace/format";
 import type { KeyStore } from "@reasontrace/keys";
 import { Hono, type Context } from "hono";
 import { streamSSE } from "hono/streaming";
@@ -11,6 +11,7 @@ export interface AppOptions {
   /** Every `/api` request must carry it in the `x-reasontrace-token` header. */
   token: string;
   sources: Source[];
+  engines: Engine[];
   keys: KeyStore;
   runsDir: string;
   /** The built viewer. Without it the server answers `/api` only, as in development behind Vite. */
@@ -37,7 +38,7 @@ const CONTENT_TYPES: Record<string, string> = {
   ".woff": "font/woff",
 };
 
-const DEFAULTS = { maxTokens: 1024, topLogprobs: 5, timeoutMs: 120_000 };
+const DEFAULTS = { maxTokens: 1024, topLogprobs: 5, timeoutMs: 120_000, solveTimeoutMs: 30_000 };
 
 class BadRequest extends Error {}
 
@@ -97,6 +98,15 @@ function runRequest(body: Record<string, unknown>): { sourceId: string; request:
   return { sourceId: source, request };
 }
 
+/** A problem for a symbolic engine, checked field by field. */
+function solveRequest(body: Record<string, unknown>): SolveRequest {
+  const { engine, problem } = body;
+  if (typeof engine !== "string" || !engine) throw new BadRequest("engine is required.");
+  if (typeof problem !== "string" || !problem.trim()) throw new BadRequest("problem is required.");
+  if (problem.length > 200_000) throw new BadRequest("problem is over 200,000 characters.");
+  return { engine, problem, timeoutMs: integer(body.timeoutMs ?? DEFAULTS.solveTimeoutMs, "timeoutMs", 1000, 600_000) };
+}
+
 async function jsonBody(c: Context): Promise<Record<string, unknown>> {
   try {
     const body = await c.req.json();
@@ -109,7 +119,7 @@ async function jsonBody(c: Context): Promise<Record<string, unknown>> {
 
 /** The local HTTP API and, when built, the viewer (docs/ARCHITECTURE.md §7). */
 export function createApp(options: AppOptions): Hono {
-  const { token, sources, keys, runsDir, webDir, log } = options;
+  const { token, sources, engines, keys, runsDir, webDir, log } = options;
   const app = new Hono();
   const sourceById = (id: string) => sources.find((s) => s.id === id);
 
@@ -222,6 +232,34 @@ export function createApp(options: AppOptions): Hono {
       log(`  ┊ capture   ${source.name} · ${request.model} · ${manifest.completion.state} ${seconds}s`);
       await send("done", { manifest });
     });
+  });
+
+  app.get("/api/engines", (c) => c.json({ engines: engines.map((e) => ({ id: e.id, name: e.name, language: e.language })) }));
+
+  app.post("/api/solve", async (c) => {
+    const request = solveRequest(await jsonBody(c));
+    const engine = engines.find((e) => e.id === request.engine);
+    if (!engine) return c.json({ error: "No engine with that ID." }, 404);
+    const capabilities = engine.capabilities();
+    const writer = new RunWriter(runsDir, {
+      id: newRunId(),
+      title: `${engine.name} · ${request.problem.trim().split("\n")[0].replace(/^;+\s*/, "").slice(0, 60)}`,
+      createdAt: new Date().toISOString(),
+      source: { id: engine.id, name: engine.name, tier: capabilities.tier, baseUrl: engine.where },
+      request,
+      unavailable: capabilities.unavailable,
+      versions: options.versions,
+    });
+    const started = performance.now();
+    let outcome: RunOutcome;
+    try {
+      outcome = await engine.solve(request, writer, AbortSignal.any([c.req.raw.signal, AbortSignal.timeout(request.timeoutMs)]));
+    } catch (error) {
+      outcome = { completion: { state: "error", reason: `The engine failed: ${error instanceof Error ? error.message : String(error)}` }, unavailable: [] };
+    }
+    const manifest = writer.finish(outcome);
+    log(`  ┊ solve     ${engine.name} · ${manifest.completion.state} ${((performance.now() - started) / 1000).toFixed(1)}s`);
+    return c.json({ manifest });
   });
 
   app.all("/api/*", (c) => c.json({ error: "No such API route." }, 404));

@@ -1,0 +1,142 @@
+{
+  "checked": "Step 6 rewrites p ⇒ q as q ∨ ¬p, and step 3 applies it to the assertion p ⇒ q (step 5). Unit resolution of q ∨ ¬p with p (step 4) gives q (step 1); q with ¬q (step 2) gives false. The leaves are the three assertions, and all three are needed, so the core is 1, 2, 3.",
+  "outcome": {
+    "completion": {
+      "state": "complete"
+    },
+    "unavailable": [],
+    "versions": {
+      "z3": "5.1.0"
+    }
+  },
+  "events": [
+    {
+      "id": "d1",
+      "type": "derivation",
+      "step": 1,
+      "content": "Proof of unsatisfiability: 7 steps",
+      "depth": "internals",
+      "label": "exact",
+      "supports": [],
+      "source": "z3"
+    },
+    {
+      "id": "d2",
+      "type": "derivation",
+      "step": 1,
+      "content": "Unsat core: assertions 1, 2, 3 of 3",
+      "depth": "internals",
+      "label": "exact",
+      "supports": [],
+      "source": "z3"
+    },
+    {
+      "id": "a1",
+      "type": "final_answer",
+      "step": 1,
+      "content": "unsat",
+      "depth": "behaviour",
+      "label": "observed",
+      "supports": [
+        "d1",
+        "d2"
+      ],
+      "source": "z3"
+    }
+  ],
+  "attachments": [
+    {
+      "kind": "symbolic.proof_tree/1",
+      "eventId": "d1",
+      "label": "exact",
+      "engine": {
+        "name": "z3",
+        "version": "5.1.0"
+      },
+      "data": {
+        "steps": [
+          {
+            "rule": "unit-resolution",
+            "params": [],
+            "premises": [
+              1,
+              2
+            ],
+            "conclusion": "false"
+          },
+          {
+            "rule": "unit-resolution",
+            "params": [],
+            "premises": [
+              3,
+              4
+            ],
+            "conclusion": "q"
+          },
+          {
+            "rule": "asserted",
+            "params": [],
+            "premises": [],
+            "conclusion": "(not q)"
+          },
+          {
+            "rule": "mp",
+            "params": [],
+            "premises": [
+              5,
+              6
+            ],
+            "conclusion": "(or q (not p))"
+          },
+          {
+            "rule": "asserted",
+            "params": [],
+            "premises": [],
+            "conclusion": "p"
+          },
+          {
+            "rule": "asserted",
+            "params": [],
+            "premises": [],
+            "conclusion": "(=> p q)"
+          },
+          {
+            "rule": "rewrite",
+            "params": [],
+            "premises": [],
+            "conclusion": "(= (=> p q) (or q (not p)))"
+          }
+        ],
+        "total": 7,
+        "limit": 1000,
+        "truncated": null
+      }
+    },
+    {
+      "kind": "symbolic.unsat_core/1",
+      "eventId": "d2",
+      "label": "exact",
+      "engine": {
+        "name": "z3",
+        "version": "5.1.0"
+      },
+      "data": {
+        "assertions": 3,
+        "core": [
+          {
+            "index": 1,
+            "formula": "p"
+          },
+          {
+            "index": 2,
+            "formula": "(=> p q)"
+          },
+          {
+            "index": 3,
+            "formula": "(not q)"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+export type { Engine } from "./engine.ts";
 export type { Capabilities, EventSink, ModelInfo, RunOutcome, Source } from "./source.ts";
 export { fetchErrorMessage, providerErrorMessage, stoppedBy } from "./source.ts";
 export type { SseMessage } from "./sse.ts";

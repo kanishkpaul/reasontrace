@@ -1,0 +1,61 @@
+{
+  "checked": "x = 2, which is above 1, and f maps every argument to 3, so f(2) = 3.",
+  "outcome": {
+    "completion": {
+      "state": "complete"
+    },
+    "unavailable": [],
+    "versions": {
+      "z3": "5.1.0"
+    }
+  },
+  "events": [
+    {
+      "id": "d1",
+      "type": "derivation",
+      "step": 1,
+      "content": "Model: 2 values",
+      "depth": "internals",
+      "label": "exact",
+      "supports": [],
+      "source": "z3"
+    },
+    {
+      "id": "a1",
+      "type": "final_answer",
+      "step": 1,
+      "content": "sat",
+      "depth": "behaviour",
+      "label": "observed",
+      "supports": [
+        "d1"
+      ],
+      "source": "z3"
+    }
+  ],
+  "attachments": [
+    {
+      "kind": "symbolic.model/1",
+      "eventId": "d1",
+      "label": "exact",
+      "engine": {
+        "name": "z3",
+        "version": "5.1.0"
+      },
+      "data": {
+        "values": [
+          {
+            "name": "x",
+            "sort": "Int",
+            "value": "2"
+          },
+          {
+            "name": "f",
+            "sort": "(Int) → Int",
+            "value": "else ↦ 3"
+          }
+        ]
+      }
+    }
+  ]
+}

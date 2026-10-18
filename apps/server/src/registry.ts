@@ -1,5 +1,6 @@
 import { join } from "node:path";
-import type { Source } from "@reasontrace/core";
+import type { Engine, Source } from "@reasontrace/core";
+import { z3Engine } from "@reasontrace/engine-z3";
 import type { KeyStore } from "@reasontrace/keys";
 import { anthropicSource } from "@reasontrace/source-anthropic";
 import { weightsSource } from "@reasontrace/sidecar";
@@ -18,3 +19,6 @@ export const registry = (deps: SourceDeps): Source[] => [
   anthropicSource(deps),
   weightsSource({ command: "uv", args: ["run", "--frozen", "--extra", "model", "python", "-m", "reasontrace_sidecar"], cwd: BRIDGE }),
 ];
+
+/** Every symbolic engine the server offers, one line each. */
+export const engines = (): Engine[] => [z3Engine()];

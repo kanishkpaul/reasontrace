@@ -7,18 +7,19 @@ import { memoryStore } from "@reasontrace/keys";
 import { describe, expect, test } from "vitest";
 import { readFixture, replay, type HttpFixture, type ReplayStep } from "../../../test/fixtureFetch";
 import { createApp, TOKEN_HEADER } from "./app.ts";
-import { registry } from "./registry.ts";
+import { engines, registry } from "./registry.ts";
 
 const TOKEN = "launch-token-for-tests";
 const OPENAI_FIXTURES = join(import.meta.dirname, "../../../packages/sources/openai/fixtures");
 const ANTHROPIC_FIXTURES = join(import.meta.dirname, "../../../packages/sources/anthropic/fixtures");
+const Z3_FIXTURES = join(import.meta.dirname, "../../../packages/engines/z3/fixtures");
 
 function setup(steps: ReplayStep[] = [], initialKeys: Record<string, string> = {}, webDir?: string) {
   const runsDir = mkdtempSync(join(tmpdir(), "rt-server-"));
   const keys = memoryStore(initialKeys);
   const fake = replay(...steps);
   const log: string[] = [];
-  const app = createApp({ token: TOKEN, sources: registry({ keys, fetch: fake.fetch }), keys, runsDir, webDir, log: (line) => log.push(line), versions: { reasontrace: "test" } });
+  const app = createApp({ token: TOKEN, sources: registry({ keys, fetch: fake.fetch }), engines: engines(), keys, runsDir, webDir, log: (line) => log.push(line), versions: { reasontrace: "test" } });
   const call = (path: string, init: RequestInit & { token?: string | null; host?: string } = {}) => {
     const headers = new Headers(init.headers);
     headers.set("host", init.host ?? "127.0.0.1:4317");
@@ -134,6 +135,49 @@ describe("runs over the API", () => {
     const { call } = setup();
     expect((await call("/api/runs/..%2F..%2Fetc")).status).toBe(404);
     expect((await call("/api/runs/20261018-000000-abcdef")).status).toBe(404);
+  });
+});
+
+describe("solves over the API", () => {
+  test("a solve writes a symbolic run whose derivations read back as exact", async () => {
+    const { call, runsDir, log } = setup();
+    const engines = (await (await call("/api/engines")).json()) as { engines: { id: string; language: string }[] };
+    expect(engines.engines).toEqual([{ id: "z3", name: "z3", language: "SMT-LIB 2" }]);
+
+    const problem = readFileSync(join(Z3_FIXTURES, "modus-ponens.smt2"), "utf8");
+    const response = await call("/api/solve", { method: "POST", body: JSON.stringify({ engine: "z3", problem }) });
+    expect(response.status).toBe(200);
+    const { manifest } = (await response.json()) as { manifest: RunManifest };
+    expect(manifest.completion).toEqual({ state: "complete" });
+    expect(manifest.title).toBe("z3 · p, and p implies q, yet not q.");
+    expect(manifest.source).toMatchObject({ id: "z3", tier: "symbolic" });
+    expect(manifest.request).toEqual({ engine: "z3", problem, timeoutMs: 30_000 });
+    expect(manifest.versions).toEqual({ reasontrace: "test", z3: "5.1.0" });
+    expect(manifest.unavailable.map((u) => u.depth)).toEqual(["stated", "probabilities"]);
+    expect(log.at(-1)).toMatch(/solve\s+z3 · complete/);
+
+    const run = (await (await call(`/api/runs/${manifest.id}`)).json()) as Run;
+    expect(run.trace.events.map((e) => [e.type, e.label])).toEqual([["derivation", "exact"], ["derivation", "exact"], ["final_answer", "observed"]]);
+    expect(run.attachments.map((a) => a.kind)).toEqual(["symbolic.proof_tree/1", "symbolic.unsat_core/1"]);
+    expect(readdirSync(join(runsDir, manifest.id)).sort()).toEqual(["attachments", "events.jsonl", "manifest.json"]);
+  });
+
+  test("a problem z3 cannot read is recorded as an error with the reason", async () => {
+    const { call } = setup();
+    const response = await call("/api/solve", { method: "POST", body: JSON.stringify({ engine: "z3", problem: "(assert (> x 1))" }) });
+    const { manifest } = (await response.json()) as { manifest: RunManifest };
+    expect(manifest.completion.state).toBe("error");
+    expect(manifest.completion.reason).toMatch(/unknown constant x/);
+  });
+
+  test("bad requests are refused before anything runs", async () => {
+    const { call, runsDir } = setup();
+    const status = async (body: unknown) => (await call("/api/solve", { method: "POST", body: JSON.stringify(body) })).status;
+    expect(await status({ engine: "z3" })).toBe(400);
+    expect(await status({ engine: "z3", problem: "  " })).toBe(400);
+    expect(await status({ engine: "z3", problem: "(check-sat)", timeoutMs: 10 })).toBe(400);
+    expect(await status({ engine: "nope", problem: "(check-sat)" })).toBe(404);
+    expect(readdirSync(runsDir)).toEqual([]);
   });
 });
 

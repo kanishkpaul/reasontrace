@@ -88,7 +88,8 @@ prototype's JSON (`{title, events[]}`) is read as version 0.
   time order never implies it.
 - **Attachment:** typed data hung on a step or event. Its kind is a namespaced,
   versioned string: `probs.top_k/1`, `lens.logit/1`, `sae.features/1`,
-  `symbolic.proof_tree/1`, `nesy.translation/1`. Large tensors are stored once
+  `symbolic.model/1`, `symbolic.unsat_core/1`, `symbolic.proof_tree/1`,
+  `nesy.translation/1`. Large tensors are stored once
   in `tensors/` as safetensors and referenced by name.
 
 Producers add events and attachments; decoders add attachments to existing
@@ -128,8 +129,11 @@ interface Source {
 
 /** A symbolic engine. Its derivations are recorded as `exact`. */
 interface Engine {
-  id: EngineId;
-  solve(problem: Problem, sink: EventSink, signal: AbortSignal): Promise<void>;
+  id: string;
+  language: string;
+  capabilities(): Capabilities;
+  /** A parse error, a timeout and `unknown` are outcomes, not rejections. */
+  solve(request: SolveRequest, sink: EventSink, signal: AbortSignal): Promise<RunOutcome>;
 }
 
 /** The sidecar's contract, over JSON-RPC on stdio. */
@@ -231,3 +235,25 @@ stored findings from the sidebar.
 
 Without uv, Python or the model runtime, every depth of the full tier is
 unavailable with that reason, and nothing else changes.
+
+## 9. Symbolic engines
+
+`packages/engines/z3` runs SMT-LIB 2 problems through z3's official
+WebAssembly build, inside the server's process. `POST /api/solve` takes an
+engine and a problem and writes an ordinary run directory: the manifest's
+`request` is the problem, and the z3 version joins the manifest's versions.
+The result is the run's behaviour (`final_answer`, `observed`). What z3
+derived is a `derivation` event at the internals depth, labelled `exact`,
+with an attachment read from z3 itself:
+
+- satisfiable: the model, `symbolic.model/1`;
+- unsatisfiable: the proof, `symbolic.proof_tree/1`, and an unsat core,
+  `symbolic.unsat_core/1`.
+
+A proof is read breadth first from its conclusion and keeps at most 1000
+steps; a longer one keeps the steps nearest the conclusion and records how
+many it had and why the rest were cut. Tracking each assertion for the core
+changes the proof z3 produces, so the core comes from a second check, and it
+can differ from the assertions the proof rests on. The engine's tests compare
+its derivations of small problems with hand-checked fixtures in
+`packages/engines/z3/fixtures`, so a change in z3's output fails them.

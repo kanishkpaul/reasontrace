@@ -6,7 +6,7 @@ import { serve } from "@hono/node-server";
 import { closeInterruptedRuns } from "@reasontrace/core";
 import { keychainStore } from "@reasontrace/keys";
 import { createApp } from "./app.ts";
-import { registry } from "./registry.ts";
+import { engines, registry } from "./registry.ts";
 
 const ROOT = resolve(import.meta.dirname, "../../..");
 const VERSION = (JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")) as { version: string }).version;
@@ -61,6 +61,7 @@ const closed = closeInterruptedRuns(runsDir);
 const app = createApp({
   token,
   sources: registry({ keys }),
+  engines: engines(),
   keys,
   runsDir,
   webDir,

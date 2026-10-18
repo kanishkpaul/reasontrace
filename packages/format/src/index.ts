@@ -16,7 +16,9 @@ export type EventType =
   /** Reasoning text a model emitted before its answer: `<think>` text, a reasoning field, a thinking block. */
   | "reasoning"
   /** Internal values captured from a model, such as its residual stream. */
-  | "activation";
+  | "activation"
+  /** A symbolic engine's derivation of its result: a proof, a model or an unsat core. */
+  | "derivation";
 
 /** Which depth of a model an event comes from (docs/CHARTER.md §1). */
 export type Depth = "behaviour" | "stated" | "probabilities" | "internals";
@@ -169,6 +171,15 @@ export interface Runtime {
   captureMethod: string;
 }
 
+/** What a symbolic engine was asked: a problem in the engine's own language. */
+export interface SolveRequest {
+  engine: string;
+  problem: string;
+  timeoutMs: number;
+}
+
+export const isSolveRequest = (request: RunRequest | SolveRequest): request is SolveRequest => "problem" in request;
+
 /** Everything needed to repeat a run and judge whether two runs are comparable. */
 export interface RunManifest {
   formatVersion: typeof FORMAT_VERSION;
@@ -177,7 +188,8 @@ export interface RunManifest {
   createdAt: string;
   finishedAt?: string;
   source: { id: string; name: string; tier: Tier; baseUrl: string };
-  request: RunRequest;
+  /** A `SolveRequest` when the source is a symbolic engine. */
+  request: RunRequest | SolveRequest;
   /** The body sent to the provider, as sent. Keys travel in headers and never appear here. */
   providerRequest?: Record<string, unknown>;
   /** The model the provider says answered, which can differ from the one asked for. */
@@ -201,7 +213,7 @@ export interface TokenLogprob {
  * Typed data hung on an event. `kind` is namespaced and versioned
  * (docs/ARCHITECTURE.md §3).
  */
-export type Attachment = TopKAttachment | ResidualAttachment | DecodedAttachment;
+export type Attachment = TopKAttachment | ResidualAttachment | DecodedAttachment | DerivationAttachment;
 
 export interface TopKAttachment {
   kind: "probs.top_k/1";
@@ -308,6 +320,60 @@ export interface SaeFeaturesAttachment extends Decoded {
     /** Fraction of variance unexplained by the reconstruction, over the positions that are not special tokens. Null when there are too few to estimate the variance. */
     fvu: number | null;
     fvuPositions: number;
+  };
+}
+
+/** What a symbolic engine derived, read from the engine itself (docs/CHARTER.md §2, `exact`). */
+export type DerivationAttachment = ModelAttachment | UnsatCoreAttachment | ProofTreeAttachment;
+
+interface Derivation {
+  /** The derivation event it belongs to. */
+  eventId: string;
+  label: "exact";
+  engine: { name: string; version: string };
+}
+
+/** The satisfying assignment the engine found. */
+export interface ModelAttachment extends Derivation {
+  kind: "symbolic.model/1";
+  data: {
+    /** Symbols the engine left out can take any value. */
+    values: { name: string; sort: string; value: string }[];
+  };
+}
+
+/** Assertions that are unsatisfiable together, from a second check with each assertion tracked. */
+export interface UnsatCoreAttachment extends Derivation {
+  kind: "symbolic.unsat_core/1";
+  data: {
+    /** How many assertions the problem has. */
+    assertions: number;
+    /** Each numbered from 1 in the order the problem gives them. */
+    core: { index: number; formula: string }[];
+  };
+}
+
+/** One inference in a proof: the rule, the steps it uses, and what it concludes. */
+export interface ProofStep {
+  rule: string;
+  /** The rule's parameters, such as the coefficients of an arithmetic lemma. */
+  params: string[];
+  /** Indices of the steps this one uses. An index at or past the number of kept steps was cut by the size limit. */
+  premises: number[];
+  conclusion: string;
+}
+
+/** A proof of unsatisfiability, numbered breadth first from its conclusion, `false`, at step 0. */
+export interface ProofTreeAttachment extends Derivation {
+  kind: "symbolic.proof_tree/1";
+  data: {
+    /** A step used by several others appears once, so this is a graph that the viewer draws as a tree. */
+    steps: ProofStep[];
+    /** How many steps the whole proof has. */
+    total: number;
+    limit: number;
+    /** Why steps were cut. Null when the whole proof is kept. */
+    truncated: string | null;
   };
 }
 

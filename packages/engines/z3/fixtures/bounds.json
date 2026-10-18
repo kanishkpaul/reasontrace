@@ -1,0 +1,195 @@
+{
+  "checked": "Steps 8, 9, 4 and 2 turn x > 2 into ¬(x ≤ 2). Steps 12, 13, 10, 6, 7 and 3 turn x < 1 into ¬(x ≥ 1). Step 1 is the arithmetic lemma x ≥ 1 ∨ x ≤ 2: its negation, x ≤ 0 and x ≥ 3, sums with Farkas coefficients 1 and 1 to 0 ≥ 3. Unit resolution of the lemma with both gives false. Only assertions 1 and 2 are leaves, matching the core; x < 5 plays no part.",
+  "outcome": {
+    "completion": {
+      "state": "complete"
+    },
+    "unavailable": [],
+    "versions": {
+      "z3": "5.1.0"
+    }
+  },
+  "events": [
+    {
+      "id": "d1",
+      "type": "derivation",
+      "step": 1,
+      "content": "Proof of unsatisfiability: 14 steps",
+      "depth": "internals",
+      "label": "exact",
+      "supports": [],
+      "source": "z3"
+    },
+    {
+      "id": "d2",
+      "type": "derivation",
+      "step": 1,
+      "content": "Unsat core: assertions 1, 2 of 3",
+      "depth": "internals",
+      "label": "exact",
+      "supports": [],
+      "source": "z3"
+    },
+    {
+      "id": "a1",
+      "type": "final_answer",
+      "step": 1,
+      "content": "unsat",
+      "depth": "behaviour",
+      "label": "observed",
+      "supports": [
+        "d1",
+        "d2"
+      ],
+      "source": "z3"
+    }
+  ],
+  "attachments": [
+    {
+      "kind": "symbolic.proof_tree/1",
+      "eventId": "d1",
+      "label": "exact",
+      "engine": {
+        "name": "z3",
+        "version": "5.1.0"
+      },
+      "data": {
+        "steps": [
+          {
+            "rule": "unit-resolution",
+            "params": [],
+            "premises": [
+              1,
+              2,
+              3
+            ],
+            "conclusion": "false"
+          },
+          {
+            "rule": "th-lemma",
+            "params": [
+              "arith",
+              "farkas",
+              "1",
+              "1"
+            ],
+            "premises": [],
+            "conclusion": "(or (>= x 1) (<= x 2))"
+          },
+          {
+            "rule": "mp",
+            "params": [],
+            "premises": [
+              4,
+              5
+            ],
+            "conclusion": "(not (<= x 2))"
+          },
+          {
+            "rule": "mp",
+            "params": [],
+            "premises": [
+              6,
+              7
+            ],
+            "conclusion": "(not (>= x 1))"
+          },
+          {
+            "rule": "mp",
+            "params": [],
+            "premises": [
+              8,
+              9
+            ],
+            "conclusion": "(not (<= x 2))"
+          },
+          {
+            "rule": "rewrite",
+            "params": [],
+            "premises": [],
+            "conclusion": "(= (not (<= x 2)) (not (<= x 2)))"
+          },
+          {
+            "rule": "mp",
+            "params": [],
+            "premises": [
+              10,
+              11
+            ],
+            "conclusion": "(not (<= 1 x))"
+          },
+          {
+            "rule": "rewrite",
+            "params": [],
+            "premises": [],
+            "conclusion": "(= (not (<= 1 x)) (not (>= x 1)))"
+          },
+          {
+            "rule": "asserted",
+            "params": [],
+            "premises": [],
+            "conclusion": "(> x 2)"
+          },
+          {
+            "rule": "rewrite",
+            "params": [],
+            "premises": [],
+            "conclusion": "(= (> x 2) (not (<= x 2)))"
+          },
+          {
+            "rule": "mp",
+            "params": [],
+            "premises": [
+              12,
+              13
+            ],
+            "conclusion": "(not (<= 1 x))"
+          },
+          {
+            "rule": "rewrite",
+            "params": [],
+            "premises": [],
+            "conclusion": "(= (not (<= 1 x)) (not (<= 1 x)))"
+          },
+          {
+            "rule": "asserted",
+            "params": [],
+            "premises": [],
+            "conclusion": "(< x 1)"
+          },
+          {
+            "rule": "rewrite",
+            "params": [],
+            "premises": [],
+            "conclusion": "(= (< x 1) (not (<= 1 x)))"
+          }
+        ],
+        "total": 14,
+        "limit": 1000,
+        "truncated": null
+      }
+    },
+    {
+      "kind": "symbolic.unsat_core/1",
+      "eventId": "d2",
+      "label": "exact",
+      "engine": {
+        "name": "z3",
+        "version": "5.1.0"
+      },
+      "data": {
+        "assertions": 3,
+        "core": [
+          {
+            "index": 1,
+            "formula": "(> x 2)"
+          },
+          {
+            "index": 2,
+            "formula": "(< x 1)"
+          }
+        ]
+      }
+    }
+  ]
+}

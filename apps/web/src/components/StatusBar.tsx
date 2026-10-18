@@ -1,4 +1,4 @@
-import type { ReasonTrace } from "@reasontrace/format";
+import { isSolveRequest, type ReasonTrace } from "@reasontrace/format";
 import { useTraceStore } from "../store";
 import { COMPLETION, TIER } from "../lib/completion";
 
@@ -16,8 +16,12 @@ export function StatusBar({ trace, saved }: { trace: ReasonTrace; saved: boolean
       {manifest && request ? (
         <>
           <span>tier {TIER[manifest.source.tier]} · {manifest.source.name}</span>
-          <span>{manifest.respondingModel ?? request.model}</span>
-          {manifest.runtime ? (
+          {isSolveRequest(request) ? (
+            <span>{request.engine} · timeout {request.timeoutMs / 1000} s</span>
+          ) : (
+            <span>{manifest.respondingModel ?? request.model}</span>
+          )}
+          {isSolveRequest(request) ? null : manifest.runtime ? (
             <span>
               {manifest.runtime.device} · {manifest.runtime.dtype} · {manifest.runtime.quantization === "none" ? "not quantised" : manifest.runtime.quantization} · KV cache {manifest.runtime.cache ? "on" : "off"} · seed {manifest.runtime.seed} · peak memory ≥ {(manifest.runtime.peakMemoryBytes / 2 ** 30).toFixed(1)} GiB
             </span>

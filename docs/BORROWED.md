@@ -40,5 +40,5 @@ row says **adopted**, its licence column is unverified.
 | SAELens | loading and running the Gemma Scope 2 SAE in the sidecar | github.com/jbloomAus/SAELens | MIT | — | adopted |
 | TransformerLens | a dependency of SAELens; not used directly | github.com/TransformerLensOrg/TransformerLens | MIT | SAELens drops it | adopted (transitive) |
 | Gemma Scope 2 | the layer-13 residual SAE for Gemma 3 1B instruct; its paper's Figure 7 gives the reconstruction range the phase 6 gate checks | huggingface.co/google/gemma-scope-2-1b-it | CC-BY-4.0 (model card `license: cc-by-4.0`) | decoder support dropped for Gemma | adopted |
-| z3-solver | SMT solver, official WebAssembly build | github.com/Z3Prover/z3 | to verify | — | planned (phase 8) |
+| z3-solver | the symbolic engine: SMT-LIB 2 problems, models, unsat cores and proofs, through the official WebAssembly build (npm 5.2.0, z3 5.1.0) | github.com/Z3Prover/z3 | MIT (the package's `LICENSE.txt`) | — | adopted |
 | Daedalus practices | run directories, failure modes, honest zeros, borrowing ledger | the author's Daedalus repository | own work | — | adopted |

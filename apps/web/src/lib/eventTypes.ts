@@ -1,6 +1,6 @@
 import type { EventType } from "@reasontrace/format";
 import type { ComponentType } from "react";
-import { ActionIcon, ActivationIcon, AlertIcon, AnswerIcon, DecisionIcon, HypothesisIcon, ObservationIcon, ReasoningIcon, UpdateIcon } from "./icons";
+import { ActionIcon, ActivationIcon, AlertIcon, AnswerIcon, DecisionIcon, DerivationIcon, HypothesisIcon, ObservationIcon, ReasoningIcon, UpdateIcon } from "./icons";
 
 type IconComponent = ComponentType<{ size?: number; stroke?: number; className?: string }>;
 
@@ -15,6 +15,7 @@ export const EVENT_TYPES: Record<EventType, { label: string; icon: IconComponent
   decision: { label: "Decision", icon: DecisionIcon },
   final_answer: { label: "Final answer", icon: AnswerIcon },
   activation: { label: "Activations", icon: ActivationIcon },
+  derivation: { label: "Derivation", icon: DerivationIcon },
 };
 
 export const EVENT_TYPE_ORDER = Object.keys(EVENT_TYPES) as EventType[];

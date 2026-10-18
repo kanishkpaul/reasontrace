@@ -31,6 +31,8 @@ export interface RunOutcome {
   respondingModel?: string;
   usage?: RunManifest["usage"];
   runtime?: RunManifest["runtime"];
+  /** Versions only the source knows, such as a solver's, added to the manifest's. */
+  versions?: Record<string, string>;
 }
 
 /** A model reached over HTTP: hosted APIs and local servers. */
