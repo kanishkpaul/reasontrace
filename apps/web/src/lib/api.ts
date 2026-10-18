@@ -27,6 +27,12 @@ export interface Capabilities {
   unavailable: UnavailableDepth[];
 }
 
+export interface EngineInfo {
+  id: string;
+  name: string;
+  language: string;
+}
+
 export interface RunBody {
   source: string;
   model: string;
@@ -62,6 +68,8 @@ export const api = {
   capabilities: (id: string, model: string) => call<Capabilities>(`/api/sources/${id}/capabilities?model=${encodeURIComponent(model)}`),
   runs: () => call<{ runs: RunManifest[] }>("/api/runs").then((r) => r.runs),
   run: (id: string) => call<Run>(`/api/runs/${id}`),
+  engines: () => call<{ engines: EngineInfo[] }>("/api/engines").then((r) => r.engines),
+  solve: (engine: string, problem: string) => call<{ manifest: RunManifest }>("/api/solve", { method: "POST", body: JSON.stringify({ engine, problem }) }).then((r) => r.manifest),
 };
 
 export interface RunStream {

@@ -17,6 +17,7 @@ import { ReasoningGraph } from "./ReasoningGraph";
 import { RunList } from "./RunList";
 import { RunPanel } from "./RunPanel";
 import { SampleTracePicker } from "./SampleTracePicker";
+import { SolvePanel } from "./SolvePanel";
 import { StatusBar } from "./StatusBar";
 import { StepColumns } from "./StepColumns";
 import { TimelineControls } from "./TimelineControls";
@@ -93,6 +94,7 @@ export function Layout() {
 
       <aside className="app__sidebar" aria-label="Runs, traces and filters">
         {hasServer && <RunPanel onRun={() => setRegion("trace")} />}
+        {hasServer && <SolvePanel onSolved={() => setRegion("trace")} />}
         {hasServer && <RunList onOpen={() => setRegion("trace")} />}
         <TraceInput onLoaded={() => setRegion("trace")} />
         <SampleTracePicker onLoaded={() => setRegion("trace")} />
@@ -145,6 +147,7 @@ function EmptyHome() {
       </div>
       <div className="home__open">
         {hasServer && <RunPanel />}
+        {hasServer && <SolvePanel />}
         {hasServer && <RunList />}
         <TraceInput />
         <SampleTracePicker />

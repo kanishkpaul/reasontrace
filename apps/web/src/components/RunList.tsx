@@ -17,7 +17,7 @@ export function RunList({ onOpen }: { onOpen?: () => void }) {
   const [runs, setRuns] = useState<RunManifest[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // Read again whenever a run finishes, so it appears here.
+  // Read again whenever a run finishes or another one opens: a solve opens its run when it is done.
   useEffect(() => {
     if (running) return;
     let cancelled = false;
@@ -29,7 +29,7 @@ export function RunList({ onOpen }: { onOpen?: () => void }) {
     return () => {
       cancelled = true;
     };
-  }, [running]);
+  }, [running, current]);
 
   const open = (id: string) => api.run(id).then((run) => {
     openRun(run);

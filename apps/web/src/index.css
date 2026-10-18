@@ -292,6 +292,16 @@ button { font: inherit; }
 .prob-bar[data-chosen] .prob-bar__fill { background: var(--ui-accent); }
 .lens-token { flex: 0 0 6rem; overflow: hidden; color: var(--ui-text-1); text-overflow: ellipsis; white-space: pre; }
 .decoders-missing { display: flex; flex-direction: column; gap: var(--space-1); }
+.proof-tree { margin: 0; padding: 0 0 0 var(--space-3); list-style: none; font-size: var(--text-xs); }
+.proof-tree[aria-label] { padding-left: 0; }
+.proof-step { margin: var(--space-1) 0 0; }
+.proof-step__line { display: flex; flex-wrap: wrap; gap: var(--space-1); align-items: baseline; }
+.proof-step__toggle { flex: 0 0 1.25rem; }
+.proof-step__index { color: var(--ui-text-3); font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.proof-step__conclusion { font-family: var(--font-mono); overflow-wrap: anywhere; }
+.proof-step--cut { color: var(--ui-text-3); }
+.proof-core { display: flex; flex-direction: column; gap: var(--space-1); margin: 0; padding: 0; list-style: none; font-size: var(--text-xs); }
+.proof-core code { font-family: var(--font-mono); overflow-wrap: anywhere; }
 
 /* ── Home ── */
 

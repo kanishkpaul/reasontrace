@@ -5,6 +5,7 @@ import { EVENT_TYPES } from "../lib/eventTypes";
 import { CheckIcon, CopyIcon, ICON } from "../lib/icons";
 import { useTraceStore } from "../store";
 import { DecodedView } from "./DecodedView";
+import { DerivationView } from "./DerivationView";
 import { EvidenceLabel, Unavailable } from "./EvidenceLabel";
 import { ResidualView } from "./ResidualView";
 import { TokenView } from "./TokenView";
@@ -49,6 +50,7 @@ export function NodeInspector() {
   const tokens = attached.find((a) => a.kind === "probs.top_k/1")?.data.tokens;
   const residual = attached.find((a) => a.kind === "activations.residual/1")?.data;
   const decoded = attached.filter((a) => a.label === "decoded");
+  const derivations = attached.filter((a) => a.label === "exact");
   const missing = ((event?.metadata?.decoders ?? []) as DecoderOutcome[]).filter((d) => !d.attached);
 
   if (!event) {
@@ -101,6 +103,7 @@ export function NodeInspector() {
       {tokens && <TokenView tokens={tokens} />}
       {residual && <ResidualView capture={residual} />}
       {decoded.map((a, i) => <DecodedView key={`${a.kind}-${i}`} attachment={a} />)}
+      {derivations.map((a, i) => <DerivationView key={`${a.kind}-${i}`} attachment={a} />)}
       {missing.length > 0 && (
         <section className="decoders-missing">
           <h3 className="section-heading">Decoders not run</h3>
