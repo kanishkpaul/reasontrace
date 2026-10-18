@@ -22,7 +22,7 @@ reasontrace:~$ open qwen3-0.6b · What is 6 + 7? Answer with the number.
   stated      “ stated        Okay, so the question is asking what is 6 plus 7…
   probs       ● measured      the 5 likeliest tokens at each generated token
   internals   ● measured      residual stream, 3 layers × 183 positions, float32
-              ◆ decoded       logit lens, validated on a planted circuit: 3 of 3 controls failed
+              ◆ decoded       logit lens, validated: 3 of 3 controls failed
               ∅ unavailable   SAE features: Gemma Scope 2 has SAEs for Gemma 3 only
 
 [ OK ] complete · tier full · mps · float32 · seed 0
