@@ -28,10 +28,10 @@ def chance_bound(n: int, chance: float, tests: int) -> float:
     return k / n
 
 
-def verdict(score: float, controls: dict[str, float], bound: float) -> tuple[str, str | None]:
-    """`("validated", None)`, or `("unvalidated", reason)`."""
+def verdict(score: float, controls: dict[str, float], bound: float, target: str = "the planted variable") -> tuple[str, str | None]:
+    """`("validated", None)`, or `("unvalidated", reason)`. `target` names what the decoder was meant to recover."""
     if score < REQUIRED:
-        return "unvalidated", f"It recovered the planted variable in {score:.0%} of cases, short of the {REQUIRED:.0%} required."
+        return "unvalidated", f"It recovered {target} in {score:.0%} of cases, short of the {REQUIRED:.0%} required."
     succeeded = [name for name, control in controls.items() if control >= bound]
     if succeeded:
         listed = ", ".join(f"{name} ({controls[name]:.0%})" for name in succeeded)
