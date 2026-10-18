@@ -19,7 +19,7 @@ export function StatusBar({ trace, saved }: { trace: ReasonTrace; saved: boolean
           {isSolveRequest(request) ? (
             <span>{request.engine} · timeout {request.timeoutMs / 1000} s</span>
           ) : (
-            <span>{manifest.respondingModel ?? request.model}</span>
+            <span>{manifest.respondingModel ?? request.model}{manifest.pipeline ? ` → ${manifest.pipeline.engine}` : ""}</span>
           )}
           {isSolveRequest(request) ? null : manifest.runtime ? (
             <span>

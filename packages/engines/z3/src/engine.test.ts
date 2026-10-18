@@ -76,7 +76,7 @@ describe("runs that end without a derivation", () => {
   test("a problem z3 cannot read is an error with z3's message", async () => {
     const { outcome, events } = await solve("(assert (> x 1))");
     expect(outcome.completion.state).toBe("error");
-    expect(outcome.completion.reason).toMatch(/^z3 could not read the problem: .*unknown constant x/);
+    expect(outcome.completion.reason).toMatch(/^Could not read the problem: .*unknown constant x/);
     expect(events).toEqual([]);
   });
 

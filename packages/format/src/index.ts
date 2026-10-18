@@ -18,7 +18,9 @@ export type EventType =
   /** Internal values captured from a model, such as its residual stream. */
   | "activation"
   /** A symbolic engine's derivation of its result: a proof, a model or an unsat core. */
-  | "derivation";
+  | "derivation"
+  /** A formula a model wrote for a symbolic engine, from a problem in words. */
+  | "translation";
 
 /** Which depth of a model an event comes from (docs/CHARTER.md §1). */
 export type Depth = "behaviour" | "stated" | "probabilities" | "internals";
@@ -178,6 +180,15 @@ export interface SolveRequest {
   timeoutMs: number;
 }
 
+/** A pipeline: a model translates a problem in words into a formula, and an engine solves the formula. */
+export interface PipelineSpec {
+  /** The problem in words, as given. The model's prompt wraps it in instructions. */
+  text: string;
+  engine: string;
+  /** For the engine's solve; the model's request has its own. */
+  timeoutMs: number;
+}
+
 export const isSolveRequest = (request: RunRequest | SolveRequest): request is SolveRequest => "problem" in request;
 
 /** Everything needed to repeat a run and judge whether two runs are comparable. */
@@ -190,6 +201,8 @@ export interface RunManifest {
   source: { id: string; name: string; tier: Tier; baseUrl: string };
   /** A `SolveRequest` when the source is a symbolic engine. */
   request: RunRequest | SolveRequest;
+  /** Present when the run is a pipeline: `request` is then the model's, and the engine solves what it wrote. */
+  pipeline?: PipelineSpec;
   /** The body sent to the provider, as sent. Keys travel in headers and never appear here. */
   providerRequest?: Record<string, unknown>;
   /** The model the provider says answered, which can differ from the one asked for. */
@@ -213,7 +226,7 @@ export interface TokenLogprob {
  * Typed data hung on an event. `kind` is namespaced and versioned
  * (docs/ARCHITECTURE.md §3).
  */
-export type Attachment = TopKAttachment | ResidualAttachment | DecodedAttachment | DerivationAttachment;
+export type Attachment = TopKAttachment | ResidualAttachment | DecodedAttachment | DerivationAttachment | TranslationAttachment;
 
 export interface TopKAttachment {
   kind: "probs.top_k/1";
@@ -374,6 +387,43 @@ export interface ProofTreeAttachment extends Derivation {
     limit: number;
     /** Why steps were cut. Null when the whole proof is kept. */
     truncated: string | null;
+  };
+}
+
+/** One way a formula's assertion departs from the words it says it encodes. */
+export interface Departure {
+  check: "quote" | "numbers" | "relation";
+  detail: string;
+}
+
+/**
+ * A formula lined up against the problem it was written from. The formula is
+ * what the model wrote (`observed`); which words each assertion encodes is the
+ * model's own claim (`stated`); the departures are rule-based checks
+ * (`inferred`) that can miss a wrong translation and flag a right one.
+ */
+export interface TranslationAttachment {
+  kind: "nesy.translation/1";
+  eventId: string;
+  label: "inferred";
+  data: {
+    text: string;
+    formula: string;
+    /** In the order the formula gives them, so assertion i is the engine's assertion i + 1. */
+    assertions: {
+      formula: string;
+      /** The words the model's comment before the assertion says it encodes. Null when it gave none. */
+      quote: string | null;
+      /** Where the quoted words are in the text, as [start, end) in characters. Null when they are not there. */
+      span: [number, number] | null;
+      departures: Departure[];
+    }[];
+    /** Sentences of the text that no assertion quotes from. */
+    unencoded: { span: [number, number]; text: string }[];
+    /** What was checked, one sentence each. */
+    rules: string[];
+    /** What the checks cannot tell. */
+    limitations: string;
   };
 }
 

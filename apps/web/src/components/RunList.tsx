@@ -5,9 +5,11 @@ import { api } from "../lib/api";
 import { COMPLETION, TIER } from "../lib/completion";
 import { useTraceStore } from "../store";
 
-/** A prompt's first line, or a problem's, without the comment marker it often starts with. */
-const firstLine = (request: RunManifest["request"]) =>
-  isSolveRequest(request) ? request.problem.trim().split("\n")[0].replace(/^;+\s*/, "") : request.prompt.trim().split("\n")[0];
+/** What was asked, by its first line: a pipeline's problem in words, a solve's problem without its comment marker, or a prompt. */
+function firstLine({ request, pipeline }: RunManifest): string {
+  if (pipeline) return pipeline.text.trim().split("\n")[0];
+  return isSolveRequest(request) ? request.problem.trim().split("\n")[0].replace(/^;+\s*/, "") : request.prompt.trim().split("\n")[0];
+}
 
 const time = (iso: string) => new Date(iso).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
@@ -57,9 +59,9 @@ export function RunList({ onOpen }: { onOpen?: () => void }) {
             const { word, dot } = COMPLETION[run.completion.state];
             return (
               <button key={run.id} type="button" className="row sample-row" aria-current={run.id === current} onClick={() => void open(run.id)}>
-                <span className="row__title">{firstLine(run.request)}</span>
+                <span className="row__title">{firstLine(run)}</span>
                 <span className="row__meta">{time(run.createdAt)}</span>
-                <span className="row__desc"><span className={`dot ${dot}`} /> {word} · {run.source.name}</span>
+                <span className="row__desc"><span className={`dot ${dot}`} /> {word} · {run.source.name}{run.pipeline ? ` → ${run.pipeline.engine}` : ""}</span>
               </button>
             );
           })}

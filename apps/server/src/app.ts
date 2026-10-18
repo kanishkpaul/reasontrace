@@ -2,10 +2,12 @@ import { timingSafeEqual } from "node:crypto";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { extname, join, normalize, sep } from "node:path";
 import { isRunId, listRuns, newRunId, readRun, RunReadError, RunWriter, type Engine, type RunOutcome, type Source } from "@reasontrace/core";
-import type { CapturePlan, RunRequest, SolveRequest } from "@reasontrace/format";
+import { translationPrompt } from "@reasontrace/analysis";
+import type { CapturePlan, PipelineSpec, RunRequest, SolveRequest } from "@reasontrace/format";
 import type { KeyStore } from "@reasontrace/keys";
 import { Hono, type Context } from "hono";
 import { streamSSE } from "hono/streaming";
+import { solveTranslation, watched } from "./pipeline.ts";
 
 export interface AppOptions {
   /** Every `/api` request must carry it in the `x-reasontrace-token` header. */
@@ -107,6 +109,18 @@ function solveRequest(body: Record<string, unknown>): SolveRequest {
   return { engine, problem, timeoutMs: integer(body.timeoutMs ?? DEFAULTS.solveTimeoutMs, "timeoutMs", 1000, 600_000) };
 }
 
+/**
+ * A pipeline request: the model's fields as for a run, with the problem in
+ * words as `text` in place of a prompt, and `solveTimeoutMs` for the engine.
+ */
+function pipelineRequest(body: Record<string, unknown>): { sourceId: string; request: RunRequest; pipeline: PipelineSpec } {
+  const { text, engine } = body;
+  if (typeof text !== "string" || !text.trim()) throw new BadRequest("text is required.");
+  if (typeof engine !== "string" || !engine) throw new BadRequest("engine is required.");
+  const { sourceId, request } = runRequest({ ...body, prompt: translationPrompt(text) });
+  return { sourceId, request, pipeline: { text, engine, timeoutMs: integer(body.solveTimeoutMs ?? DEFAULTS.solveTimeoutMs, "solveTimeoutMs", 1000, 600_000) } };
+}
+
 async function jsonBody(c: Context): Promise<Record<string, unknown>> {
   try {
     const body = await c.req.json();
@@ -195,12 +209,12 @@ export function createApp(options: AppOptions): Hono {
     return c.json(readRun(runsDir, id));
   });
 
-  app.post("/api/runs", async (c) => {
-    const { sourceId, request } = runRequest(await jsonBody(c));
-    const source = sourceById(sourceId);
-    if (!source) return c.json({ error: "No source with that ID." }, 404);
+  /**
+   * Runs a source and streams its text. A pipeline then hands the reply to
+   * its engine before the run is finished.
+   */
+  const streamRun = (c: Context, source: Source, request: RunRequest, title: string, pipeline?: { spec: PipelineSpec; engine: Engine }) => {
     const capabilities = source.capabilities(request.model);
-
     return streamSSE(c, async (stream) => {
       const stop = new AbortController();
       stream.onAbort(() => stop.abort());
@@ -211,27 +225,46 @@ export function createApp(options: AppOptions): Hono {
 
       const writer = new RunWriter(runsDir, {
         id: newRunId(),
-        title: `${request.model} · ${request.prompt.trim().split("\n")[0].slice(0, 60)}`,
+        title,
         createdAt: new Date().toISOString(),
         source: { id: source.id, name: source.name, tier: capabilities.tier, baseUrl: source.baseUrl },
         request,
+        ...(pipeline ? { pipeline: pipeline.spec } : {}),
         unavailable: capabilities.unavailable,
         versions: options.versions,
       }, (channel, text) => void send("delta", { channel, text }));
       await send("start", { id: writer.manifest.id });
 
       const started = performance.now();
+      const { sink, events } = watched(writer);
       let outcome: RunOutcome;
       try {
-        outcome = await source.run(request, writer, signal);
+        outcome = await source.run(request, sink, signal);
+        if (pipeline) outcome = await solveTranslation(pipeline.spec, pipeline.engine, events, sink, signal, outcome);
       } catch (error) {
-        outcome = { completion: { state: "error", reason: `The source failed: ${error instanceof Error ? error.message : String(error)}` }, unavailable: [] };
+        outcome = { completion: { state: "error", reason: `The ${pipeline ? "pipeline" : "source"} failed: ${error instanceof Error ? error.message : String(error)}` }, unavailable: [] };
       }
       const manifest = writer.finish(outcome);
       const seconds = ((performance.now() - started) / 1000).toFixed(1);
-      log(`  ┊ capture   ${source.name} · ${request.model} · ${manifest.completion.state} ${seconds}s`);
+      log(`  ┊ ${pipeline ? "pipeline" : "capture "}  ${source.name} · ${request.model}${pipeline ? ` → ${pipeline.engine.name}` : ""} · ${manifest.completion.state} ${seconds}s`);
       await send("done", { manifest });
     });
+  };
+
+  app.post("/api/runs", async (c) => {
+    const { sourceId, request } = runRequest(await jsonBody(c));
+    const source = sourceById(sourceId);
+    if (!source) return c.json({ error: "No source with that ID." }, 404);
+    return streamRun(c, source, request, `${request.model} · ${request.prompt.trim().split("\n")[0].slice(0, 60)}`);
+  });
+
+  app.post("/api/pipelines", async (c) => {
+    const { sourceId, request, pipeline } = pipelineRequest(await jsonBody(c));
+    const source = sourceById(sourceId);
+    if (!source) return c.json({ error: "No source with that ID." }, 404);
+    const engine = engines.find((e) => e.id === pipeline.engine);
+    if (!engine) return c.json({ error: "No engine with that ID." }, 404);
+    return streamRun(c, source, request, `${request.model} → ${engine.name} · ${pipeline.text.trim().split("\n")[0].slice(0, 60)}`, { spec: pipeline, engine });
   });
 
   app.get("/api/engines", (c) => c.json({ engines: engines.map((e) => ({ id: e.id, name: e.name, language: e.language })) }));

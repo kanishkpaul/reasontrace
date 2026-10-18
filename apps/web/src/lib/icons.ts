@@ -16,6 +16,7 @@ export {
   IconDownload as DownloadIcon,
   IconEye as ObservationIcon,
   IconGitBranch as DecisionIcon,
+  IconLanguage as TranslationIcon,
   IconLayoutSidebar as SidebarIcon,
   IconLayoutSidebarRight as RailIcon,
   IconMaximize as FitIcon,

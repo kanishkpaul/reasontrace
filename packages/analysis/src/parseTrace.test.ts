@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { parsed, traceFixture } from "../../../test/traces";
-import { parseTrace } from "./parseTrace";
+import { parseTrace } from "./parseTrace.ts";
 
 const parse = (text: string) => parseTrace(text);
 const events = (text: string) => parsed(text).events;

@@ -86,6 +86,7 @@ const defaultFilters: StoreFilters = {
     reasoning: true,
     activation: true,
     derivation: true,
+    translation: true,
   },
   searchQuery: "",
 };

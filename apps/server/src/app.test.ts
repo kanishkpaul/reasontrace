@@ -13,6 +13,10 @@ const TOKEN = "launch-token-for-tests";
 const OPENAI_FIXTURES = join(import.meta.dirname, "../../../packages/sources/openai/fixtures");
 const ANTHROPIC_FIXTURES = join(import.meta.dirname, "../../../packages/sources/anthropic/fixtures");
 const Z3_FIXTURES = join(import.meta.dirname, "../../../packages/engines/z3/fixtures");
+const PIPELINE_FIXTURES = join(import.meta.dirname, "../../../fixtures/pipelines");
+
+/** A stored run without what changes each time it is made. */
+const stable = (run: Run) => ({ ...run, manifest: { ...run.manifest, id: "run", createdAt: "", finishedAt: "" } });
 
 function setup(steps: ReplayStep[] = [], initialKeys: Record<string, string> = {}, webDir?: string) {
   const runsDir = mkdtempSync(join(tmpdir(), "rt-server-"));
@@ -177,6 +181,57 @@ describe("solves over the API", () => {
     expect(await status({ engine: "z3", problem: "  " })).toBe(400);
     expect(await status({ engine: "z3", problem: "(check-sat)", timeoutMs: 10 })).toBe(400);
     expect(await status({ engine: "nope", problem: "(check-sat)" })).toBe(404);
+    expect(readdirSync(runsDir)).toEqual([]);
+  });
+});
+
+describe("pipelines over the API", () => {
+  const AGES = "Ann is 30. Ben is more than 5 years older than Ann. Ben is younger than 34.";
+
+  test("a translation with a deliberate error shows where the formula departs from the text", async () => {
+    const { call, log, requests } = setup([readFixture(PIPELINE_FIXTURES, "ages-deliberate-error")]);
+    const response = await call("/api/pipelines", { method: "POST", body: JSON.stringify({ source: "llamacpp", model: "Qwen/Qwen3-0.6B-GGUF:Q8_0", text: AGES, engine: "z3", topLogprobs: 0 }) });
+    const messages: { event: string; data: unknown }[] = [];
+    for await (const message of readSse(response.body!)) messages.push({ event: message.event, data: JSON.parse(message.data) });
+    const { manifest } = messages.find((m) => m.event === "done")!.data as { manifest: RunManifest };
+
+    // The model was asked to quote the words each assertion encodes.
+    expect(JSON.parse(requests[0].body).messages[0].content).toContain(`Problem:\n${AGES}`);
+    expect(manifest.completion).toEqual({ state: "complete" });
+    expect(manifest.pipeline).toEqual({ text: AGES, engine: "z3", timeoutMs: 30_000 });
+    expect(manifest.title).toBe(`Qwen/Qwen3-0.6B-GGUF:Q8_0 → z3 · ${AGES.slice(0, 60)}`);
+    expect(log.at(-1)).toMatch(/pipeline\s+llama\.cpp server · Qwen\/Qwen3-0\.6B-GGUF:Q8_0 → z3 · complete/);
+
+    const run = (await (await call(`/api/runs/${manifest.id}`)).json()) as Run;
+    expect(run.trace.events.map((e) => [e.id, e.type, e.step])).toEqual([["output", "final_answer", 1], ["translation", "translation", 2], ["d1", "derivation", 3], ["a1", "final_answer", 3]]);
+    const translation = run.attachments.find((a) => a.kind === "nesy.translation/1")!.data;
+    expect(translation.assertions.map((a) => a.departures)).toEqual([[], [], [{ check: "numbers", detail: "The words give 34; the assertion has 43." }]]);
+    expect(AGES.slice(...translation.assertions[2].span!)).toBe("Ben is younger than 34");
+    // The departure changes the answer: the problem has no solution, the formula has one.
+    expect(run.trace.events.at(-1)?.content).toBe("sat");
+
+    // The viewer's tests read this run as stored.
+    expect(stable(run)).toEqual(JSON.parse(readFileSync(join(PIPELINE_FIXTURES, "ages-deliberate-error.run.json"), "utf8")));
+  });
+
+  test("a reply with no SMT-LIB ends the pipeline with the reason, and nothing is solved", async () => {
+    const { call } = setup([readFixture(OPENAI_FIXTURES, "llamacpp-reasoning-field")]);
+    const response = await call("/api/pipelines", { method: "POST", body: JSON.stringify({ source: "llamacpp", model: "m", text: AGES, engine: "z3" }) });
+    let manifest: RunManifest | undefined;
+    for await (const message of readSse(response.body!)) if (message.event === "done") manifest = JSON.parse(message.data).manifest;
+    expect(manifest!.completion).toEqual({ state: "error", reason: "The model's reply has no SMT-LIB in it, so there was nothing to solve." });
+    const run = (await (await call(`/api/runs/${manifest!.id}`)).json()) as Run;
+    expect(run.trace.events.some((e) => e.type === "translation" || e.type === "derivation")).toBe(false);
+  });
+
+  test("bad requests are refused before anything runs", async () => {
+    const { call, runsDir } = setup();
+    const status = async (body: unknown) => (await call("/api/pipelines", { method: "POST", body: JSON.stringify(body) })).status;
+    expect(await status({ source: "llamacpp", model: "m", engine: "z3" })).toBe(400);
+    expect(await status({ source: "llamacpp", model: "m", text: "x" })).toBe(400);
+    expect(await status({ source: "llamacpp", model: "m", text: "x", engine: "z3", solveTimeoutMs: 1 })).toBe(400);
+    expect(await status({ source: "llamacpp", model: "m", text: "x", engine: "nope" })).toBe(404);
+    expect(await status({ source: "nope", model: "m", text: "x", engine: "z3" })).toBe(404);
     expect(readdirSync(runsDir)).toEqual([]);
   });
 });

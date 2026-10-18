@@ -1,5 +1,5 @@
 import type { AnswerGrounding, EventType, ReasonTrace, TraceEvent, TraceDiagnostics, TraceFinding } from "@reasontrace/format";
-import { supportGraph, typeMask } from "./supportGraph";
+import { supportGraph, typeMask } from "./supportGraph.ts";
 
 /** Each check's rule and what it cannot tell, shown with every finding it raises. */
 const RULES = {

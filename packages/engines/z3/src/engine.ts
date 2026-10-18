@@ -97,7 +97,7 @@ export function z3Engine(limit = PROOF_LIMIT): Engine {
         try {
           solver.fromString(request.problem);
         } catch (error) {
-          return end({ completion: { state: "error", reason: `z3 could not read the problem: ${error instanceof Error ? error.message : String(error)}` }, unavailable: [] });
+          return end({ completion: { state: "error", reason: `Could not read the problem: ${error instanceof Error ? error.message : String(error)}` }, unavailable: [] });
         }
         const assertions = [...solver.assertions()];
         const result = await solver.check();

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { parsed } from "../../../test/traces";
-import { supportGraph, supportOrder, typeMask } from "./supportGraph";
+import { supportGraph, supportOrder, typeMask } from "./supportGraph.ts";
 
 // h supports a, a supports o; x stands alone. Listed out of order on purpose.
 const events = parsed(JSON.stringify({

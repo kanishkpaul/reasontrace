@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { parsed, traceFixture } from "../../../test/traces";
-import { computeDiagnostics } from "./diagnostics";
+import { computeDiagnostics } from "./diagnostics.ts";
 
 const diagnose = (text: string) => computeDiagnostics(parsed(text));
 /** A trace of `length` events of one type, each supported by the one before. */

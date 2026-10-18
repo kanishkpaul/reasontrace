@@ -11,6 +11,7 @@ const TYPE_BIT: Record<EventType, number> = {
   reasoning: 128,
   activation: 256,
   derivation: 512,
+  translation: 1024,
 };
 
 /** A set of event types as a bitmask, for testing against `SupportGraph` masks. */

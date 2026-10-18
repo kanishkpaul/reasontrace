@@ -104,7 +104,7 @@ function normaliseType(value: unknown): EventType {
   if (["answer", "final", "assistant_final"].includes(raw)) return "final_answer";
   if (["update", "belief", "conclusion"].includes(raw)) return "belief_update";
   if (["error", "exception", "hallucination"].includes(raw)) return "failure";
-  return ["hypothesis", "action", "observation", "belief_update", "failure", "decision", "final_answer", "reasoning", "activation", "derivation"].includes(raw)
+  return ["hypothesis", "action", "observation", "belief_update", "failure", "decision", "final_answer", "reasoning", "activation", "derivation", "translation"].includes(raw)
     ? raw as EventType
     : "hypothesis";
 }

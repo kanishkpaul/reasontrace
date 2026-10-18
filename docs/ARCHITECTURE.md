@@ -257,3 +257,25 @@ changes the proof z3 produces, so the core comes from a second check, and it
 can differ from the assertions the proof rests on. The engine's tests compare
 its derivations of small problems with hand-checked fixtures in
 `packages/engines/z3/fixtures`, so a change in z3's output fails them.
+
+## 10. Pipelines
+
+A pipeline is a model and an engine in one run: `POST /api/pipelines` takes a
+run's fields with a problem in words as `text`, and an engine. The server
+wraps the text in instructions (`translationPrompt` in `packages/analysis`)
+asking for SMT-LIB with a comment before each assertion quoting the words it
+encodes, runs the source, and takes the formula from the reply. The formula
+is a `translation` event, `observed`, with a `nesy.translation/1` attachment
+that lines each assertion up against the words it quotes and lists where it
+departs from them: quoted words the problem doesn't contain, numbers that
+differ, comparisons that don't match, sentences nothing quotes. Those checks
+read words, not meaning, so the attachment is `inferred` and records its
+rules and limits. The engine then solves the formula, and its events follow
+the model's. The manifest's `request` is the model's, and `pipeline` holds
+the text and the engine.
+
+The model's internals at the handoff are whatever its source captures: from
+the full tier, the residual stream at the last generated token, where it
+hands the formula over; from any other tier, unavailable with the source's
+reason. The viewer's handoff view sets the problem, the formula and the
+engine's result side by side.

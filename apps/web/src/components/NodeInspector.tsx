@@ -26,6 +26,7 @@ function readingOf(event: TraceEvent): string {
       : "Reasoning text the model emitted before answering. It is the model's own account, not a reading of its internal state; it can leave out what drove the answer.",
     activation: "Raw values captured from inside the model. They are measurements with no interpretation; what a layer represents takes a decoder and its control.",
     derivation: "A symbolic engine's own record of how it reached its result: a proof, a model or an unsat core, read from the engine rather than reconstructed. A proof step follows from the steps it names by the rule it names; a model can be checked by substituting it into the problem.",
+    translation: "The formula the model wrote for the solver, taken from its reply. Which words each assertion encodes is the model's own claim; the departures are rule-based checks that read words, not meaning. The handoff view sets the text, the formula and the solver's result side by side.",
     final_answer: "The trace's final answer. Follow its support links back to see which observations it rests on; the links show what the trace declares, not whether the answer is right.",
   };
   return readings[event.type];

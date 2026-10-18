@@ -1,0 +1,210 @@
+{
+ "manifest": {
+  "formatVersion": 1,
+  "id": "run",
+  "title": "Qwen/Qwen3-0.6B-GGUF:Q8_0 → z3 · Ann is 30. Ben is more than 5 years older than Ann. Ben is y",
+  "createdAt": "",
+  "source": {
+   "id": "llamacpp",
+   "name": "llama.cpp server",
+   "tier": "local",
+   "baseUrl": "http://127.0.0.1:8080/v1"
+  },
+  "request": {
+   "model": "Qwen/Qwen3-0.6B-GGUF:Q8_0",
+   "prompt": "Translate the problem below into SMT-LIB 2 for the z3 solver.\nDeclare every constant you use. Before each (assert ...), write a comment that quotes, word for word, the words of the problem it encodes. For example:\n; \"x is above 2\"\n(assert (> x 2))\nReply with the SMT-LIB in one ```smt2 code block and nothing after it.\n\nProblem:\nAnn is 30. Ben is more than 5 years older than Ann. Ben is younger than 34.",
+   "maxTokens": 1024,
+   "topLogprobs": 0,
+   "timeoutMs": 120000
+  },
+  "pipeline": {
+   "text": "Ann is 30. Ben is more than 5 years older than Ann. Ben is younger than 34.",
+   "engine": "z3",
+   "timeoutMs": 30000
+  },
+  "unavailable": [
+   {
+    "depth": "internals",
+    "reason": "llama.cpp server is reached over HTTP, which exposes no activations. The full tier reads them from local weights."
+   },
+   {
+    "depth": "stated",
+    "reason": "The model returned no reasoning text."
+   },
+   {
+    "depth": "probabilities",
+    "reason": "Not requested for this run."
+   }
+  ],
+  "versions": {
+   "reasontrace": "test",
+   "z3": "5.1.0"
+  },
+  "completion": {
+   "state": "complete"
+  },
+  "finishedAt": "",
+  "providerRequest": {
+   "model": "Qwen/Qwen3-0.6B-GGUF:Q8_0",
+   "messages": [
+    {
+     "role": "user",
+     "content": "Translate the problem below into SMT-LIB 2 for the z3 solver.\nDeclare every constant you use. Before each (assert ...), write a comment that quotes, word for word, the words of the problem it encodes. For example:\n; \"x is above 2\"\n(assert (> x 2))\nReply with the SMT-LIB in one ```smt2 code block and nothing after it.\n\nProblem:\nAnn is 30. Ben is more than 5 years older than Ann. Ben is younger than 34."
+    }
+   ],
+   "stream": true,
+   "stream_options": {
+    "include_usage": true
+   },
+   "max_tokens": 1024
+  },
+  "respondingModel": "Qwen/Qwen3-0.6B-GGUF:Q8_0",
+  "usage": {
+   "inputTokens": 120,
+   "outputTokens": 80
+  }
+ },
+ "trace": {
+  "formatVersion": 1,
+  "title": "Qwen/Qwen3-0.6B-GGUF:Q8_0 → z3 · Ann is 30. Ben is more than 5 years older than Ann. Ben is y",
+  "events": [
+   {
+    "step": 1,
+    "depth": "behaviour",
+    "label": "observed",
+    "supports": [],
+    "source": "llama.cpp server",
+    "id": "output",
+    "type": "final_answer",
+    "content": "```smt2\n(declare-const ann Int)\n(declare-const ben Int)\n; \"Ann is 30\"\n(assert (= ann 30))\n; \"Ben is more than 5 years older than Ann\"\n(assert (> ben (+ ann 5)))\n; \"Ben is younger than 34\"\n(assert (< ben 43))\n```",
+    "metadata": {
+     "finishReason": "stop"
+    }
+   },
+   {
+    "id": "translation",
+    "type": "translation",
+    "step": 2,
+    "depth": "behaviour",
+    "label": "observed",
+    "content": "(declare-const ann Int)\n(declare-const ben Int)\n; \"Ann is 30\"\n(assert (= ann 30))\n; \"Ben is more than 5 years older than Ann\"\n(assert (> ben (+ ann 5)))\n; \"Ben is younger than 34\"\n(assert (< ben 43))",
+    "supports": [
+     "output"
+    ],
+    "source": "pipeline"
+   },
+   {
+    "id": "d1",
+    "type": "derivation",
+    "step": 3,
+    "content": "Model: 2 values",
+    "depth": "internals",
+    "label": "exact",
+    "supports": [],
+    "source": "z3"
+   },
+   {
+    "id": "a1",
+    "type": "final_answer",
+    "step": 3,
+    "content": "sat",
+    "depth": "behaviour",
+    "label": "observed",
+    "supports": [
+     "d1"
+    ],
+    "source": "z3"
+   }
+  ],
+  "unavailable": [
+   {
+    "depth": "internals",
+    "reason": "llama.cpp server is reached over HTTP, which exposes no activations. The full tier reads them from local weights."
+   },
+   {
+    "depth": "stated",
+    "reason": "The model returned no reasoning text."
+   },
+   {
+    "depth": "probabilities",
+    "reason": "Not requested for this run."
+   }
+  ]
+ },
+ "attachments": [
+  {
+   "kind": "nesy.translation/1",
+   "eventId": "translation",
+   "label": "inferred",
+   "data": {
+    "text": "Ann is 30. Ben is more than 5 years older than Ann. Ben is younger than 34.",
+    "formula": "(declare-const ann Int)\n(declare-const ben Int)\n; \"Ann is 30\"\n(assert (= ann 30))\n; \"Ben is more than 5 years older than Ann\"\n(assert (> ben (+ ann 5)))\n; \"Ben is younger than 34\"\n(assert (< ben 43))",
+    "assertions": [
+     {
+      "formula": "(assert (= ann 30))",
+      "quote": "Ann is 30",
+      "span": [
+       0,
+       9
+      ],
+      "departures": []
+     },
+     {
+      "formula": "(assert (> ben (+ ann 5)))",
+      "quote": "Ben is more than 5 years older than Ann",
+      "span": [
+       11,
+       50
+      ],
+      "departures": []
+     },
+     {
+      "formula": "(assert (< ben 43))",
+      "quote": "Ben is younger than 34",
+      "span": [
+       52,
+       74
+      ],
+      "departures": [
+       {
+        "check": "numbers",
+        "detail": "The words give 34; the assertion has 43."
+       }
+      ]
+     }
+    ],
+    "unencoded": [],
+    "rules": [
+     "Each assertion's comment quotes words that are in the problem, ignoring case and spacing.",
+     "The numbers in the quoted words, as digits or as words up to twelve, are the numbers in the assertion.",
+     "Where the quoted words name a comparison (above, at least, younger than…), the assertion makes that comparison, read with the symbol on the left.",
+     "Every sentence of the problem is quoted by some assertion."
+    ],
+    "limitations": "The checks read words, not meaning. They do not check which side of a comparison each symbol is on, negation in the words, or units, so a wrong formula can pass. An equivalent rewriting, such as x > 17 for at least 18, is flagged. The quotes are the model's own claim about what each assertion encodes."
+   }
+  },
+  {
+   "kind": "symbolic.model/1",
+   "eventId": "d1",
+   "label": "exact",
+   "engine": {
+    "name": "z3",
+    "version": "5.1.0"
+   },
+   "data": {
+    "values": [
+     {
+      "name": "ann",
+      "sort": "Int",
+      "value": "30"
+     },
+     {
+      "name": "ben",
+      "sort": "Int",
+      "value": "36"
+     }
+    ]
+   }
+  }
+ ]
+}
