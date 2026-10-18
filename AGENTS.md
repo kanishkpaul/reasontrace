@@ -72,8 +72,9 @@ npm run check
 ```
 
 The Python sidecar has its own tests. Without the model runtime they skip the
-reference test and the decoder ground-truth test. With the runtime they run the
-ground-truth test, and with the Qwen3 0.6B weights as well, the reference test:
+reference test and the decoder tests. With the runtime they run the
+ground-truth test; with the Qwen3 0.6B weights, the reference and logit-lens
+tests; and with Gemma 3 1B and its Gemma Scope 2 SAE, the SAE gate:
 
 ```bash
 uv run --directory bridge/python --frozen --group dev pytest

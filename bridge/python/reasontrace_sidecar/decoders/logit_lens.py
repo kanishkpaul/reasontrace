@@ -31,3 +31,9 @@ def logits(hidden: torch.Tensor, via: Readout) -> torch.Tensor:
     """Token logits for hidden states of shape [..., width]."""
     with torch.no_grad():
         return via.norm(hidden) @ via.unembed.T
+
+
+def top(hidden: torch.Tensor, via: Readout, k: int) -> tuple[torch.Tensor, torch.Tensor]:
+    """The `k` likeliest tokens for each hidden state of shape [positions, width]: log-probabilities and token ids."""
+    with torch.no_grad():
+        return torch.log_softmax(logits(hidden, via).float(), dim=-1).topk(k, dim=-1)

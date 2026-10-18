@@ -4,15 +4,18 @@ Methods:
 - hello: versions and device, or why the model runtime can't load.
 - models: the supported models and whether their weights are downloaded.
 - run: generates, streaming `delta` notifications, and captures to the plan.
+- decode: runs the decoders over a finished run's directory and adds their attachments.
 - cancel: stops the run with the given request id.
 
 The process ends when stdin closes.
 """
 
 import concurrent.futures
+import functools
 import sys
 import threading
 import traceback
+from pathlib import Path
 from typing import Any
 
 from .plan import read_plan
@@ -22,9 +25,10 @@ PROTOCOL = 1
 
 
 def load_runtime() -> tuple[Any, str | None]:
-    """The runtime module, or None and the reason it can't be imported."""
+    """The runtime module, or None and the reason it can't be imported. Importing it checks the decoders' libraries too."""
     try:
         from . import runtime
+        from .decoders import runner  # noqa: F401
     except ImportError as e:
         return None, f"The model runtime is not installed ({e}). Run `uv sync --extra model` in bridge/python."
     return runtime, None
@@ -44,17 +48,25 @@ def main() -> None:
     host = runtime.Host() if runtime else None
     worker = concurrent.futures.ThreadPoolExecutor(max_workers=1)
     cancels: dict[Any, threading.Event] = {}
+    if runtime:
+        from .decoders import runner, sae
 
-    def run(request_id: Any, params: dict[str, Any]) -> None:
-        cancel = cancels[request_id]
-        send = lambda ch, text: channel.notify("delta", {"id": request_id, "channel": ch, "text": text})
+        saes = sae.Loaded()
+
+    def answer(request_id: Any, work) -> None:
         try:
-            channel.result(request_id, host.run(params, read_plan, send, cancel))
+            channel.result(request_id, work())
         except RpcError as e:
             channel.error(request_id, e.code, str(e))
         except Exception as e:
             traceback.print_exc(file=sys.stderr)
             channel.error(request_id, INTERNAL_ERROR, f"{type(e).__name__}: {e}")
+
+    def run(request_id: Any, params: dict[str, Any]) -> None:
+        cancel = cancels[request_id]
+        send = lambda ch, text: channel.notify("delta", {"id": request_id, "channel": ch, "text": text})
+        try:
+            answer(request_id, lambda: host.run(params, read_plan, send, cancel))
         finally:
             cancels.pop(request_id, None)
 
@@ -83,6 +95,12 @@ def main() -> None:
                 check_run(params)
                 cancels[request_id] = threading.Event()
                 worker.submit(run, request_id, params)
+            elif method == "decode":
+                if missing:
+                    raise RpcError(UNAVAILABLE, missing)
+                if not isinstance(params.get("runDir"), str):
+                    raise RpcError(INVALID_PARAMS, "decode needs `runDir` (str).")
+                worker.submit(answer, request_id, functools.partial(runner.decode_run, host, Path(params["runDir"]), saes))
             elif method == "cancel":
                 event = cancels.get(params.get("id"))
                 if event:

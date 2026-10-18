@@ -35,9 +35,10 @@ row says **adopted**, its licence column is unverified.
 | uv | the sidecar's Python environment and lockfile | github.com/astral-sh/uv | MIT or Apache-2.0 | — | adopted (tool) |
 | pytest | the sidecar's tests | github.com/pytest-dev/pytest | MIT | — | adopted |
 | Qwen3 0.6B | full-tier model; source of the stored capture reference | huggingface.co/Qwen/Qwen3-0.6B | Apache-2.0 | — | adopted |
-| Gemma 3 1B instruct | full-tier model | huggingface.co/google/gemma-3-1b-it | to verify: the repository is gated, so its terms weren't read here | Qwen3 alone covers the full tier | supported, not downloaded |
+| Gemma 3 1B instruct | full-tier model; the model the Gemma Scope 2 SAE reads | huggingface.co/google/gemma-3-1b-it | Gemma Terms of Use (model card `license: gemma`, ai.google.dev/gemma/terms), accepted on Hugging Face | Qwen3 alone covers the full tier | adopted |
 | Logit lens | reading a layer's hidden state through the final norm and unembedding | nostalgebraist, "interpreting GPT: the logit lens", LessWrong, 2020 | idea only; no code taken | — | adopted |
-| SAELens | loading and encoding SAEs | github.com/jbloomAus/SAELens | to verify | — | planned (phase 6) |
-| Gemma Scope 2 | SAE and transcoder weights for Gemma 3 | huggingface.co/google/gemma-scope-2-* | to verify; weights may carry terms separate from code | decoder support dropped for Gemma | planned (phase 6) |
+| SAELens | loading and running the Gemma Scope 2 SAE in the sidecar | github.com/jbloomAus/SAELens | MIT | — | adopted |
+| TransformerLens | a dependency of SAELens; not used directly | github.com/TransformerLensOrg/TransformerLens | MIT | SAELens drops it | adopted (transitive) |
+| Gemma Scope 2 | the layer-13 residual SAE for Gemma 3 1B instruct; its paper's Figure 7 gives the reconstruction range the phase 6 gate checks | huggingface.co/google/gemma-scope-2-1b-it | CC-BY-4.0 (model card `license: cc-by-4.0`) | decoder support dropped for Gemma | adopted |
 | z3-solver | SMT solver, official WebAssembly build | github.com/Z3Prover/z3 | to verify | — | planned (phase 8) |
 | Daedalus practices | run directories, failure modes, honest zeros, borrowing ledger | the author's Daedalus repository | own work | — | adopted |
