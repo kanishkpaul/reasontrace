@@ -1,5 +1,6 @@
 import type { TokenLogprob } from "@reasontrace/format";
 import { useState } from "react";
+import { shown } from "../lib/tokens";
 import { EvidenceLabel } from "./EvidenceLabel";
 
 /**
@@ -16,9 +17,6 @@ function bin(logprob: number): number {
 }
 
 const percent = (logprob: number) => `${(Math.exp(logprob) * 100).toFixed(1)}%`;
-
-/** Visible stand-ins for tokens that are only whitespace. */
-const shown = (token: string) => token.replace(/\n/g, "↵").replace(/^ +$/, (s) => "·".repeat(s.length)) || "∅";
 
 /** The generated tokens with their probabilities, and the alternatives for the one selected. */
 export function TokenView({ tokens }: { tokens: TokenLogprob[] }) {

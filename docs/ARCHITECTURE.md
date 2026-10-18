@@ -199,7 +199,7 @@ only) and Vite, which puts the same token in the page and forwards `/api`.
 `bridge/python/` is a uv project. The server starts it on first use, through
 `uv run --extra model python -m reasontrace_sidecar`, and talks to it over
 JSON-RPC 2.0 on stdio, one message per line: `hello`, `models`, `run` (which
-streams `delta` notifications) and `cancel`. `packages/sidecar` is the client,
+streams `delta` notifications), `decode` and `cancel`. `packages/sidecar` is the client,
 and registers it as the `weights` source.
 
 It runs open-weights models (Gemma 3 1B, Qwen3 0.6B, on Apple MPS where
@@ -210,8 +210,14 @@ run directory's `tensors/` as safetensors; events and the manifest come back
 over JSON-RPC and the server writes them. The manifest records device, dtype,
 quantisation, the cache setting, seed, the weights' revision, library versions
 and sampled peak memory. The decoders and their ground-truth harness live here
-too (§4). Later phases run decoders on real runs (logit lens, Gemma Scope
-SAEs through SAELens).
+too (§4). After each run, the weights source asks the sidecar to `decode` the
+run directory: the logit lens reads every captured layer at every captured
+position, and for Gemma 3 1B the Gemma Scope 2 layer-13 residual SAE, through
+SAELens, gives each position's strongest features, its L0 and the
+reconstruction's FVU. Each decoder writes `attachments/<kind>.jsonl`. A
+decoder that can't run (no SAE for the model, its layer not captured, a pooled
+capture) is recorded with its reason on the activation event, as
+`metadata.decoders`.
 
 Without uv, Python or the model runtime, every depth of the full tier is
 unavailable with that reason, and nothing else changes.

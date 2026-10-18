@@ -73,6 +73,21 @@ describe("weights source, replaying a recorded Qwen3 run", () => {
     expect(run.manifest.providerRequest).toMatchObject({ do_sample: false, use_cache: true, max_new_tokens: 400 });
     expect(run.manifest.unavailable).toEqual([]);
   });
+
+  test("the decoders add their attachments, and one that can't run says why", async () => {
+    const s = source();
+    const { root, w } = writer();
+    w.finish(await s.run(request, w, new AbortController().signal));
+    const run = readRun(root, w.manifest.id);
+
+    const lens = run.attachments.find((a) => a.kind === "lens.logit/1");
+    expect(lens).toMatchObject({ eventId: "activations", label: "decoded", method: { name: "logit lens", version: "1" }, validation: { status: "validated" } });
+    expect(lens?.kind === "lens.logit/1" && lens.data.top).toHaveLength(28);
+    expect(run.trace.events[2].metadata?.decoders).toEqual([
+      { kind: "lens.logit/1", attached: true, reason: null },
+      { kind: "sae.features/1", attached: false, reason: "Gemma Scope 2 has SAEs for Gemma 3 only, not qwen3-0.6b." },
+    ]);
+  });
 });
 
 describe("weights source, when things go wrong", () => {
@@ -110,6 +125,19 @@ describe("weights source, when things go wrong", () => {
     const { w } = writer();
     const outcome = await s.run(request, w, new AbortController().signal);
     expect(outcome.completion).toMatchObject({ state: "error", reason: expect.stringMatching(/exited \(code 3\): RuntimeError: MPS backend out of memory/) });
+  });
+
+  test("a decoder failure is recorded on the activations and leaves the run complete", async () => {
+    const s = source("undecodable");
+    const { root, w } = writer();
+    const outcome = await s.run(request, w, new AbortController().signal);
+    w.finish(outcome);
+    const run = readRun(root, w.manifest.id);
+    expect(outcome.completion).toEqual({ state: "complete" });
+    expect(run.attachments.some((a) => a.label === "decoded")).toBe(false);
+    expect(run.trace.events.at(-1)?.metadata?.decoders).toEqual([
+      { kind: "decoders", attached: false, reason: "Decoding failed: RuntimeError: MPS backend out of memory" },
+    ]);
   });
 
   test("an error the sidecar returns, such as a gated model, is the run's error", async () => {

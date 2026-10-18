@@ -1,6 +1,6 @@
 import { join } from "node:path";
 import { stoppedBy, type Capabilities, type EventSink, type ModelInfo, type RunOutcome, type Source } from "@reasontrace/core";
-import type { CapturePlan, Completion, Depth, ResidualAttachment, RunRequest, Runtime, TokenLogprob, TraceEvent, UnavailableDepth } from "@reasontrace/format";
+import type { CapturePlan, Completion, DecoderOutcome, Depth, ResidualAttachment, RunRequest, Runtime, TokenLogprob, TraceEvent, UnavailableDepth } from "@reasontrace/format";
 import { Sidecar, SidecarError, type SidecarCommand } from "./client.ts";
 
 /** Every layer at the last position: about 115 KB for Qwen3 0.6B, small enough to keep for every run. */
@@ -143,14 +143,22 @@ export function weightsSource(command: SidecarCommand): Source & { stop(): Promi
 
       if (result.capture) {
         const { layers, positions, dModel, pooling, file } = result.capture;
+        // The decoders read the residual stream from the run directory, so it is attached first.
+        sink.attach({ kind: "activations.residual/1", eventId: "activations", label: "measured", data: result.capture });
+        let decoders: DecoderOutcome[];
+        try {
+          decoders = await process.request<DecoderOutcome[]>("decode", { runDir: sink.dir });
+        } catch (error) {
+          decoders = [{ kind: "decoders", attached: false, reason: `Decoding failed: ${error instanceof Error ? error.message : String(error)}` }];
+        }
         record({
           id: "activations",
           type: "activation",
           depth: "internals",
           label: "measured",
           content: `Residual stream at ${layers.length} layer${layers.length === 1 ? "" : "s"} × ${pooling === "mean" ? `mean of ${positions.length}` : positions.length} position${positions.length === 1 ? "" : "s"}, ${dModel} wide, float32, in ${file}.`,
+          metadata: { decoders },
         });
-        sink.attach({ kind: "activations.residual/1", eventId: "activations", label: "measured", data: result.capture });
       } else {
         found.push({ depth: "internals", reason: "The run stopped before capture, which runs after generation." });
       }

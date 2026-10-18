@@ -1,11 +1,11 @@
-import type { EventType, TraceEvent } from "@reasontrace/format";
+import type { DecoderOutcome, EventType, TraceEvent } from "@reasontrace/format";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { EVENT_TYPES } from "../lib/eventTypes";
 import { CheckIcon, CopyIcon, ICON } from "../lib/icons";
 import { useTraceStore } from "../store";
 import { DecodedView } from "./DecodedView";
-import { EvidenceLabel } from "./EvidenceLabel";
+import { EvidenceLabel, Unavailable } from "./EvidenceLabel";
 import { ResidualView } from "./ResidualView";
 import { TokenView } from "./TokenView";
 
@@ -48,6 +48,7 @@ export function NodeInspector() {
   const tokens = attached.find((a) => a.kind === "probs.top_k/1")?.data.tokens;
   const residual = attached.find((a) => a.kind === "activations.residual/1")?.data;
   const decoded = attached.filter((a) => a.label === "decoded");
+  const missing = ((event?.metadata?.decoders ?? []) as DecoderOutcome[]).filter((d) => !d.attached);
 
   if (!event) {
     return (
@@ -99,6 +100,12 @@ export function NodeInspector() {
       {tokens && <TokenView tokens={tokens} />}
       {residual && <ResidualView capture={residual} />}
       {decoded.map((a, i) => <DecodedView key={`${a.kind}-${i}`} attachment={a} />)}
+      {missing.length > 0 && (
+        <section className="decoders-missing">
+          <h3 className="section-heading">Decoders not run</h3>
+          {missing.map((d) => <Unavailable key={d.kind} reason={`${d.kind}: ${d.reason}`} />)}
+        </section>
+      )}
 
       <LinkedEvents title="Supported by" events={supportedBy} empty="No support declared." onSelect={select} />
       <LinkedEvents title="Supports" events={supports} empty="Nothing declares this as support." onSelect={select} />

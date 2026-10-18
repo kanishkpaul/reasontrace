@@ -1,0 +1,12 @@
+[
+  {
+    "kind": "lens.logit/1",
+    "attached": true,
+    "reason": null
+  },
+  {
+    "kind": "sae.features/1",
+    "attached": false,
+    "reason": "Gemma Scope 2 has SAEs for Gemma 3 only, not qwen3-0.6b."
+  }
+]

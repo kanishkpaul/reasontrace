@@ -3,24 +3,22 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, test } from "vitest";
-import type { DecodedAttachment, Run, Validation } from "@reasontrace/format";
+import type { LogitLensAttachment, Run, SaeFeaturesAttachment, Validation } from "@reasontrace/format";
 import { useTraceStore } from "../store";
 import { DecodedView } from "./DecodedView";
 import { NodeInspector } from "./NodeInspector";
 
 afterEach(cleanup);
 
-/** The logit lens's validation as the sidecar's harness wrote it. */
-const stored: Validation = JSON.parse(readFileSync(join(import.meta.dirname, "../../../../fixtures/validation/lens.logit-1.json"), "utf8"));
+const fixture = <T,>(path: string): T => JSON.parse(readFileSync(join(import.meta.dirname, "../../../../fixtures", path), "utf8"));
 
-const lens = (validation: Validation | null, version = "1"): DecodedAttachment => ({
-  kind: "lens.logit/1",
-  eventId: "activations",
-  label: "decoded",
-  method: { name: "logit lens", version },
-  validation,
-  data: { layers: [0, 1], top: [["Paris"], ["Paris"]] },
-});
+/** The logit lens's validation as the sidecar's harness wrote it. */
+const stored = fixture<Validation>("validation/lens.logit-1.json");
+/** What the sidecar's decoders attached to a Gemma 3 1B run that answered "Paris", at the last position. */
+const gemmaLens = fixture<LogitLensAttachment>("attachments/gemma-3-1b-it-lens.logit-1.json");
+const gemmaSae = fixture<SaeFeaturesAttachment>("attachments/gemma-3-1b-it-sae.features-1.json");
+
+const lens = (validation: Validation | null, version = "1"): LogitLensAttachment => ({ ...gemmaLens, method: { ...gemmaLens.method, version }, validation });
 
 describe("a decoded attachment", () => {
   test("validated by the harness, it shows the ground truth and each control failing", () => {
@@ -58,6 +56,24 @@ describe("a decoded attachment", () => {
     expect(screen.getByText(/validation is for logit lens version 1/)).toBeTruthy();
   });
 
+  test("the logit lens shows the likeliest token at every captured layer", () => {
+    render(<DecodedView attachment={gemmaLens} />);
+    expect(screen.getByRole("heading", { name: "Likeliest next token, by layer" })).toBeTruthy();
+    expect(screen.getByText(/At position 23, token "<end_of_turn>"/)).toBeTruthy();
+    // Gemma 3 1B's 26 layers, then the planted model's layers in the validation.
+    expect(screen.getAllByText(/^layer \d+$/)).toHaveLength(26 + gemmaLens.validation!.byLayer.length);
+  });
+
+  test("SAE features are unvalidated, and say when there were too few positions for FVU", () => {
+    render(<DecodedView attachment={gemmaSae} />);
+    expect(screen.getByText("unvalidated")).toBeTruthy();
+    expect(screen.getByText(/No control was run/)).toBeTruthy();
+    expect(screen.getByText("gemma-scope-2-1b-it-res / layer_13_width_65k_l0_medium")).toBeTruthy();
+    expect(screen.getByText(/not estimated: 1 position, too few/)).toBeTruthy();
+    expect(screen.getByText("feature 160")).toBeTruthy();
+    expect(screen.getByText(/46 features active/)).toBeTruthy();
+  });
+
   test("the step detail shows it under the event it decodes", () => {
     const run: Run = {
       manifest: {
@@ -75,7 +91,10 @@ describe("a decoded attachment", () => {
         formatVersion: 1,
         title: "qwen3-0.6b · hi",
         unavailable: [],
-        events: [{ id: "activations", type: "activation", step: 1, depth: "internals", label: "measured", content: "Residual stream", supports: [] }],
+        events: [{
+          id: "activations", type: "activation", step: 1, depth: "internals", label: "measured", content: "Residual stream", supports: [],
+          metadata: { decoders: [{ kind: "lens.logit/1", attached: true, reason: null }, { kind: "sae.features/1", attached: false, reason: "Gemma Scope 2 has SAEs for Gemma 3 only, not qwen3-0.6b." }] },
+        }],
       },
       attachments: [lens(stored)],
     };
@@ -85,5 +104,6 @@ describe("a decoded attachment", () => {
     const section = screen.getByRole("heading", { name: "logit lens" }).closest("section")!;
     expect(within(section).getByText("validated")).toBeTruthy();
     expect(within(section).getByText("lens.logit/1")).toBeTruthy();
+    expect(screen.getByText("unavailable: sae.features/1: Gemma Scope 2 has SAEs for Gemma 3 only, not qwen3-0.6b.")).toBeTruthy();
   });
 });

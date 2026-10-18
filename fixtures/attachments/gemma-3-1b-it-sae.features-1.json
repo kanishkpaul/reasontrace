@@ -1,0 +1,54 @@
+{
+ "kind": "sae.features/1",
+ "eventId": "activations",
+ "label": "decoded",
+ "method": {
+  "name": "Gemma Scope 2 SAE",
+  "version": "1"
+ },
+ "validation": null,
+ "data": {
+  "release": "gemma-scope-2-1b-it-res",
+  "saeId": "layer_13_width_65k_l0_medium",
+  "layer": 13,
+  "width": 65536,
+  "positions": [
+   23
+  ],
+  "tokens": [
+   "<end_of_turn>"
+  ],
+  "top": [
+   [
+    {
+     "feature": 160,
+     "activation": 461.56292724609375
+    },
+    {
+     "feature": 286,
+     "activation": 404.781005859375
+    },
+    {
+     "feature": 853,
+     "activation": 398.3956298828125
+    },
+    {
+     "feature": 230,
+     "activation": 334.4151611328125
+    },
+    {
+     "feature": 779,
+     "activation": 301.94482421875
+    }
+   ]
+  ],
+  "l0": [
+   46
+  ],
+  "special": [
+   false
+  ],
+  "fvu": null,
+  "fvuPositions": 1
+ }
+}

@@ -263,14 +263,60 @@ export interface Validation {
 }
 
 /** An interpretation of internals by a decoder (docs/CHARTER.md §2, `decoded`). */
-export interface DecodedAttachment {
-  kind: `lens.${string}` | `sae.${string}`;
+export type DecodedAttachment = LogitLensAttachment | SaeFeaturesAttachment;
+
+interface Decoded {
+  /** The activation event whose captured stream was decoded. */
   eventId: string;
   label: "decoded";
   method: { name: string; version: string };
   /** Null when no control was run; the viewer then shows the attachment as unvalidated. */
   validation: Validation | null;
-  data: Record<string, unknown>;
+}
+
+/** Each captured layer read through the final norm and unembedding, at each captured position. */
+export interface LogitLensAttachment extends Decoded {
+  kind: "lens.logit/1";
+  data: {
+    layers: number[];
+    positions: number[];
+    /** The token at each position. */
+    tokens: string[];
+    /** By layer, then position: the likeliest tokens, likeliest first. */
+    top: { token: string; logprob: number }[][][];
+  };
+}
+
+/** One layer's residual stream encoded by a sparse autoencoder, at each captured position. */
+export interface SaeFeaturesAttachment extends Decoded {
+  kind: "sae.features/1";
+  data: {
+    /** The SAE as SAELens names it. */
+    release: string;
+    saeId: string;
+    layer: number;
+    /** How many features the SAE has. */
+    width: number;
+    positions: number[];
+    tokens: string[];
+    /** By position: the strongest active features, strongest first. */
+    top: { feature: number; activation: number }[][];
+    /** By position: how many features are active. */
+    l0: number[];
+    /** By position: whether the token is a special token, which FVU leaves out. */
+    special: boolean[];
+    /** Fraction of variance unexplained by the reconstruction, over the positions that are not special tokens. Null when there are too few to estimate the variance. */
+    fvu: number | null;
+    fvuPositions: number;
+  };
+}
+
+/** What became of one decoder on a run, recorded on the activation event as `metadata.decoders`. */
+export interface DecoderOutcome {
+  kind: string;
+  attached: boolean;
+  /** Why it did not attach. Null when it did. */
+  reason: string | null;
 }
 
 /** A run as stored in its run directory. */

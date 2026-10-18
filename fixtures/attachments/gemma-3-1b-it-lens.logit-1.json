@@ -1,0 +1,711 @@
+{
+ "kind": "lens.logit/1",
+ "eventId": "activations",
+ "label": "decoded",
+ "method": {
+  "name": "logit lens",
+  "version": "1"
+ },
+ "validation": {
+  "decoder": {
+   "kind": "lens.logit/1",
+   "name": "logit lens",
+   "version": "1"
+  },
+  "status": "validated",
+  "reason": null,
+  "groundTruth": "A 4-layer Qwen3-architecture model with hand-written weights and a 64-token vocabulary. It answers σ(x) = (7x + 3) mod 64 for the last token x. Layer 1 writes x into dimensions the unembedding never reads; layer 2 writes σ(x) into the unembedding's basis.",
+  "metric": "top-1 accuracy of the decoded token against the planted variable, at the last position",
+  "items": 64,
+  "score": 1.0,
+  "required": 0.9,
+  "chance": 0.015625,
+  "chanceBound": 0.09375,
+  "byLayer": [
+   0.0,
+   0.0,
+   1.0,
+   1.0
+  ],
+  "recoveredFrom": 2,
+  "controls": [
+   {
+    "control": "random direction",
+    "score": 0.015625,
+    "succeeded": false
+   },
+   {
+    "control": "shuffled inputs",
+    "score": 0.015625,
+    "succeeded": false
+   },
+   {
+    "control": "untrained weights",
+    "score": 0.03125,
+    "succeeded": false
+   }
+  ]
+ },
+ "data": {
+  "layers": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19,
+   20,
+   21,
+   22,
+   23,
+   24,
+   25
+  ],
+  "positions": [
+   23
+  ],
+  "tokens": [
+   "<end_of_turn>"
+  ],
+  "top": [
+   [
+    [
+     {
+      "token": "ation",
+      "logprob": -0.00144413101952523
+     },
+     {
+      "token": "的看着",
+      "logprob": -6.99478006362915
+     },
+     {
+      "token": "ante",
+      "logprob": -7.826563358306885
+     },
+     {
+      "token": "ের",
+      "logprob": -9.744607925415039
+     },
+     {
+      "token": "的",
+      "logprob": -10.371999740600586
+     }
+    ]
+   ],
+   [
+    [
+     {
+      "token": "s",
+      "logprob": -0.4748868942260742
+     },
+     {
+      "token": "ation",
+      "logprob": -1.1258001327514648
+     },
+     {
+      "token": "st",
+      "logprob": -3.3625402450561523
+     },
+     {
+      "token": "t",
+      "logprob": -4.07645320892334
+     },
+     {
+      "token": "ের",
+      "logprob": -6.758242607116699
+     }
+    ]
+   ],
+   [
+    [
+     {
+      "token": "s",
+      "logprob": -0.5714892148971558
+     },
+     {
+      "token": "st",
+      "logprob": -0.9952982664108276
+     },
+     {
+      "token": "ation",
+      "logprob": -3.5305614471435547
+     },
+     {
+      "token": "t",
+      "logprob": -3.6697559356689453
+     },
+     {
+      "token": "ante",
+      "logprob": -5.061147689819336
+     }
+    ]
+   ],
+   [
+    [
+     {
+      "token": "st",
+      "logprob": -0.15685085952281952
+     },
+     {
+      "token": "t",
+      "logprob": -2.1237316131591797
+     },
+     {
+      "token": "ante",
+      "logprob": -4.546773910522461
+     },
+     {
+      "token": "s",
+      "logprob": -4.961444854736328
+     },
+     {
+      "token": "h",
+      "logprob": -5.608572006225586
+     }
+    ]
+   ],
+   [
+    [
+     {
+      "token": "st",
+      "logprob": -0.08986389636993408
+     },
+     {
+      "token": "ante",
+      "logprob": -3.6206464767456055
+     },
+     {
+      "token": "t",
+      "logprob": -3.715609550476074
+     },
+     {
+      "token": "k",
+      "logprob": -4.524359703063965
+     },
+     {
+      "token": "h",
+      "logprob": -5.071429252624512
+     }
+    ]
+   ],
+   [
+    [
+     {
+      "token": "st",
+      "logprob": -0.14985449612140656
+     },
+     {
+      "token": "k",
+      "logprob": -3.141347646713257
+     },
+     {
+      "token": "t",
+      "logprob": -3.82804274559021
+     },
+     {
+      "token": "ante",
+      "logprob": -4.417198181152344
+     },
+     {
+      "token": "s",
+      "logprob": -4.430170059204102
+     }
+    ]
+   ],
+   [
+    [
+     {
+      "token": "st",
+      "logprob": -0.24081961810588837
+     },
+     {
+      "token": "k",
+      "logprob": -2.896301031112671
+     },
+     {
+      "token": "t",
+      "logprob": -3.6985089778900146
+     },
+     {
+      "token": "s",
+      "logprob": -3.889055013656616
+     },
+     {
+      "token": "ante",
+      "logprob": -4.188842296600342
+     }
+    ]
+   ],
+   [
+    [
+     {
+      "token": "st",
+      "logprob": -1.8783541917800903
+     },
+     {
+      "token": "k",
+      "logprob": -3.036158561706543
+     },
+     {
+      "token": "h",
+      "logprob": -3.293553352355957
+     },
+     {
+      "token": "as",
+      "logprob": -3.488978385925293
+     },
+     {
+      "token": "ar",
+      "logprob": -3.7791833877563477
+     }
+    ]
+   ],
+   [
+    [
+     {
+      "token": "st",
+      "logprob": -3.3950870037078857
+     },
+     {
+      "token": "h",
+      "logprob": -4.314940452575684
+     },
+     {
+      "token": "t",
+      "logprob": -4.518854141235352
+     },
+     {
+      "token": "s",
+      "logprob": -4.580451965332031
+     },
+     {
+      "token": "as",
+      "logprob": -4.695197105407715
+     }
+    ]
+   ],
+   [
+    [
+     {
+      "token": "st",
+      "logprob": -2.9371120929718018
+     },
+     {
+      "token": "or",
+      "logprob": -4.217310905456543
+     },
+     {
+      "token": "something",
+      "logprob": -4.644057273864746
+     },
+     {
+      "token": "h",
+      "logprob": -4.706028938293457
+     },
+     {
+      "token": "t",
+      "logprob": -4.881485939025879
+     }
+    ]
+   ],
+   [
+    [
+     {
+      "token": "or",
+      "logprob": -4.9621686935424805
+     },
+     {
+      "token": "st",
+      "logprob": -5.020538330078125
+     },
+     {
+      "token": "more",
+      "logprob": -5.542407989501953
+     },
+     {
+      "token": "s",
+      "logprob": -5.737175941467285
+     },
+     {
+      "token": "t",
+      "logprob": -5.9722161293029785
+     }
+    ]
+   ],
+   [
+    [
+     {
+      "token": "\n\n",
+      "logprob": -5.410317897796631
+     },
+     {
+      "token": "more",
+      "logprob": -5.515016555786133
+     },
+     {
+      "token": "or",
+      "logprob": -5.541090965270996
+     },
+     {
+      "token": "english",
+      "logprob": -6.063984394073486
+     },
+     {
+      "token": "st",
+      "logprob": -6.175321102142334
+     }
+    ]
+   ],
+   [
+    [
+     {
+      "token": "st",
+      "logprob": -4.1825079917907715
+     },
+     {
+      "token": "\n\n",
+      "logprob": -4.355720520019531
+     },
+     {
+      "token": "en",
+      "logprob": -5.074738025665283
+     },
+     {
+      "token": "ar",
+      "logprob": -5.084357261657715
+     },
+     {
+      "token": "el",
+      "logprob": -5.491082191467285
+     }
+    ]
+   ],
+   [
+    [
+     {
+      "token": "\n\n",
+      "logprob": -3.0192129611968994
+     },
+     {
+      "token": "st",
+      "logprob": -3.7124083042144775
+     },
+     {
+      "token": "en",
+      "logprob": -4.636974334716797
+     },
+     {
+      "token": "\n\n\n",
+      "logprob": -4.689858436584473
+     },
+     {
+      "token": "ar",
+      "logprob": -4.8872880935668945
+     }
+    ]
+   ],
+   [
+    [
+     {
+      "token": "st",
+      "logprob": -3.02807354927063
+     },
+     {
+      "token": "\n\n",
+      "logprob": -3.9414188861846924
+     },
+     {
+      "token": "en",
+      "logprob": -4.232390403747559
+     },
+     {
+      "token": "pl",
+      "logprob": -4.419460296630859
+     },
+     {
+      "token": "el",
+      "logprob": -4.8622236251831055
+     }
+    ]
+   ],
+   [
+    [
+     {
+      "token": "en",
+      "logprob": -3.853769302368164
+     },
+     {
+      "token": "el",
+      "logprob": -4.096845626831055
+     },
+     {
+      "token": "\n",
+      "logprob": -4.538026809692383
+     },
+     {
+      "token": "h",
+      "logprob": -5.052343368530273
+     },
+     {
+      "token": "<eos>",
+      "logprob": -5.197861671447754
+     }
+    ]
+   ],
+   [
+    [
+     {
+      "token": "\n\n",
+      "logprob": -2.648998260498047
+     },
+     {
+      "token": "<eos>",
+      "logprob": -3.548933982849121
+     },
+     {
+      "token": "\n",
+      "logprob": -4.950455665588379
+     },
+     {
+      "token": "\n\n\n",
+      "logprob": -4.956994533538818
+     },
+     {
+      "token": "回复",
+      "logprob": -5.124091148376465
+     }
+    ]
+   ],
+   [
+    [
+     {
+      "token": "\n\n",
+      "logprob": -2.5525598526000977
+     },
+     {
+      "token": "read",
+      "logprob": -3.632610321044922
+     },
+     {
+      "token": "\n",
+      "logprob": -3.98297119140625
+     },
+     {
+      "token": "Read",
+      "logprob": -4.194820404052734
+     },
+     {
+      "token": "夠",
+      "logprob": -4.246077537536621
+     }
+    ]
+   ],
+   [
+    [
+     {
+      "token": "夠",
+      "logprob": -1.4755045175552368
+     },
+     {
+      "token": "\n\n",
+      "logprob": -2.770961284637451
+     },
+     {
+      "token": "undefined",
+      "logprob": -4.345326900482178
+     },
+     {
+      "token": " courtesy",
+      "logprob": -4.580150127410889
+     },
+     {
+      "token": "Peace",
+      "logprob": -4.749321460723877
+     }
+    ]
+   ],
+   [
+    [
+     {
+      "token": "夠",
+      "logprob": -1.9326637983322144
+     },
+     {
+      "token": "<end_of_turn>",
+      "logprob": -2.728940963745117
+     },
+     {
+      "token": " Etienne",
+      "logprob": -4.191476821899414
+     },
+     {
+      "token": "潰",
+      "logprob": -4.381435394287109
+     },
+     {
+      "token": "ണു",
+      "logprob": -4.892602920532227
+     }
+    ]
+   ],
+   [
+    [
+     {
+      "token": "<end_of_turn>",
+      "logprob": -2.2884867191314697
+     },
+     {
+      "token": "undefined",
+      "logprob": -3.4308226108551025
+     },
+     {
+      "token": "Peace",
+      "logprob": -4.1703081130981445
+     },
+     {
+      "token": "夠",
+      "logprob": -4.329408645629883
+     },
+     {
+      "token": " corrig",
+      "logprob": -4.331756591796875
+     }
+    ]
+   ],
+   [
+    [
+     {
+      "token": "χει",
+      "logprob": -1.944140076637268
+     },
+     {
+      "token": "advanced",
+      "logprob": -3.8630967140197754
+     },
+     {
+      "token": "登",
+      "logprob": -4.228749752044678
+     },
+     {
+      "token": "undefined",
+      "logprob": -4.287119388580322
+     },
+     {
+      "token": "last",
+      "logprob": -4.302856922149658
+     }
+    ]
+   ],
+   [
+    [
+     {
+      "token": " Esc",
+      "logprob": -2.521439790725708
+     },
+     {
+      "token": "登",
+      "logprob": -2.981776475906372
+     },
+     {
+      "token": " लास्ट",
+      "logprob": -3.1209537982940674
+     },
+     {
+      "token": "R",
+      "logprob": -3.6303551197052
+     },
+     {
+      "token": " Ron",
+      "logprob": -3.9353725910186768
+     }
+    ]
+   ],
+   [
+    [
+     {
+      "token": " Ron",
+      "logprob": -1.6693520545959473
+     },
+     {
+      "token": "শ্চ",
+      "logprob": -2.6731743812561035
+     },
+     {
+      "token": "lost",
+      "logprob": -2.7082695960998535
+     },
+     {
+      "token": " Esc",
+      "logprob": -2.9101357460021973
+     },
+     {
+      "token": " தலைமை",
+      "logprob": -3.1303811073303223
+     }
+    ]
+   ],
+   [
+    [
+     {
+      "token": "ی",
+      "logprob": -0.37986481189727783
+     },
+     {
+      "token": "ions",
+      "logprob": -1.4878989458084106
+     },
+     {
+      "token": "ion",
+      "logprob": -3.8822240829467773
+     },
+     {
+      "token": " ",
+      "logprob": -3.8823862075805664
+     },
+     {
+      "token": "е",
+      "logprob": -4.505459785461426
+     }
+    ]
+   ],
+   [
+    [
+     {
+      "token": "ی",
+      "logprob": -0.012493795715272427
+     },
+     {
+      "token": "यंस",
+      "logprob": -6.191893100738525
+     },
+     {
+      "token": "ஈ",
+      "logprob": -6.826141834259033
+     },
+     {
+      "token": "Romeo",
+      "logprob": -7.06060266494751
+     },
+     {
+      "token": "<end_of_turn>",
+      "logprob": -7.209547519683838
+     }
+    ]
+   ]
+  ]
+ }
+}
