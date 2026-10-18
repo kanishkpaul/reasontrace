@@ -20,7 +20,10 @@ Studio, llama.cpp, vLLM) or a provider you hold a key for (OpenAI, OpenRouter,
 Groq, Gemini, Anthropic). Each run is written to `runs/<id>/` with its
 manifest, and the viewer shows its behaviour, its stated reasoning and, where
 the source returns them, its token probabilities. Keys go to the OS keychain.
-Nothing reads model internals yet.
+
+With the Python sidecar, it also runs Qwen3 0.6B or Gemma 3 1B from their
+weights and stores each run's residual stream, to a capture plan, as
+safetensors next to the run. Nothing interprets those activations yet.
 
 The viewer also opens agent trace files (plain `Thought:` / `Action:`
 transcripts, chat-message JSON, OpenAI Responses output, and native event
@@ -37,7 +40,16 @@ npm run test:live  # sources against a running llama.cpp server or a stored key
 ```
 
 `npm run test:live` picks a source with `RT_LIVE_SOURCE` (default `llamacpp`)
-and a model with `RT_LIVE_MODEL`. The default tests never touch the network.
+and a model with `RT_LIVE_MODEL`, and runs the sidecar's determinism check on
+Qwen3 0.6B. The default tests never touch the network.
+
+The sidecar needs [uv](https://docs.astral.sh/uv/). Install its model runtime
+once; the weights download on first run (Gemma 3 needs its licence accepted on
+Hugging Face first):
+
+```bash
+uv sync --directory bridge/python --extra model
+```
 
 Needs Node 22.22.2+ or 24.15+ (the test tools, jsdom and ESLint, set the floor).
 

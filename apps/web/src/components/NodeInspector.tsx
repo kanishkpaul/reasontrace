@@ -5,6 +5,7 @@ import { EVENT_TYPES } from "../lib/eventTypes";
 import { CheckIcon, CopyIcon, ICON } from "../lib/icons";
 import { useTraceStore } from "../store";
 import { EvidenceLabel } from "./EvidenceLabel";
+import { ResidualView } from "./ResidualView";
 import { TokenView } from "./TokenView";
 
 /** What each event type can show, and what to check next. Says no more than the event records. */
@@ -44,6 +45,7 @@ export function NodeInspector() {
   const supports = useMemo(() => (trace && event ? trace.events.filter((e) => e.supports.includes(event.id)) : []), [trace, event]);
   const attached = run?.attachments.filter((a) => a.eventId === event?.id) ?? [];
   const tokens = attached.find((a) => a.kind === "probs.top_k/1")?.data.tokens;
+  const residual = attached.find((a) => a.kind === "activations.residual/1")?.data;
 
   if (!event) {
     return (
@@ -93,6 +95,7 @@ export function NodeInspector() {
       <p className="hint">{readingOf(event)}</p>
 
       {tokens && <TokenView tokens={tokens} />}
+      {residual && <ResidualView capture={residual} />}
 
       <LinkedEvents title="Supported by" events={supportedBy} empty="No support declared." onSelect={select} />
       <LinkedEvents title="Supports" events={supports} empty="Nothing declares this as support." onSelect={select} />

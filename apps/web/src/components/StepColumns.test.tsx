@@ -5,6 +5,7 @@ import { parsed } from "../../../../test/traces";
 import { useTraceStore } from "../store";
 import type { Run } from "@reasontrace/format";
 import { EvidenceLabel } from "./EvidenceLabel";
+import { NodeInspector } from "./NodeInspector";
 import { StatusBar } from "./StatusBar";
 import { StepColumns } from "./StepColumns";
 
@@ -73,6 +74,34 @@ describe("a run's missing depths and ending", () => {
     expect(screen.getByText(/tier frontier API · Anthropic/)).toBeTruthy();
     expect(screen.getByText(/timed out/)).toBeTruthy();
     expect(screen.queryByText(/imported trace file/)).toBeNull();
+  });
+});
+
+describe("a run of local weights", () => {
+  test("its activation event shows the stored residual stream as measured values, by layer", () => {
+    const run: Run = {
+      ...anthropicRun,
+      manifest: { ...anthropicRun.manifest, unavailable: [], completion: { state: "complete" } },
+      trace: {
+        ...anthropicRun.trace,
+        unavailable: [],
+        events: [{ id: "activations", type: "activation", step: 1, depth: "internals", label: "measured", content: "Residual stream", supports: [] }],
+      },
+      attachments: [{
+        kind: "activations.residual/1",
+        eventId: "activations",
+        label: "measured",
+        data: { file: "tensors/residual.safetensors", layers: [0, 27], positions: [212], tokens: ["<|im_end|>"], pooling: "none", dModel: 1024, dtype: "float32", norms: [7.4, 210.5] },
+      }],
+    };
+    useTraceStore.getState().openRun(run);
+    useTraceStore.getState().setSelectedNodeId("activations");
+    render(<NodeInspector />);
+    expect(screen.getByRole("heading", { name: "Residual stream" })).toBeTruthy();
+    expect(screen.getByText("tensors/residual.safetensors")).toBeTruthy();
+    expect(screen.getByText("layer 27")).toBeTruthy();
+    expect(screen.getByText("210.5")).toBeTruthy();
+    expect(screen.getAllByText("measured").length).toBeGreaterThan(0);
   });
 });
 

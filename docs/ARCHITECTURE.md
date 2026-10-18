@@ -189,9 +189,21 @@ only) and Vite, which puts the same token in the page and forwards `/api`.
 
 ## 8. The Python sidecar
 
-`bridge/python/` is a uv project. The server starts it on demand and talks to
-it over JSON-RPC on stdio. It runs open-weights models (Gemma 3, Qwen3 on
-Apple MPS) through nnsight, captures activations to the plan it is given, and
-runs decoders (logit lens, Gemma Scope SAEs through SAELens). It reads and writes run directories and
-nothing else. Without Python installed, the app loses the full tier and
-nothing more.
+`bridge/python/` is a uv project. The server starts it on first use, through
+`uv run --extra model python -m reasontrace_sidecar`, and talks to it over
+JSON-RPC 2.0 on stdio, one message per line: `hello`, `models`, `run` (which
+streams `delta` notifications) and `cancel`. `packages/sidecar` is the client,
+and registers it as the `weights` source.
+
+It runs open-weights models (Gemma 3 1B, Qwen3 0.6B, on Apple MPS where
+available) in float32 through transformers, and captures the residual stream
+through nnsight to the plan it is given, in a teacher-forced forward pass over
+the prompt and the generated tokens after generation ends. Tensors go to the
+run directory's `tensors/` as safetensors; events and the manifest come back
+over JSON-RPC and the server writes them. The manifest records device, dtype,
+quantisation, the cache setting, seed, the weights' revision, library versions
+and sampled peak memory. Later phases add decoders (logit lens, Gemma Scope
+SAEs through SAELens).
+
+Without uv, Python or the model runtime, every depth of the full tier is
+unavailable with that reason, and nothing else changes.

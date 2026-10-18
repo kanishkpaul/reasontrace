@@ -17,7 +17,13 @@ export function StatusBar({ trace, saved }: { trace: ReasonTrace; saved: boolean
         <>
           <span>tier {TIER[manifest.source.tier]} · {manifest.source.name}</span>
           <span>{manifest.respondingModel ?? request.model}</span>
-          <span>temperature {request.temperature ?? "default"} · seed {request.seed ?? "none"}</span>
+          {manifest.runtime ? (
+            <span>
+              {manifest.runtime.device} · {manifest.runtime.dtype} · {manifest.runtime.quantization === "none" ? "not quantised" : manifest.runtime.quantization} · KV cache {manifest.runtime.cache ? "on" : "off"} · seed {manifest.runtime.seed} · peak memory ≥ {(manifest.runtime.peakMemoryBytes / 2 ** 30).toFixed(1)} GiB
+            </span>
+          ) : (
+            <span>temperature {request.temperature ?? "default"} · seed {request.seed ?? "none"}</span>
+          )}
           <span><span className={`dot ${COMPLETION[manifest.completion.state].dot}`} /> {COMPLETION[manifest.completion.state].word}</span>
           <span>determinism not checked</span>
           <span>run {manifest.id}</span>
