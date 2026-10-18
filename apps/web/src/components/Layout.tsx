@@ -2,14 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { diagnosticsFor } from "../lib/diagnostics";
 import { downloadFile, fileNameFor } from "../lib/download";
-import { DownloadIcon, ICON, RailIcon, SidebarIcon } from "../lib/icons";
+import { DownloadIcon, RailIcon, SidebarIcon } from "../lib/icons";
 import { api, hasServer } from "../lib/api";
-import { COMPLETION } from "../lib/completion";
 import { translationOf } from "../lib/pipeline";
 import { loadOpenRunId, loadSavedTrace } from "../lib/savedTrace";
 import { useTraceStore } from "../store";
 import { DiagnosisPanel } from "./DiagnosisPanel";
 import { EventFilters } from "./EventFilters";
+import { Ending } from "./EvidenceLabel";
 import { FindingPicker } from "./FindingPicker";
 import { FindingView } from "./FindingView";
 import { HandoffView } from "./HandoffView";
@@ -29,7 +29,7 @@ import { TraceInput } from "./TraceInput";
 type Region = "trace" | "open" | "detail";
 
 /**
- * The app shell (design/README.md, Layout): traces in the sidebar, the trace
+ * The app shell (apps/web/STYLE.md, Layout): traces in the sidebar, the trace
  * by step and depth in the main surface, step detail and findings in the rail,
  * and an honest status bar.
  */
@@ -79,16 +79,16 @@ export function Layout() {
     <div className="app" data-region={region} data-sidebar={sidebarOpen || undefined} data-rail={railOpen || undefined}>
       <header className="app__bar">
         <button type="button" className="btn btn--ghost btn--icon app__wide-only" aria-label={sidebarOpen ? "Hide the sidebar" : "Show the sidebar"} onClick={() => setSidebarOpen(!sidebarOpen)}>
-          <SidebarIcon size={ICON.size} stroke={ICON.stroke} />
+          <SidebarIcon />
         </button>
         <span className="app__glyph" aria-hidden="true">∴</span>
         <h1 className="app__title">{trace.title}</h1>
         <button type="button" className="btn btn--ghost btn--sm" onClick={exportJson}>
-          <DownloadIcon size={ICON.size} stroke={ICON.stroke} />
+          <DownloadIcon />
           Export JSON
         </button>
         <button type="button" className="btn btn--ghost btn--icon app__wide-only" aria-label={railOpen ? "Hide the detail rail" : "Show the detail rail"} onClick={() => setRailOpen(!railOpen)}>
-          <RailIcon size={ICON.size} stroke={ICON.stroke} />
+          <RailIcon />
         </button>
       </header>
 
@@ -119,7 +119,7 @@ export function Layout() {
         </div>
         {completion && completion.state !== "complete" && !live && (
           <p className="run-ending" data-state={completion.state}>
-            <span className={`dot ${COMPLETION[completion.state].dot}`} /> {COMPLETION[completion.state].word}{completion.reason ? `: ${completion.reason}` : ""}
+            <Ending state={completion.state} reason={completion.reason} />
           </p>
         )}
         <div className="app__surface">
@@ -149,9 +149,10 @@ function EmptyHome() {
   return (
     <div className="home">
       <div className="home__intro">
-        <p className="eyebrow">∴ interpretability</p>
+        <p className="eyebrow">∴ hello, friend</p>
         <p className="wordmark">ReasonTrace</p>
         <h1 className="display-3">See what a model did, what it said it thought, and how far each can be trusted.</h1>
+        <p className="home__prompt" aria-hidden="true">reasontrace:~$ <span className="cursor" /></p>
         <p className="hint">
           {hasServer ? "Run a model, or open a trace file or a sample." : "Open a trace file or a sample."} Every value carries its evidence label, and what a trace can't show is marked unavailable, with the reason.
         </p>

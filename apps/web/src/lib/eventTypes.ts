@@ -2,7 +2,7 @@ import type { EventType } from "@reasontrace/format";
 import type { ComponentType } from "react";
 import { ActionIcon, ActivationIcon, AlertIcon, AnswerIcon, DecisionIcon, DerivationIcon, HypothesisIcon, ObservationIcon, ReasoningIcon, TranslationIcon, UpdateIcon } from "./icons";
 
-type IconComponent = ComponentType<{ size?: number; stroke?: number; className?: string }>;
+type IconComponent = ComponentType<{ className?: string }>;
 
 /** Display name and icon for each event type. Colour never carries the type alone. */
 export const EVENT_TYPES: Record<EventType, { label: string; icon: IconComponent }> = {

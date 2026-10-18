@@ -2,7 +2,8 @@ import { isSolveRequest, type RunManifest } from "@reasontrace/format";
 import { useEffect, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { api } from "../lib/api";
-import { COMPLETION, TIER } from "../lib/completion";
+import { TIER } from "../lib/completion";
+import { Ending } from "./EvidenceLabel";
 import { useTraceStore } from "../store";
 
 /** What was asked, by its first line: a pipeline's problem in words, a solve's problem without its comment marker, or a prompt. */
@@ -56,12 +57,11 @@ export function RunList({ onOpen }: { onOpen?: () => void }) {
             <span className="badge badge--muted">{TIER[list[0].source.tier]}</span>
           </p>
           {list.map((run) => {
-            const { word, dot } = COMPLETION[run.completion.state];
             return (
               <button key={run.id} type="button" className="row sample-row" aria-current={run.id === current} onClick={() => void open(run.id)}>
                 <span className="row__title">{firstLine(run)}</span>
                 <span className="row__meta">{time(run.createdAt)}</span>
-                <span className="row__desc"><span className={`dot ${dot}`} /> {word} · {run.source.name}{run.pipeline ? ` → ${run.pipeline.engine}` : ""}</span>
+                <span className="row__desc"><Ending state={run.completion.state} /> · {run.source.name}{run.pipeline ? ` → ${run.pipeline.engine}` : ""}</span>
               </button>
             );
           })}

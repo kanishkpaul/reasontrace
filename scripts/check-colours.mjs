@@ -1,19 +1,17 @@
 #!/usr/bin/env node
-// Rejects colours that bypass the design tokens in the viewer's source
-// (AGENTS.md, Design): hex values, rgb()/hsl() literals, --seed-* tokens and
-// Tailwind's built-in palette classes. Colours come from --ui-* tokens or the
-// kit's Tailwind bridge (bg-card, text-ink-2, …).
+// Holds the viewer to its own tokens (apps/web/STYLE.md): colours are written
+// only in styles/tokens.css, every custom property used is one the viewer
+// defines, and nothing comes from the old design kit in design/.
 //
 // Usage: node scripts/check-colours.mjs [directory]   (default: apps/web/src)
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { extname, join, relative } from "node:path";
 
-const PALETTE = "slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|black|white";
+const TOKENS = join("styles", "tokens.css");
 const RULES = [
   [/#[0-9a-fA-F]{3,8}\b/, "hex colour"],
-  [/\b(?:rgba?|hsla?)\(/, "colour function"],
-  [/--seed-/, "seed token"],
-  [new RegExp(`\\b(?:bg|text|border|fill|stroke|ring|outline|from|via|to|decoration|divide|placeholder|accent|caret|shadow)-(?:${PALETTE})(?:-\\d{2,3})?\\b`), "Tailwind palette class"],
+  [/\b(?:rgba?|hsla?|oklch|lab|lch)\(/, "colour function"],
+  [/["'][^"']*\bdesign\//, "import from design/"],
 ];
 // Sample traces are data; "order #4812" in their text is not a colour.
 const SKIP = new Set(["data"]);
@@ -27,19 +25,31 @@ function files(dir) {
 }
 
 const root = process.argv[2] ?? "apps/web/src";
+const sources = files(root).map((path) => ({ path, name: relative(root, path), text: readFileSync(path, "utf8") }));
+// A property is defined by a CSS declaration, or by a style object in a component ("--fill": …).
+const defined = new Set(sources.flatMap(({ text }) => [...text.matchAll(/(?:^|[\s{;"'])(--[\w-]+)["']?\s*:/g)].map((m) => m[1])));
+
 const problems = [];
-for (const file of files(root)) {
-  readFileSync(file, "utf8").split("\n").forEach((line, i) => {
-    for (const [pattern, what] of RULES) {
-      const match = line.match(pattern);
-      if (match) problems.push(`${relative(process.cwd(), file)}:${i + 1}: ${what} "${match[0]}"`);
+for (const { path, name, text } of sources) {
+  text.split("\n").forEach((line, i) => {
+    const at = `${relative(process.cwd(), path)}:${i + 1}`;
+    if (name !== TOKENS) {
+      for (const [pattern, what] of RULES) {
+        const match = line.match(pattern);
+        if (match) problems.push(`${at}: ${what} "${match[0]}"`);
+      }
+    } else if (/design\//.test(line)) {
+      problems.push(`${at}: import from design/`);
+    }
+    for (const [, property] of line.matchAll(/var\((--[\w-]+)/g)) {
+      if (!defined.has(property)) problems.push(`${at}: ${property} is not one of the viewer's tokens`);
     }
   });
 }
 
 if (problems.length) {
   console.error(problems.join("\n"));
-  console.error("error: use the design tokens for colour (design/system/COLOR.md)");
+  console.error("error: colours come from apps/web/src/styles/tokens.css (apps/web/STYLE.md)");
   process.exit(1);
 }
-console.log(`no ad-hoc colours in ${root}`);
+console.log(`no ad-hoc colours or unknown tokens in ${root}`);

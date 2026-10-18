@@ -2,7 +2,7 @@ import type { DecoderOutcome, EventType, TraceEvent } from "@reasontrace/format"
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { EVENT_TYPES } from "../lib/eventTypes";
-import { CheckIcon, CopyIcon, ICON } from "../lib/icons";
+import { CheckIcon, CopyIcon } from "../lib/icons";
 import { useTraceStore } from "../store";
 import { DecodedView } from "./DecodedView";
 import { DerivationView } from "./DerivationView";
@@ -81,11 +81,11 @@ export function NodeInspector() {
   return (
     <div className="step-detail">
       <div className="step-detail__head">
-        <Icon size={ICON.size} stroke={ICON.stroke} />
+        <Icon />
         <span className="step-detail__type">{label}</span>
         <span className="badge badge--mono badge--muted">{event.id}</span>
         <button type="button" className="btn btn--ghost btn--sm" onClick={copyAsMarkdown}>
-          {copied ? <CheckIcon size={ICON.size} stroke={ICON.stroke} /> : <CopyIcon size={ICON.size} stroke={ICON.stroke} />}
+          {copied ? <CheckIcon /> : <CopyIcon />}
           {copied ? "Copied" : "Copy as Markdown"}
         </button>
       </div>

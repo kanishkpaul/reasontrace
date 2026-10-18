@@ -196,7 +196,7 @@ export function RunPanel({ onRun }: { onRun?: () => void }) {
 
           {engines.length > 0 && (
             <label className="run-panel__check">
-              <input type="checkbox" checked={pipeline} onChange={(e) => setPipeline(e.target.checked)} disabled={Boolean(live)} />
+              <input type="checkbox" className="switch" checked={pipeline} onChange={(e) => setPipeline(e.target.checked)} disabled={Boolean(live)} />
               Translate into {engines[0].language} and solve with {engines[0].name}
             </label>
           )}

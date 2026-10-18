@@ -1,11 +1,12 @@
 import type { TokenLogprob } from "@reasontrace/format";
 import { useState } from "react";
 import { shown } from "../lib/tokens";
+import { AsciiBar } from "./AsciiBar";
 import { EvidenceLabel } from "./EvidenceLabel";
 
 /**
  * Five fill steps, strongest for the least likely tokens, so the places the
- * model hesitated stand out (design/README.md, Token view).
+ * model hesitated stand out.
  */
 function bin(logprob: number): number {
   const p = Math.exp(logprob);
@@ -40,7 +41,7 @@ export function TokenView({ tokens }: { tokens: TokenLogprob[] }) {
             <div key={i} className="prob-bar" data-chosen={alt.token === token.token || undefined}>
               <dt>{shown(alt.token)}</dt>
               <dd>
-                <span className="prob-bar__track"><span className="prob-bar__fill" style={{ width: percent(alt.logprob) }} /></span>
+                <AsciiBar fraction={Math.exp(alt.logprob)} />
                 {percent(alt.logprob)}
               </dd>
             </div>

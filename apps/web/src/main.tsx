@@ -3,8 +3,6 @@ import { createRoot } from 'react-dom/client'
 import '@fontsource/jetbrains-mono/400.css'
 import '@fontsource/jetbrains-mono/700.css'
 import '@fontsource/jetbrains-mono/400-italic.css'
-import '@fontsource-variable/newsreader/wght.css'
-import '@fontsource-variable/archivo/wdth.css'
 import './index.css'
 import App from './App.tsx'
 

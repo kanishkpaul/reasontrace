@@ -37,7 +37,7 @@ if (args.version) {
   process.exit(0);
 }
 
-// design/system/TUI.md: colour only on a terminal, and never with NO_COLOR set.
+// apps/web/STYLE.md: colour only on a terminal, and never with NO_COLOR set.
 const tty = process.stdout.isTTY && !process.env.NO_COLOR;
 const dim = (text: string) => (tty ? `\u001b[2m${text}\u001b[22m` : text);
 const bold = (text: string) => (tty ? `\u001b[1m${text}\u001b[22m` : text);

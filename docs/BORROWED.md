@@ -12,11 +12,7 @@ row says **adopted**, its licence column is unverified.
 | React, React DOM | viewer framework | github.com/facebook/react | MIT | — | adopted |
 | xyflow (React Flow) | step graph in the viewer | github.com/xyflow/xyflow | MIT | a simpler graph renderer | adopted |
 | Zustand | viewer state | github.com/pmndrs/zustand | MIT | React state alone covers it | adopted |
-| Tabler Icons | interface icons, the design kit's chosen set | github.com/tabler/tabler-icons | MIT | — | adopted |
-| Tailwind CSS | utility classes over the design tokens, through the kit's bridge | github.com/tailwindlabs/tailwindcss | MIT | components written against tokens directly | adopted |
-| JetBrains Mono | mono face for traces, IDs and numbers, bundled through Fontsource | github.com/JetBrains/JetBrainsMono | OFL-1.1 | — | adopted |
-| Newsreader | display face for empty states, bundled through Fontsource | github.com/productiontype/Newsreader | OFL-1.1 | — | adopted |
-| Archivo | wordmark face, bundled through Fontsource | github.com/Omnibus-Type/Archivo | OFL-1.1 | — | adopted |
+| JetBrains Mono | the viewer's one face, bundled through Fontsource | github.com/JetBrains/JetBrainsMono | OFL-1.1 | — | adopted |
 | Vite | dev server and build | github.com/vitejs/vite | MIT | — | adopted |
 | TypeScript | language and typecheck | github.com/microsoft/TypeScript | Apache-2.0 | — | adopted |
 | ESLint, typescript-eslint | lint | github.com/eslint/eslint | MIT | — | adopted |

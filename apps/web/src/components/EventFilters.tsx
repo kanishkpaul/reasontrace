@@ -1,6 +1,6 @@
 import { useShallow } from "zustand/react/shallow";
 import { EVENT_TYPE_ORDER, EVENT_TYPES } from "../lib/eventTypes";
-import { ICON, SearchIcon } from "../lib/icons";
+import { SearchIcon } from "../lib/icons";
 import { useTraceStore } from "../store";
 
 /** Search and type filters for the open trace, and the graph's display options. */
@@ -21,7 +21,7 @@ export function EventFilters() {
         <button type="button" className="btn btn--text btn--xs" onClick={s.resetFilters}>Reset</button>
       </div>
       <label className="search">
-        <SearchIcon size={ICON.size} stroke={ICON.stroke} />
+        <SearchIcon />
         <input
           type="search"
           aria-label="Search events"

@@ -1,5 +1,6 @@
 import type { AnswerCommitmentFinding, CommitmentMeasures, DigitReadout } from "@reasontrace/format";
 import { useState } from "react";
+import { AsciiBar } from "./AsciiBar";
 import { EvidenceLabel } from "./EvidenceLabel";
 
 type Problem = AnswerCommitmentFinding["problems"][number];
@@ -30,7 +31,7 @@ export function FindingView({ finding, onClose }: { finding: AnswerCommitmentFin
   const problem = open === null ? null : finding.problems[open];
 
   return (
-    <div className="finding">
+    <div className="finding-page">
       <header className="app__bar">
         <span className="app__glyph" aria-hidden="true">∴</span>
         <h1 className="app__title">{finding.title}</h1>
@@ -108,9 +109,9 @@ function MeasuresRow({ name, measures, result, warn }: { name: string; measures:
   return (
     <tr>
       <th scope="row">{name}</th>
-      <td>{percent(measures.atAnswer)}</td>
-      <td>{percent(measures.steps)}</td>
-      <td>{percent(measures.beforeStated)}</td>
+      <td><AsciiBar fraction={measures.atAnswer} /> {percent(measures.atAnswer)}</td>
+      <td><AsciiBar fraction={measures.steps} /> {percent(measures.steps)}</td>
+      <td><AsciiBar fraction={measures.beforeStated} /> {percent(measures.beforeStated)}</td>
       <td>{result && <span className={`badge ${warn ? "badge--warn" : "badge--ok"}`}>{result}</span>}</td>
     </tr>
   );

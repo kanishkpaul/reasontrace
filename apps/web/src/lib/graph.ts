@@ -127,14 +127,14 @@ export function buildGraphData(
       explicitEdges.add(`${parentId}->${event.id}`);
 
       // Support edges touching the selected event stand out; the rest recede.
-      let strokeColor = "var(--ui-stroke-1)";
+      let strokeColor = "var(--ink-3)";
       let strokeWidth = 1.5;
       let opacity = 1;
       let animated = false;
 
       if (selectedNodeId) {
         if (selectedNodeId === event.id || selectedNodeId === parentId) {
-          strokeColor = "var(--ui-accent)";
+          strokeColor = "var(--ink-green)";
           strokeWidth = 2.5;
           animated = true;
         } else {
@@ -166,7 +166,7 @@ export function buildGraphData(
       // Only add temporal edge if there isn't already an explicit edge between them
       if (!explicitEdges.has(`${prevEvent.id}->${currEvent.id}`)) {
         const opacity = selectedNodeId ? 0.4 : 1;
-        const strokeColor = "var(--ui-stroke-3)";
+        const strokeColor = "var(--line-2)";
 
         edges.push({
           id: `temp-${prevEvent.id}-${currEvent.id}`,

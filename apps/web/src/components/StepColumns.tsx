@@ -2,7 +2,6 @@ import type { Depth, TraceEvent } from "@reasontrace/format";
 import { useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { EVENT_TYPES } from "../lib/eventTypes";
-import { ICON } from "../lib/icons";
 import { useTraceStore } from "../store";
 import { useVisibleEvents } from "../useVisibleEvents";
 import { EvidenceLabel, Unavailable } from "./EvidenceLabel";
@@ -95,7 +94,7 @@ function EventCell({ event, selected, onSelect }: { event: TraceEvent; selected:
   return (
     <button type="button" className="event-cell" data-type={event.type} aria-current={selected} onClick={() => onSelect(event.id)}>
       <span className="event-cell__head">
-        <Icon size={ICON.size} stroke={ICON.stroke} />
+        <Icon />
         <span className="event-cell__type">{label}</span>
         {event.tool && <span className="badge badge--mono badge--muted">{event.tool}</span>}
         {event.confidence !== undefined && <span className="event-cell__confidence">{Math.round(event.confidence * 100)}%</span>}

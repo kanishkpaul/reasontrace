@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import { useShallow } from "zustand/react/shallow";
-import { FirstStepIcon, ICON, LastStepIcon, PauseIcon, PlayIcon, StepBackIcon, StepForwardIcon } from "../lib/icons";
+import { FirstStepIcon, LastStepIcon, PauseIcon, PlayIcon, StepBackIcon, StepForwardIcon } from "../lib/icons";
 import { useTraceStore } from "../store";
 
 const SPEEDS = [
@@ -37,19 +37,19 @@ export function TimelineControls() {
     <div className="timeline">
       <div className="timeline__buttons">
         <button type="button" className="btn btn--ghost btn--icon" aria-label="First step" onClick={s.resetReplay} disabled={position === 0}>
-          <FirstStepIcon size={ICON.size} stroke={ICON.stroke} />
+          <FirstStepIcon />
         </button>
         <button type="button" className="btn btn--ghost btn--icon" aria-label="Step Backward" onClick={s.stepBackward} disabled={position === 0}>
-          <StepBackIcon size={ICON.size} stroke={ICON.stroke} />
+          <StepBackIcon />
         </button>
         <button type="button" className="btn btn--secondary btn--icon" aria-label={s.isPlaying ? "Pause replay" : "Play replay"} onClick={s.togglePlay}>
-          {s.isPlaying ? <PauseIcon size={ICON.size} stroke={ICON.stroke} /> : <PlayIcon size={ICON.size} stroke={ICON.stroke} />}
+          {s.isPlaying ? <PauseIcon /> : <PlayIcon />}
         </button>
         <button type="button" className="btn btn--ghost btn--icon" aria-label="Step Forward" onClick={s.stepForward} disabled={position === last}>
-          <StepForwardIcon size={ICON.size} stroke={ICON.stroke} />
+          <StepForwardIcon />
         </button>
         <button type="button" className="btn btn--ghost btn--icon" aria-label="Last step" onClick={s.revealAll} disabled={position === last}>
-          <LastStepIcon size={ICON.size} stroke={ICON.stroke} />
+          <LastStepIcon />
         </button>
       </div>
       <span className="timeline__position">

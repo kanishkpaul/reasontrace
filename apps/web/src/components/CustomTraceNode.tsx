@@ -1,7 +1,6 @@
 import { Handle, Position } from "@xyflow/react";
 import type { TraceEvent } from "@reasontrace/format";
 import { EVENT_TYPES } from "../lib/eventTypes";
-import { ICON } from "../lib/icons";
 import { EvidenceLabel } from "./EvidenceLabel";
 
 const PREVIEW_CHARS = 80;
@@ -26,7 +25,7 @@ export const CustomTraceNode = (props: { data: unknown }) => {
     >
       <Handle type="target" position={Position.Top} className="trace-node__handle" />
       <div className="event-cell__head">
-        <Icon size={ICON.size} stroke={ICON.stroke} />
+        <Icon />
         <span className="event-cell__type">{label}</span>
         {event.tool && <span className="badge badge--mono badge--muted">{event.tool}</span>}
         {event.confidence !== undefined && <span className="event-cell__confidence">{Math.round(event.confidence * 100)}%</span>}

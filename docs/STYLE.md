@@ -182,8 +182,8 @@ the tool.
 - Store state is the open run, the selected step and view settings; derived
   values (diagnostics, layout) are computed once and memoised, not stored.
 - Components select the store fields they use, never the whole store.
-- Colours, spacing and type come from `design/tokens`. Never use hex values
-  or Tailwind palette colours inline.
+- Colours, spacing and type come from `apps/web/src/styles/tokens.css`
+  (apps/web/STYLE.md). Never write a hex value anywhere else.
 
 ## 3. Commits
 

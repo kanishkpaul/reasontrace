@@ -1,4 +1,5 @@
 import type { ResidualAttachment } from "@reasontrace/format";
+import { AsciiBar } from "./AsciiBar";
 import { EvidenceLabel } from "./EvidenceLabel";
 
 /**
@@ -26,7 +27,7 @@ export function ResidualView({ capture }: { capture: ResidualAttachment["data"] 
           <div key={layer} className="prob-bar">
             <dt>layer {layer}</dt>
             <dd>
-              <span className="prob-bar__track"><span className="prob-bar__fill" style={{ width: `${(capture.norms[i] / largest) * 100}%` }} /></span>
+              <AsciiBar fraction={capture.norms[i] / largest} />
               {capture.norms[i].toFixed(1)}
             </dd>
           </div>

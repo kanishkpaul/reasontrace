@@ -3,7 +3,7 @@ import type { Edge, Node, NodeChange, ReactFlowInstance, XYPosition } from "@xyf
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { buildGraphData } from "../lib/graph";
-import { FitIcon, ICON, ZoomInIcon, ZoomOutIcon } from "../lib/icons";
+import { FitIcon, ZoomInIcon, ZoomOutIcon } from "../lib/icons";
 import { useTraceStore } from "../store";
 import { useVisibleEvents } from "../useVisibleEvents";
 import { CustomTraceNode } from "./CustomTraceNode";
@@ -79,13 +79,13 @@ export function ReasoningGraph() {
         <Background gap={24} size={1} />
         <Panel position="top-right" className="graph-view__controls">
           <button type="button" className="btn btn--ghost btn--icon" aria-label="Zoom in" onClick={() => reactFlowRef.current?.zoomIn({ duration: 300 })}>
-            <ZoomInIcon size={ICON.size} stroke={ICON.stroke} />
+            <ZoomInIcon />
           </button>
           <button type="button" className="btn btn--ghost btn--icon" aria-label="Zoom out" onClick={() => reactFlowRef.current?.zoomOut({ duration: 300 })}>
-            <ZoomOutIcon size={ICON.size} stroke={ICON.stroke} />
+            <ZoomOutIcon />
           </button>
           <button type="button" className="btn btn--ghost btn--icon" aria-label="Fit the graph to the view" onClick={() => reactFlowRef.current?.fitView({ padding: 0.2, duration: 300 })}>
-            <FitIcon size={ICON.size} stroke={ICON.stroke} />
+            <FitIcon />
           </button>
         </Panel>
       </ReactFlow>

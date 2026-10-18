@@ -1,36 +1,34 @@
-// The viewer's one icon module (design/system/DESIGN.md, Icons). Feature code
-// imports icons from here, so the set can be swapped in one place.
-export {
-  IconAlertTriangle as AlertIcon,
-  IconBinaryTree as DerivationIcon,
-  IconBrain as ReasoningIcon,
-  IconBulb as HypothesisIcon,
-  IconCpu as ActivationIcon,
-  IconCheck as CheckIcon,
-  IconChevronLeft as StepBackIcon,
-  IconChevronRight as StepForwardIcon,
-  IconChevronsRight as LastStepIcon,
-  IconCircleCheck as AnswerIcon,
-  IconCopy as CopyIcon,
-  IconDeviceFloppy as SaveIcon,
-  IconDownload as DownloadIcon,
-  IconEye as ObservationIcon,
-  IconGitBranch as DecisionIcon,
-  IconLanguage as TranslationIcon,
-  IconLayoutSidebar as SidebarIcon,
-  IconLayoutSidebarRight as RailIcon,
-  IconMaximize as FitIcon,
-  IconPlayerPause as PauseIcon,
-  IconPlayerPlay as PlayIcon,
-  IconRefresh as UpdateIcon,
-  IconRotate as FirstStepIcon,
-  IconSearch as SearchIcon,
-  IconTool as ActionIcon,
-  IconUpload as ImportIcon,
-  IconX as CloseIcon,
-  IconZoomIn as ZoomInIcon,
-  IconZoomOut as ZoomOutIcon,
-} from "@tabler/icons-react";
+import { createElement } from "react";
 
-/** Icon size in controls (DESIGN.md: 14px, stroke 1.75). */
-export const ICON = { size: 14, stroke: 1.75 } as const;
+// The viewer's one icon module. Icons are text glyphs in the page's monospace
+// face, so they sit on the same grid as everything else and need no icon set.
+const glyph = (text: string) => ({ className }: { className?: string }) =>
+  createElement("span", { className: className ? `glyph ${className}` : "glyph", "aria-hidden": true }, text);
+
+export const ReasoningIcon = glyph("~");
+export const HypothesisIcon = glyph("?");
+export const ActionIcon = glyph("$");
+export const ObservationIcon = glyph("<");
+export const UpdateIcon = glyph("↻");
+export const AlertIcon = glyph("!");
+export const DecisionIcon = glyph("⑂");
+export const AnswerIcon = glyph("=");
+export const ActivationIcon = glyph("▦");
+export const DerivationIcon = glyph("⊢");
+export const TranslationIcon = glyph("⇄");
+
+export const CheckIcon = glyph("✓");
+export const CopyIcon = glyph("⧉");
+export const DownloadIcon = glyph("↓");
+export const SearchIcon = glyph("/");
+export const SidebarIcon = glyph("◧");
+export const RailIcon = glyph("◨");
+export const FitIcon = glyph("⤢");
+export const ZoomInIcon = glyph("+");
+export const ZoomOutIcon = glyph("−");
+export const PlayIcon = glyph("▶");
+export const PauseIcon = glyph("❚❚");
+export const StepBackIcon = glyph("◀");
+export const StepForwardIcon = glyph("▶");
+export const FirstStepIcon = glyph("⏮");
+export const LastStepIcon = glyph("⏭");

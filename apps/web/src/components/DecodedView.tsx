@@ -2,6 +2,7 @@ import type { DecodedAttachment, LogitLensAttachment, SaeFeaturesAttachment, Val
 import { Fragment, useState } from "react";
 import { shown } from "../lib/tokens";
 import { validationOf } from "../lib/validation";
+import { AsciiBar } from "./AsciiBar";
 import { EvidenceLabel } from "./EvidenceLabel";
 
 const percent = (value: number) => `${Math.round(value * 100)}%`;
@@ -94,7 +95,7 @@ function LensView({ data }: { data: LogitLensAttachment["data"] }) {
               <dt>layer {layer}</dt>
               <dd>
                 <span className="lens-token">{shown(first.token)}</span>
-                <span className="prob-bar__track"><span className="prob-bar__fill" style={{ width: `${p * 100}%` }} /></span>
+                <AsciiBar fraction={p} />
                 {percent(p)}
               </dd>
             </div>
@@ -155,7 +156,7 @@ export function ValidationView({ validation }: { validation: Validation }) {
           <div key={layer} className="prob-bar" data-chosen={score >= validation.required || undefined}>
             <dt>layer {layer}</dt>
             <dd>
-              <span className="prob-bar__track"><span className="prob-bar__fill" style={{ width: `${score * 100}%` }} /></span>
+              <AsciiBar fraction={score} />
               {percent(score)}
             </dd>
           </div>

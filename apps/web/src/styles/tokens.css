@@ -1,0 +1,52 @@
+/*
+ * The viewer's tokens: the only place a colour is written down
+ * (apps/web/STYLE.md). A terminal on a dark ground. `--ink-*` colours are
+ * for text and marks, `--bg-*` for what they sit on; scripts/check-contrast.mjs
+ * holds every ink to WCAG AA on every background.
+ */
+:root {
+  color-scheme: dark;
+
+  /* Grounds, darkest first. */
+  --bg-0: #050607;
+  --bg-1: #0a0c0d;
+  --bg-2: #111416;
+  --bg-3: #182024;
+  /* Tinted grounds behind a departure, a selection and a hit. */
+  --bg-alert: #240b0d;
+  --bg-select: #0f2a1b;
+
+  /* Text, brightest first. */
+  --ink-1: #e4e8e1;
+  --ink-2: #a3ada4;
+  --ink-3: #86918a;
+  /* Signals. Green is the prompt and what holds; red is fsociety and what failed. */
+  --ink-green: #3dff7f;
+  --ink-red: #ff4a4a;
+  --ink-amber: #ffb02e;
+  --ink-cyan: #43d3e6;
+  --ink-violet: #b69cff;
+
+  /* Rules and borders: box-drawing weight, never text. */
+  --line-1: #1f272b;
+  --line-2: #33403f;
+  --line-glow: #1b5c35;
+
+  --font: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --fs-1: 0.6875rem;
+  --fs-2: 0.75rem;
+  --fs-3: 0.8125rem;
+  --fs-4: 0.9375rem;
+  --fs-5: 1.25rem;
+  --fs-6: 2.5rem;
+
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.5rem;
+  --sp-6: 2.5rem;
+
+  --z-sticky: 10;
+  --z-overlay: 100;
+}

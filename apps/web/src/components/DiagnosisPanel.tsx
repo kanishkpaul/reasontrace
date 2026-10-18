@@ -4,9 +4,9 @@ import { useTraceStore } from "../store";
 import { diagnosticsFor } from "../lib/diagnostics";
 import { downloadFile, fileNameFor } from "../lib/download";
 import { GROUNDING_TEXT } from "../lib/grounding";
-import { DownloadIcon, ICON } from "../lib/icons";
+import { DownloadIcon } from "../lib/icons";
 
-// Red is kept for explicit failures (design/system/DESIGN.md); a heuristic
+// Red is kept for explicit failures (apps/web/STYLE.md); a heuristic
 // finding, however severe, is a warning to check.
 const SEVERITY_BADGE = {
   failure: "badge--destructive",
@@ -79,7 +79,7 @@ export const DiagnosisPanel: React.FC = () => {
         <span className="dot" data-grounding={diagnostics.answerGrounding} />
         <strong>{grounding.title}</strong>
         <button type="button" className="btn btn--ghost btn--sm" onClick={exportDiagnosisAsMarkdown}>
-          <DownloadIcon size={ICON.size} stroke={ICON.stroke} />
+          <DownloadIcon />
           Export Markdown
         </button>
       </div>

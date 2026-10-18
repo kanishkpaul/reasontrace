@@ -1,42 +1,36 @@
-/* Evidence-label marks and text treatments (design/README.md, Evidence labels).
-   Tokens only. */
+/*
+ * Evidence labels and run endings (apps/web/STYLE.md). The mark and the word
+ * carry the meaning; colour only repeats it.
+ */
 
 .evidence-label {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
-  font: var(--text-2xs) / 1rem var(--font-mono);
-  color: var(--ui-text-3);
+  gap: var(--sp-1);
+  color: var(--ink-3);
+  font-size: var(--fs-1);
+  letter-spacing: 0.04em;
 }
+.evidence-mark { flex: none; min-width: 1ch; font-style: normal; line-height: 1; text-align: center; }
 
-.evidence-mark {
-  display: inline-block;
-  flex: none;
-  width: 0.5rem;
-  height: 0.5rem;
-}
-.evidence-mark[data-label="observed"] { background: var(--ui-text-1); }
-.evidence-mark[data-label="stated"] { height: 0; border-bottom: 2px dashed var(--ui-warm); }
-.evidence-mark[data-label="exact"] {
-  display: inline-grid;
-  place-items: center;
-  width: 0.625rem;
-  height: 0.625rem;
-  background: var(--ui-ok);
-  color: var(--ui-bg-chrome);
-  font: 700 0.5rem / 1 var(--font-sans);
-}
-.evidence-mark[data-label="exact"]::after { content: "✓"; }
-.evidence-mark[data-label="measured"] { border-radius: var(--radius-full); background: var(--ui-info); }
-.evidence-mark[data-label="decoded"] { border-radius: var(--radius-full); box-shadow: inset 0 0 0 1.5px var(--ui-purple); }
-.evidence-mark[data-label="decoded"][data-validated] { box-shadow: none; background: var(--ui-accent); }
-.evidence-mark[data-label="inferred"] { box-shadow: inset 0 0 0 1.5px var(--ui-text-3); }
-.evidence-mark[data-label="unavailable"] { height: 0; border-bottom: 1.5px solid var(--ui-text-4); }
-
-.evidence-label[data-label="stated"] { color: var(--ui-warm); }
-.evidence-label[data-label="unavailable"] { color: var(--ui-text-4); font-family: var(--font-sans); }
+.evidence-label[data-label="observed"] .evidence-mark { color: var(--ink-1); }
+.evidence-label[data-label="stated"], .evidence-label[data-label="stated"] .evidence-mark { color: var(--ink-amber); }
+.evidence-label[data-label="exact"] .evidence-mark { color: var(--ink-green); }
+.evidence-label[data-label="measured"] .evidence-mark { color: var(--ink-cyan); }
+.evidence-label[data-label="decoded"] .evidence-mark { color: var(--ink-violet); }
+.evidence-label[data-label="inferred"] .evidence-mark { color: var(--ink-3); }
+.evidence-label[data-label="unavailable"] { color: var(--ink-3); letter-spacing: 0; }
 
 /* Content in each label's text treatment. */
-.evidence-text[data-label="stated"] { font-style: italic; }
-.evidence-text[data-label="measured"] { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
-.evidence-text[data-label="inferred"] { color: var(--ui-text-3); }
+.evidence-text[data-label="stated"] { color: var(--ink-amber); font-style: italic; }
+.evidence-text[data-label="measured"] { color: var(--ink-cyan); font-variant-numeric: tabular-nums; }
+.evidence-text[data-label="exact"] { color: var(--ink-green); }
+.evidence-text[data-label="inferred"] { color: var(--ink-3); }
+
+.ending { white-space: nowrap; }
+.ending__tag { font-weight: 700; }
+.ending[data-state="running"] .ending__tag { color: var(--ink-cyan); }
+.ending[data-state="complete"] .ending__tag { color: var(--ink-green); }
+.ending[data-state="truncated"] .ending__tag, .ending[data-state="refused"] .ending__tag { color: var(--ink-amber); }
+.ending[data-state="error"] .ending__tag, .ending[data-state="timeout"] .ending__tag { color: var(--ink-red); }
+.ending[data-state="aborted"] .ending__tag { color: var(--ink-2); }

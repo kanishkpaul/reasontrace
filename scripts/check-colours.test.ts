@@ -24,17 +24,19 @@ afterEach(() => {
 });
 
 describe("check-colours", () => {
-  test("passes token colours", () => {
-    expect(check(source({ "a.css": ".x { color: var(--ui-text-1); }", "b.tsx": '<p className="bg-card text-ink-2" />' })).status).toBe(0);
+  test("passes colours from the viewer's own tokens", () => {
+    const tokens = ":root { --ink-1: #e4e8e1; --bg-0: #050607; }";
+    expect(check(source({ "styles/tokens.css": tokens, "a.css": ".x { color: var(--ink-1); }", "b.tsx": 'style={{ "--fill": "3%" }} var(--fill)' })).status).toBe(0);
   });
 
   test.each([
     ["a hex value", "a.css", ".x { color: #3b82f6; }"],
     ["an rgba literal", "a.css", ".x { background: rgba(0, 0, 0, 0.5); }"],
-    ["a seed token", "a.css", ".x { color: var(--seed-ink); }"],
-    ["a Tailwind palette class", "b.tsx", '<p className="text-rose-400" />'],
+    ["a token the viewer does not define", "a.css", ".x { color: var(--ui-text-1); }"],
+    ["an import from design/", "a.css", '@import "../../../design/tokens/base.css";'],
+    ["an import from design/ in a component", "b.tsx", 'import tokens from "../design/tokens.json";'],
   ])("rejects %s", (_name, file, text) => {
-    const result = check(source({ [file]: text }));
+    const result = check(source({ "styles/tokens.css": ":root { --ink-1: #e4e8e1; }", [file]: text }));
     expect(result.status).toBe(1);
     expect(result.stderr).toContain(`${file}:1:`);
   });
