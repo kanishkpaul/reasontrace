@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
-import { api, ApiError, startRun, type Capabilities, type ModelInfo, type SourceInfo } from "../lib/api";
+import { api, ApiError, startRun, type Capabilities, type EngineInfo, type ModelInfo, type SourceInfo } from "../lib/api";
 import { Unavailable } from "./EvidenceLabel";
 import { useTraceStore } from "../store";
 
@@ -32,7 +32,8 @@ const message = (error: unknown) => (error instanceof Error ? error.message : St
 /**
  * Runs a prompt against a model the server can reach: a local server, or a
  * provider with your key. Keys go to the server, which keeps them in the OS
- * keychain; the page never holds one after sending it.
+ * keychain; the page never holds one after sending it. As a pipeline, the
+ * prompt is a problem in words that the model translates for an engine.
  */
 export function RunPanel({ onRun }: { onRun?: () => void }) {
   const { live, setLive, openRun } = useTraceStore(useShallow((s) => ({ live: s.live, setLive: s.setLive, openRun: s.openRun })));
@@ -45,6 +46,9 @@ export function RunPanel({ onRun }: { onRun?: () => void }) {
   const [keyDraft, setKeyDraft] = useState("");
   const [prompt, setPrompt] = useState("");
   const [maxTokens, setMaxTokens] = useState(DEFAULT_MAX_TOKENS);
+  const [engines, setEngines] = useState<EngineInfo[]>([]);
+  const [pipeline, setPipeline] = useState(false);
+  const engine = pipeline ? engines[0] : undefined;
   const [error, setError] = useState<string | null>(null);
   const stop = useRef<AbortController | null>(null);
 
@@ -58,6 +62,7 @@ export function RunPanel({ onRun }: { onRun?: () => void }) {
 
   useEffect(() => {
     void loadSources();
+    api.engines().then(setEngines, (e) => setError(message(e)));
   }, []);
 
   useEffect(() => {
@@ -127,10 +132,10 @@ export function RunPanel({ onRun }: { onRun?: () => void }) {
     const controller = new AbortController();
     stop.current = controller;
     let runId: string | null = null;
-    setLive({ title: `${model} · ${prompt.trim().split("\n")[0].slice(0, 60)}`, reasoning: "", output: "" });
+    setLive({ title: `${model}${engine ? ` → ${engine.name}` : ""} · ${prompt.trim().split("\n")[0].slice(0, 60)}`, reasoning: "", output: "" });
     onRun?.();
     try {
-      await startRun({ source: sourceId, model, prompt, maxTokens }, {
+      await startRun(engine ? { source: sourceId, model, text: prompt, engine: engine.id, maxTokens } : { source: sourceId, model, prompt, maxTokens }, {
         onStart: (id) => {
           runId = id;
         },
@@ -189,7 +194,13 @@ export function RunPanel({ onRun }: { onRun?: () => void }) {
             </ul>
           )}
 
-          <label className="label" htmlFor="run-prompt">Prompt</label>
+          {engines.length > 0 && (
+            <label className="run-panel__check">
+              <input type="checkbox" checked={pipeline} onChange={(e) => setPipeline(e.target.checked)} disabled={Boolean(live)} />
+              Translate into {engines[0].language} and solve with {engines[0].name}
+            </label>
+          )}
+          <label className="label" htmlFor="run-prompt">{engine ? "Problem, in words" : "Prompt"}</label>
           <textarea id="run-prompt" className="field run-panel__prompt" value={prompt} onChange={(e) => setPrompt(e.target.value)} disabled={Boolean(live)} />
 
           <label className="label" htmlFor="run-max">Output token limit</label>

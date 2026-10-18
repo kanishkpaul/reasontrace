@@ -5,12 +5,14 @@ import { downloadFile, fileNameFor } from "../lib/download";
 import { DownloadIcon, ICON, RailIcon, SidebarIcon } from "../lib/icons";
 import { api, hasServer } from "../lib/api";
 import { COMPLETION } from "../lib/completion";
+import { translationOf } from "../lib/pipeline";
 import { loadOpenRunId, loadSavedTrace } from "../lib/savedTrace";
 import { useTraceStore } from "../store";
 import { DiagnosisPanel } from "./DiagnosisPanel";
 import { EventFilters } from "./EventFilters";
 import { FindingPicker } from "./FindingPicker";
 import { FindingView } from "./FindingView";
+import { HandoffView } from "./HandoffView";
 import { LiveRun } from "./LiveRun";
 import { NodeInspector } from "./NodeInspector";
 import { ReasoningGraph } from "./ReasoningGraph";
@@ -32,18 +34,19 @@ type Region = "trace" | "open" | "detail";
  * and an honest status bar.
  */
 export function Layout() {
-  const { trace, setTrace, openRun, selectedId, saved, live, completion, finding, setFinding } = useTraceStore(useShallow((s) => ({
+  const { trace, setTrace, openRun, selectedId, select, saved, live, run, finding, setFinding } = useTraceStore(useShallow((s) => ({
     trace: s.currentTrace,
     setTrace: s.setTrace,
     openRun: s.openRun,
     selectedId: s.selectedNodeId,
+    select: s.setSelectedNodeId,
     saved: s.savedInBrowser,
     live: s.live !== null,
-    completion: s.run?.manifest.completion,
+    run: s.run,
     finding: s.finding,
     setFinding: s.setFinding,
   })));
-  const [view, setView] = useState<"steps" | "graph">("steps");
+  const [view, setView] = useState<"steps" | "graph" | "handoff">("steps");
   const [railTab, setRailTab] = useState<"step" | "findings">("step");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [railOpen, setRailOpen] = useState(true);
@@ -62,6 +65,9 @@ export function Layout() {
   const diagnostics = trace ? diagnosticsFor(trace) : null;
   const toCheck = diagnostics?.findings.filter((f) => f.severity !== "info").length ?? 0;
   const selected = useMemo(() => trace?.events.find((e) => e.id === selectedId), [trace, selectedId]);
+  const completion = run?.manifest.completion;
+  const translation = translationOf(run);
+  const shown = view === "handoff" && !translation ? "steps" : view;
 
   if (finding) return <FindingView finding={finding} onClose={() => setFinding(null)} />;
   if (!trace && !live) return <EmptyHome />;
@@ -105,8 +111,9 @@ export function Layout() {
       <main className="app__main">
         <div className="app__main-head">
           <div className="seg" role="group" aria-label="View">
-            <button type="button" aria-pressed={view === "steps"} onClick={() => setView("steps")}>Steps</button>
-            <button type="button" aria-pressed={view === "graph"} onClick={() => setView("graph")}>Graph</button>
+            <button type="button" aria-pressed={shown === "steps"} onClick={() => setView("steps")}>Steps</button>
+            <button type="button" aria-pressed={shown === "graph"} onClick={() => setView("graph")}>Graph</button>
+            {translation && <button type="button" aria-pressed={shown === "handoff"} onClick={() => setView("handoff")}>Handoff</button>}
           </div>
           <span className="hint">{selected ? `Step ${selected.step} selected` : "Select an event to inspect it"}</span>
         </div>
@@ -115,7 +122,11 @@ export function Layout() {
             <span className={`dot ${COMPLETION[completion.state].dot}`} /> {COMPLETION[completion.state].word}{completion.reason ? `: ${completion.reason}` : ""}
           </p>
         )}
-        <div className="app__surface">{live ? <LiveRun /> : view === "steps" ? <StepColumns /> : <ReasoningGraph />}</div>
+        <div className="app__surface">
+          {live ? <LiveRun />
+            : shown === "handoff" && run && translation ? <HandoffView run={run} trace={trace} translation={translation} onInspect={(id) => { select(id); setRegion("detail"); }} />
+            : shown === "graph" ? <ReasoningGraph /> : <StepColumns />}
+        </div>
         <TimelineControls />
       </main>
 

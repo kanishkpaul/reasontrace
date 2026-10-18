@@ -37,7 +37,10 @@ export function StepColumns() {
   }, [events]);
 
   if (!trace) return null;
-  const unavailable = new Map(trace.unavailable.map((u) => [u.depth, u.reason]));
+  // A pipeline's model can lack a depth its engine provides, so a column with events shows them and its reason both.
+  const reasons = new Map(trace.unavailable.map((u) => [u.depth, u.reason]));
+  const hasEvents = (depth: Depth) => trace.events.some((e) => e.depth === depth);
+  const unavailable = new Map([...reasons].filter(([depth]) => !hasEvents(depth)));
   const probabilities = unavailable.get("probabilities");
 
   return (
@@ -50,6 +53,7 @@ export function StepColumns() {
             {!unavailable.has(column.depth) && (
               <span className="step-columns__count"> · {events.filter((e) => column.depths.includes(e.depth)).length}</span>
             )}
+            {!unavailable.has(column.depth) && reasons.has(column.depth) && <span className="step-columns__partly"><Unavailable reason={reasons.get(column.depth)!} /></span>}
           </span>
         ))}
       </div>

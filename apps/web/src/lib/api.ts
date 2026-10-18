@@ -77,14 +77,20 @@ export interface RunStream {
   onDelta: (channel: "reasoning" | "output", text: string) => void;
 }
 
+/** A pipeline's model fields as for a run, with the problem in words in place of a prompt. */
+export interface PipelineBody extends Omit<RunBody, "prompt"> {
+  text: string;
+  engine: string;
+}
+
 /**
- * Starts a run and reads its event stream until the server reports it done.
+ * Starts a run, or a pipeline, and reads its event stream until the server reports it done.
  * Aborting `signal` stops the run; the server records it as aborted.
  */
-export async function startRun(body: RunBody, handlers: RunStream, signal: AbortSignal): Promise<RunManifest> {
+export async function startRun(body: RunBody | PipelineBody, handlers: RunStream, signal: AbortSignal): Promise<RunManifest> {
   const headers = new Headers({ "content-type": "application/json" });
   if (token) headers.set("x-reasontrace-token", token);
-  const response = await fetch("/api/runs", { method: "POST", headers, body: JSON.stringify(body), signal });
+  const response = await fetch("engine" in body ? "/api/pipelines" : "/api/runs", { method: "POST", headers, body: JSON.stringify(body), signal });
   if (!response.ok || !response.body) {
     const error = await response.json().catch(() => ({}));
     throw new ApiError((error as { error?: string }).error ?? `HTTP ${response.status}`);
