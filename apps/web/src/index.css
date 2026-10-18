@@ -321,7 +321,7 @@
 .handoff__column + .handoff__column { border-left: 1px solid var(--line-1); }
 .handoff__text { font-size: var(--fs-3); line-height: 1.9; }
 .handoff__span { padding: 0 var(--sp-1); background: var(--bg-3); color: inherit; }
-.handoff__span[data-departs] { background: var(--bg-alert); color: var(--ink-red); text-decoration: line-through wavy var(--ink-red); text-decoration-thickness: 1px; }
+.handoff__span[data-departs] { background: var(--bg-alert); color: var(--ink-red); text-decoration: underline wavy var(--ink-red); text-decoration-thickness: 1px; text-underline-offset: 4px; }
 .handoff__span[aria-current] { outline: 1px solid var(--ink-green); }
 .handoff__span sup { margin-left: 1px; color: var(--ink-3); }
 .handoff__list { display: flex; flex-direction: column; gap: var(--sp-1); margin: 0; padding-left: var(--sp-4); font-size: var(--fs-2); }
