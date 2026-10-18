@@ -50,6 +50,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--sp-5);
+  position: relative;
   min-height: 0;
   overflow-y: auto;
   padding: var(--sp-3);
@@ -60,7 +61,7 @@
 
 .app__main { grid-area: main; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
 .app__main-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); padding: var(--sp-2) var(--sp-3); border-bottom: 1px solid var(--line-1); }
-.app__surface { flex: 1; min-height: 0; overflow: auto; }
+.app__surface { position: relative; flex: 1; min-height: 0; overflow: auto; }
 
 /* The status line, after vim's: a mode block, then fields split by │. */
 .app__status {
@@ -367,7 +368,7 @@
 
 /* ── A stored finding, shown as its own page ── */
 
-.finding-page { display: flex; flex-direction: column; height: 100dvh; overflow-y: auto; background: var(--bg-1); }
+.finding-page { position: relative; display: flex; flex-direction: column; height: 100dvh; overflow-y: auto; background: var(--bg-1); }
 .finding__body { display: flex; flex-direction: column; gap: var(--sp-5); width: 100%; max-width: 68rem; margin: 0 auto; padding: var(--sp-4); }
 .finding__section { display: flex; flex-direction: column; gap: var(--sp-2); }
 .finding__table { width: 100%; border-collapse: collapse; font-size: var(--fs-2); }
@@ -387,5 +388,5 @@
 @media (max-width: 47.99rem) {
   .finding__step { grid-template-columns: 2rem minmax(0, 1fr); }
   .finding__step .layer-strip { grid-column: 2; }
-  .finding__table { display: block; overflow-x: auto; }
+  .finding__table { position: relative; display: block; overflow-x: auto; }
 }

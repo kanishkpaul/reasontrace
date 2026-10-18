@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { api } from "../lib/api";
 import { TIER } from "../lib/completion";
+import { groupRuns } from "../lib/runGroups";
 import { Ending } from "./EvidenceLabel";
 import { useTraceStore } from "../store";
 
@@ -14,7 +15,7 @@ function firstLine({ request, pipeline }: RunManifest): string {
 
 const time = (iso: string) => new Date(iso).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
-/** Runs recorded by the local server, grouped by model, newest first. */
+/** Runs recorded by the local server, grouped by source and model, newest first. */
 export function RunList({ onOpen }: { onOpen?: () => void }) {
   const { running, current, openRun } = useTraceStore(useShallow((s) => ({ running: s.live !== null, current: s.run?.manifest.id, openRun: s.openRun })));
   const [runs, setRuns] = useState<RunManifest[]>([]);
@@ -39,24 +40,18 @@ export function RunList({ onOpen }: { onOpen?: () => void }) {
     onOpen?.();
   }).catch((e) => setError(e instanceof Error ? e.message : String(e)));
 
-  const groups = new Map<string, RunManifest[]>();
-  for (const run of runs) {
-    const key = isSolveRequest(run.request) ? run.request.engine : run.request.model;
-    groups.set(key, [...(groups.get(key) ?? []), run]);
-  }
-
   return (
     <section>
       <h2 className="section-heading">Runs</h2>
       {error && <p className="hint hint--error" role="alert">{error}</p>}
       {runs.length === 0 && !error && <p className="hint">No runs yet. Runs you start appear here, and stay in the runs folder.</p>}
-      {[...groups.entries()].map(([model, list]) => (
-        <div key={model} className="run-group">
+      {groupRuns(runs).map((group) => (
+        <div key={`${group.runs[0].source.id} ${group.name}`} className="run-group">
           <p className="run-group__model">
-            <span className="run-group__name">{model}</span>
-            <span className="badge badge--muted">{TIER[list[0].source.tier]}</span>
+            <span className="run-group__name">{group.name}</span>
+            <span className="badge badge--muted">{TIER[group.tier]}</span>
           </p>
-          {list.map((run) => {
+          {group.runs.map((run) => {
             return (
               <button key={run.id} type="button" className="row sample-row" aria-current={run.id === current} onClick={() => void open(run.id)}>
                 <span className="row__title">{firstLine(run)}</span>
