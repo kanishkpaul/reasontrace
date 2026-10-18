@@ -139,9 +139,14 @@ interface Runner {
 }
 ```
 
-Decoders are the fourth point and live in Python (`bridge/python/decoders/`):
-each declares its attachment kind, which runs it accepts, and its validation
-(the control it ran). Decoders without a control are shown as unvalidated.
+Decoders are the fourth point and live in Python
+(`bridge/python/reasontrace_sidecar/decoders/`): each declares its attachment
+kind and version, and its attachments carry its validation. A validation comes
+from the harness in `reasontrace_sidecar/ground_truth/`, which runs the decoder
+on a model with a planted circuit and on three controls (random direction,
+shuffled inputs, untrained weights). The decoder is validated only if it
+recovers the planted variable and every control fails to. The result is stored
+under `fixtures/validation/`, and a test reruns the harness against it.
 
 The fifth is in the viewer: a **view** is a React component registered for
 one attachment kind in `apps/web/src/views/`. An attachment kind with no view
@@ -202,7 +207,8 @@ the prompt and the generated tokens after generation ends. Tensors go to the
 run directory's `tensors/` as safetensors; events and the manifest come back
 over JSON-RPC and the server writes them. The manifest records device, dtype,
 quantisation, the cache setting, seed, the weights' revision, library versions
-and sampled peak memory. Later phases add decoders (logit lens, Gemma Scope
+and sampled peak memory. The decoders and their ground-truth harness live here
+too (§4). Later phases run decoders on real runs (logit lens, Gemma Scope
 SAEs through SAELens).
 
 Without uv, Python or the model runtime, every depth of the full tier is

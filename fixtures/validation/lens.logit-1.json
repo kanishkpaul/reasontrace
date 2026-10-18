@@ -1,0 +1,40 @@
+{
+  "decoder": {
+    "kind": "lens.logit/1",
+    "name": "logit lens",
+    "version": "1"
+  },
+  "status": "validated",
+  "reason": null,
+  "groundTruth": "A 4-layer Qwen3-architecture model with hand-written weights and a 64-token vocabulary. It answers σ(x) = (7x + 3) mod 64 for the last token x. Layer 1 writes x into dimensions the unembedding never reads; layer 2 writes σ(x) into the unembedding's basis.",
+  "metric": "top-1 accuracy of the decoded token against the planted variable, at the last position",
+  "items": 64,
+  "score": 1.0,
+  "required": 0.9,
+  "chance": 0.015625,
+  "chanceBound": 0.09375,
+  "byLayer": [
+    0.0,
+    0.0,
+    1.0,
+    1.0
+  ],
+  "recoveredFrom": 2,
+  "controls": [
+    {
+      "control": "random direction",
+      "score": 0.015625,
+      "succeeded": false
+    },
+    {
+      "control": "shuffled inputs",
+      "score": 0.015625,
+      "succeeded": false
+    },
+    {
+      "control": "untrained weights",
+      "score": 0.03125,
+      "succeeded": false
+    }
+  ]
+}

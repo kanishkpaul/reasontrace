@@ -36,6 +36,7 @@ row says **adopted**, its licence column is unverified.
 | pytest | the sidecar's tests | github.com/pytest-dev/pytest | MIT | — | adopted |
 | Qwen3 0.6B | full-tier model; source of the stored capture reference | huggingface.co/Qwen/Qwen3-0.6B | Apache-2.0 | — | adopted |
 | Gemma 3 1B instruct | full-tier model | huggingface.co/google/gemma-3-1b-it | to verify: the repository is gated, so its terms weren't read here | Qwen3 alone covers the full tier | supported, not downloaded |
+| Logit lens | reading a layer's hidden state through the final norm and unembedding | nostalgebraist, "interpreting GPT: the logit lens", LessWrong, 2020 | idea only; no code taken | — | adopted |
 | SAELens | loading and encoding SAEs | github.com/jbloomAus/SAELens | to verify | — | planned (phase 6) |
 | Gemma Scope 2 | SAE and transcoder weights for Gemma 3 | huggingface.co/google/gemma-scope-2-* | to verify; weights may carry terms separate from code | decoder support dropped for Gemma | planned (phase 6) |
 | z3-solver | SMT solver, official WebAssembly build | github.com/Z3Prover/z3 | to verify | — | planned (phase 8) |

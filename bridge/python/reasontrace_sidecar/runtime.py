@@ -70,6 +70,15 @@ def cached_revision(repo: str) -> str | None:
     return Path(config).parent.name if isinstance(config, str) else None
 
 
+def residual(lm, ids: torch.Tensor, layers) -> dict[int, torch.Tensor]:
+    """The output of each of `layers`, [batch, sequence, width], read through nnsight from `lm`, an nnsight-wrapped model."""
+    saved = {}
+    with torch.no_grad(), lm.trace(ids):
+        for i in layers:
+            saved[i] = lm.model.layers[i].output.save()
+    return saved
+
+
 class MemoryGauge:
     """The largest memory figure seen at the moments it was sampled.
 
@@ -199,10 +208,7 @@ class Host:
         positions = position_indices(plan, prompt_length, total)
         if not positions:
             raise RpcError(INVALID_PARAMS, "The plan keeps generated positions, and the model generated none.")
-        saved = {}
-        with torch.no_grad(), self.lm.trace(ids):
-            for i in plan.layers:
-                saved[i] = self.layers()[i].output.save()
+        saved = residual(self.lm, ids, plan.layers)
         tensors = {}
         for i in plan.layers:
             hidden = saved[i][0, positions, :].float()

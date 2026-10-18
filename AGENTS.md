@@ -72,7 +72,8 @@ npm run check
 ```
 
 The Python sidecar has its own tests. Without the model runtime they skip the
-reference test; with it and the Qwen3 0.6B weights they run it:
+reference test and the decoder ground-truth test. With the runtime they run the
+ground-truth test, and with the Qwen3 0.6B weights as well, the reference test:
 
 ```bash
 uv run --directory bridge/python --frozen --group dev pytest
