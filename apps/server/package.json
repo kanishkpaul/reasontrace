@@ -12,6 +12,7 @@
     "@reasontrace/core": "*",
     "@reasontrace/format": "*",
     "@reasontrace/keys": "*",
+    "@reasontrace/sidecar": "*",
     "@reasontrace/source-anthropic": "*",
     "@reasontrace/source-openai": "*",
     "hono": "4.13.12"

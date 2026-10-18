@@ -2,7 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { extname, join, normalize, sep } from "node:path";
 import { isRunId, listRuns, newRunId, readRun, RunReadError, RunWriter, type RunOutcome, type Source } from "@reasontrace/core";
-import type { RunRequest } from "@reasontrace/format";
+import type { CapturePlan, RunRequest } from "@reasontrace/format";
 import type { KeyStore } from "@reasontrace/keys";
 import { Hono, type Context } from "hono";
 import { streamSSE } from "hono/streaming";
@@ -60,6 +60,16 @@ const integer = (value: unknown, name: string, min: number, max: number): number
   return value;
 };
 
+/** A capture plan's shape. The sidecar checks layer indices against the model. */
+function capturePlan(raw: unknown): CapturePlan {
+  const plan = raw as Partial<CapturePlan> | null;
+  const layersOk = plan?.layers === "all" || (Array.isArray(plan?.layers) && plan.layers.length > 0 && plan.layers.every((i) => Number.isInteger(i) && i >= 0));
+  if (!plan || typeof plan !== "object" || !layersOk || !["all", "generated", "last"].includes(plan.positions as string) || !["none", "mean"].includes(plan.pooling as string)) {
+    throw new BadRequest('plan must be {layers: "all" or layer indices, positions: "all" | "generated" | "last", pooling: "none" | "mean"}.');
+  }
+  return { layers: plan.layers!, positions: plan.positions!, pooling: plan.pooling! };
+}
+
 /** A run request from the viewer, checked field by field. */
 function runRequest(body: Record<string, unknown>): { sourceId: string; request: RunRequest } {
   const { source, model, prompt } = body;
@@ -79,6 +89,11 @@ function runRequest(body: Record<string, unknown>): { sourceId: string; request:
     request.temperature = body.temperature;
   }
   if (body.seed !== undefined) request.seed = integer(body.seed, "seed", 0, 2 ** 31 - 1);
+  if (body.cache !== undefined) {
+    if (typeof body.cache !== "boolean") throw new BadRequest("cache must be true or false.");
+    request.cache = body.cache;
+  }
+  if (body.plan !== undefined) request.plan = capturePlan(body.plan);
   return { sourceId: source, request };
 }
 

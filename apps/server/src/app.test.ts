@@ -122,6 +122,9 @@ describe("runs over the API", () => {
     expect(await status({ source: "llamacpp", model: "m" })).toBe(400);
     expect(await status({ source: "llamacpp", model: "m", prompt: "hi", maxTokens: 0 })).toBe(400);
     expect(await status({ source: "llamacpp", model: "m", prompt: "hi", temperature: 9 })).toBe(400);
+    expect(await status({ source: "weights", model: "m", prompt: "hi", cache: "yes" })).toBe(400);
+    expect(await status({ source: "weights", model: "m", prompt: "hi", plan: { layers: [-1], positions: "last", pooling: "none" } })).toBe(400);
+    expect(await status({ source: "weights", model: "m", prompt: "hi", plan: { layers: "all", positions: "first", pooling: "none" } })).toBe(400);
     expect(await status({ source: "nope", model: "m", prompt: "hi" })).toBe(404);
     expect(await status([1])).toBe(400);
     expect(readdirSync(runsDir)).toEqual([]);

@@ -1,0 +1,17 @@
+{
+  "name": "@reasontrace/sidecar",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Starts the Python sidecar (bridge/python) and runs local weights through it over JSON-RPC on stdio.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p . && tsc -p tsconfig.test.json"
+  },
+  "dependencies": {
+    "@reasontrace/core": "*",
+    "@reasontrace/format": "*"
+  }
+}
